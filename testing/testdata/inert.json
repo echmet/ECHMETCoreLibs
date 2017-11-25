@@ -1,0 +1,15 @@
+{
+	"constituents": [
+		{
+			"type": "L",
+			"role": "B",
+			"name": "Inert",
+			"chargeLow": 0,
+			"chargeHigh": 0,
+			"concentrationBGE": 10.0,
+			"concentrationSample": 9.0,
+			"pKas": [ ],
+			"mobilities": [ 0.0 ]
+		}	
+	]
+}

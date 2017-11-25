@@ -1,0 +1,15 @@
+{
+	"constituents": [
+		{
+			"type": "L",
+			"role": "B",
+			"name": "Isoleucine",
+			"chargeLow": -1,
+			"chargeHigh": 1,
+			"concentrationBGE": 50.0,
+			"concentrationSample": 30.0,
+			"pKas": [ 9.765, 2.3 ],
+			"mobilities": [ 26.7, 0.0, 29.2 ]
+		}
+	]
+}

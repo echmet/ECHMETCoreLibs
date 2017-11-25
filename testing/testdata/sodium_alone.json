@@ -1,0 +1,15 @@
+{
+	"constituents": [
+		{
+			"type": "L",
+			"role": "B",
+			"name": "Sodium",
+			"chargeLow": 0,
+			"chargeHigh": 1,
+			"concentrationBGE": 50.0,
+			"concentrationSample": 30.0,
+			"pKas": [ 13.7 ],
+			"mobilities": [ 0.0, 51.9 ]
+		}
+	]
+}

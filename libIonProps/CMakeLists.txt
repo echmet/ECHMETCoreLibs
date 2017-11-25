@@ -1,0 +1,58 @@
+cmake_minimum_required(VERSION 2.8.12)
+
+project(libIonProps LANGUAGES CXX)
+
+add_definitions("-D_USE_MATH_DEFINES")
+
+if (WIN32)
+    if (MINGW)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-function")
+    elseif (MSYS)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-function")
+    endif()
+elseif (UNIX)
+    if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" OR
+        ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-function")
+    endif()
+endif()
+
+set(libIonProps_SRCS
+    src/ionprops.cpp)
+
+include_directories(${INCLUDE_DIRECTORIES}
+                    "${CMAKE_CURRENT_SOURCE_DIR}/include"
+		    "${CMAKE_CURRENT_SOURCE_DIR}/../libSysComp/include")
+
+set(IONPROPS_LINK_LIBS
+    ECHMETShared
+    SysComp)
+			
+if (!WIN32)
+    set(IONPROPS_LINK_LIBS
+        ${IONPROPS_LINK_LIBS}
+        m)
+endif ()
+
+set(IONPROPS_LINK_LIBS
+    "${IONPROPS_LINK_LIBS}"
+    ${ECHMET_HIPREC_LIBS})
+
+add_library(IonProps SHARED ${libIonProps_SRCS})
+target_include_directories(IonProps PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+set_target_properties(IonProps
+                      PROPERTIES VERSION 0.1
+                                 SOVERSION 0.1
+                      PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/include/echmetionprops.h")
+target_link_libraries(IonProps
+                      PRIVATE ${IONPROPS_LINK_LIBS})
+
+if (WIN32)
+    install(TARGETS IonProps
+            RUNTIME DESTINATION lib
+            PUBLIC_HEADER DESTINATION include/ECHMET/CoreLibs)
+else ()
+    install(TARGETS IonProps
+            LIBRARY DESTINATION lib
+            PUBLIC_HEADER DESTINATION include/ECHMET/CoreLibs)
+endif ()
