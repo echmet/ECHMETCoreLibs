@@ -1,8 +1,5 @@
 #! /bin/sh
-LIBJANSSON_INCLUDE="/home/madcat/Devel/ECHMET/jansson-bin/include"
-LIBJANSSON_BIN="/home/madcat/Devel/ECHMET/jansson-bin/lib/libjansson.a"
-ECL_INCLUDE="/home/madcat/Devel/ECHMET/ECHMETCoreLibs_varReal/bin/include/ECHMET/CoreLibs"
-ECL_BIN="/home/madcat/Devel/ECHMET/ECHMETCoreLibs_varReal/bin/lib/"
+source ./ref_tool_glob.sh
 
 clang -c jsonloader/constituents_json_ldr.c \
 	-I${LIBJANSSON_INCLUDE}
