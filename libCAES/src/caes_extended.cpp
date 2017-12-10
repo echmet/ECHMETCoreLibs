@@ -342,8 +342,8 @@ RetCode ECHMET_CC calculateFirstConcentrationDerivatives_prepared(RealVec *deriv
 
 		/* DEBUG */
 		ECHMET_DEBUG_CODE(
-			fprintf(stderr, "cLL %s\ncL %s\ncH %s\ncHH %s\n", conductivityLow.toString().c_str(),
-									  conductivityHigh.toString().c_str())
+			fprintf(stderr, "cL %s\ncH %s\n", conductivityLow.toString().c_str(),
+							  conductivityHigh.toString().c_str())
 		)
 
 		conductivityDerivative = CAESRealToECHMETReal(firstDerivativeCalculator2O(conductivityLow, conductivityHigh, HH));
