@@ -453,6 +453,10 @@ std::vector<Ion<ECHMETReal>> makeIonVector(const SysComp::IonicFormVec *ifVec, c
 
 		if (iF->totalCharge == 0)
 			continue;
+#ifdef IONPROPS_DISABLE_COMPLEX_ONSFUO
+		if (iF->ligand != nullptr)
+			continue;
+#endif // IONPROPS_DISABLE_COMPLEX_ONSFUO
 
 		ions.emplace_back(iF->ionicMobilityIndex, ic, iF->totalCharge, iF->limitMobility);
 	}
@@ -485,6 +489,10 @@ std::vector<Ion<IPReal>> makeIonVector(const SysComp::IonicFormVec *ifVec, const
 
 		if (iF->totalCharge == 0)
 			continue;
+#ifdef IONPROPS_DISABLE_COMPLEX_ONSFUO
+		if (iF->ligand != nullptr)
+			continue;
+#endif // IONPROPS_DISABLE_COMPLEX_ONSFUO
 
 		ions.emplace_back(iF->ionicMobilityIndex, ic, iF->totalCharge, iF->limitMobility);
 	}

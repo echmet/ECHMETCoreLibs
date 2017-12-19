@@ -2,7 +2,13 @@ cmake_minimum_required(VERSION 2.8.12)
 
 project(libIonProps LANGUAGES CXX)
 
+option(IONPROPS_DISABLE_COMPLEX_ONSFUO "Do not correct mobilities of complexes by Onsager-Fuoss law" ON)
+
 add_definitions("-D_USE_MATH_DEFINES")
+
+if (IONPROPS_DISABLE_COMPLEX_ONSFUO)
+    add_definitions("-DIONPROPS_DISABLE_COMPLEX_ONSFUO")
+endif ()
 
 if (WIN32)
     if (MINGW)
