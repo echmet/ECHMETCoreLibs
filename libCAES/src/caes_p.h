@@ -88,7 +88,7 @@ class FreeMPFRCacheSwitch {};
 template <typename CAESReal>
 class SolverImpl : public Solver {
 public:
-	explicit SolverImpl(const SolverContextImpl<CAESReal> *ctx, const Options options) noexcept;
+	explicit SolverImpl(const SolverContextImpl<CAESReal> *ctx, const NonidealityCorrections corrections, const Options options) noexcept;
 	virtual ~SolverImpl() noexcept override;
 	virtual const SolverContext * ECHMET_CC context() const noexcept override;
 	virtual void ECHMET_CC destroy() const noexcept override;
@@ -103,6 +103,7 @@ private:
 	void releaseSolverInternal(SolverInternal<CAESReal> *internal, FreeMPFRCacheSwitch<false>) noexcept;
 
 	Options m_options;					/*!< Solver options */
+	bool m_correctDebyeHuckel;				/*!< Correct with Debye-Hückel */
 	const SolverContextImpl<CAESReal> *m_ctx;		/*!< Associated solver context */
 	SolverInternal<CAESReal> *m_internalUnsafe;		/*!< Internal solver used by thread-unsafe variant of the solver */
 

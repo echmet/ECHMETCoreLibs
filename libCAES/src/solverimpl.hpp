@@ -37,11 +37,13 @@ void SolverImpl<CAESReal>::releaseSolverInternal(SolverInternal<CAESReal> *inter
  * @param[in] options Solver options.
  */
 template <typename CAESReal>
-SolverImpl<CAESReal>::SolverImpl(const SolverContextImpl<CAESReal> *ctx, const Options options) noexcept :
+SolverImpl<CAESReal>::SolverImpl(const SolverContextImpl<CAESReal> *ctx, const NonidealityCorrections corrections, const Options options) noexcept :
 	m_options(options),
 	m_ctx(ctx),
 	m_internalUnsafe(nullptr)
 {
+	m_correctDebyeHuckel = corrections & NonidealityCorrections::CORR_DEBYE_HUCKEL;
+
 	if (m_options & Options::DISABLE_THREAD_SAFETY)
 		m_internalUnsafe = new (std::nothrow) SolverInternal<CAESReal>(ctx);
 }
@@ -186,7 +188,7 @@ RetCode ECHMET_CC SolverImpl<CAESReal>::solve(const RealVec *analyticalConcentra
 		for (size_t idx = 0; idx < calcProps.ionicConcentrations->size(); idx++)
 			estimatedConcentrations(idx) = calcProps.ionicConcentrations->at(idx);
 
-		const RetCode tRet = internal->solve(&anCVec, estimatedConcentrations, m_options & IONIC_STRENGTH_CORRECTION, iterations);
+		const RetCode tRet = internal->solve(&anCVec, estimatedConcentrations, m_correctDebyeHuckel, iterations);
 		if (tRet != RetCode::OK) {
 			releaseSolverInternal(internal, freeMPFRCache<CAESReal>());
 
@@ -239,7 +241,7 @@ RetCode SolverImpl<CAESReal>::solveRaw(SolverVector<CAESReal> &concentrations, C
 	if (internal == nullptr)
 		return RetCode::E_SOLVER_NOT_INITIALIZED;
 
-	const RetCode tRet = internal->solve(anCVec, estimatedConcentrations, m_options & IONIC_STRENGTH_CORRECTION, iterations);
+	const RetCode tRet = internal->solve(anCVec, estimatedConcentrations, m_correctDebyeHuckel, iterations);
 	if (tRet != RetCode::OK) {
 		releaseSolverInternal(internal, freeMPFRCache<CAESReal>());
 

@@ -128,6 +128,11 @@ void correctIonicMobilities(const std::vector<Ion<IPReal>> &ions, const IPReal &
 	delete[] mu_I;
 }
 
+template <typename IPReal>
+void correctIonicMobilitiesViscosity()
+{
+}
+
 /*!
  * Internal implementation of \p calculateConductivity() working with \p ECHMETReal type.
  *
@@ -412,8 +417,10 @@ IPReal calculatepH_directWorker(const IPReal &cH, const IPReal &ionicStrength) n
  * @param[in] isCorrection Correct for ionic strength.
  * @param[in] calcProps Corresponding \p SysComp\::CalculatedProperties struct.
  */
-ECHMETReal calculatepHWorker(const bool isCorrection, const SysComp::CalculatedProperties &calcProps) noexcept
+ECHMETReal calculatepHWorker(const NonidealityCorrections corrections, const SysComp::CalculatedProperties &calcProps) noexcept
 {
+	const bool isCorrection = corrections & NonidealityCorrections::CORR_DEBYE_HUCKEL;
+
 	return calculatepH_directWorker(calcProps.ionicConcentrations->at(0), isCorrection ? calcProps.ionicStrength : 0.0);
 }
 
@@ -424,8 +431,10 @@ ECHMETReal calculatepHWorker(const bool isCorrection, const SysComp::CalculatedP
  * @param[in] calcProps Corresponding \p SysComp\::CalculatedProperties struct.
  */
 template <typename IPReal>
-IPReal calculatepHWorker(const std::vector<IPReal> &icConcs, const SysComp::CalculatedProperties &calcProps, const bool isCorrection) noexcept
+IPReal calculatepHWorker(const std::vector<IPReal> &icConcs, const SysComp::CalculatedProperties &calcProps, const NonidealityCorrections corrections) noexcept
 {
+	const bool isCorrection = corrections & NonidealityCorrections::CORR_DEBYE_HUCKEL;
+
 	return calculatepH_directWorker<IPReal>(icConcs.at(0), isCorrection ? IPReal(calcProps.ionicStrength) : 0);
 }
 
@@ -492,11 +501,15 @@ std::vector<Ion<IPReal>> makeIonVector(const SysComp::IonicFormVec *ifVec, const
 	return ions;
 }
 
-RetCode correctMobilitiesWorker(const SysComp::ChemicalSystem &chemSystem, SysComp::CalculatedProperties &calcProps) noexcept
+RetCode correctMobilitiesWorker(const SysComp::ChemicalSystem &chemSystem, SysComp::CalculatedProperties &calcProps,const NonidealityCorrections corrections) noexcept
 {
 	try {
-		std::vector<Ion<ECHMETReal>> ions = makeIonVector(chemSystem.ionicForms, calcProps.ionicConcentrations);
-		correctIonicMobilities<ECHMETReal>(ions, calcProps.ionicStrength, calcProps);
+		if (corrections & NonidealityCorrections::CORR_VISCOSITY)
+			correctIonicMobilitiesViscosity<ECHMETReal>();
+		if (corrections & NonidealityCorrections::CORR_ONSAGER_FUOSS) {
+			std::vector<Ion<ECHMETReal>> ions = makeIonVector(chemSystem.ionicForms, calcProps.ionicConcentrations);
+			correctIonicMobilities<ECHMETReal>(ions, calcProps.ionicStrength, calcProps);
+		}
 	} catch (std::bad_alloc &) {
 		return RetCode::E_NO_MEMORY;
 	} catch (std::length_error &) {
@@ -507,12 +520,16 @@ RetCode correctMobilitiesWorker(const SysComp::ChemicalSystem &chemSystem, SysCo
 }
 
 template <typename IPReal>
-RetCode correctMobilitiesWorker(const std::vector<IPReal> &icConcs, const SysComp::ChemicalSystem &chemSystem, SysComp::CalculatedProperties &calcProps) noexcept
+RetCode correctMobilitiesWorker(const std::vector<IPReal> &icConcs, const SysComp::ChemicalSystem &chemSystem, SysComp::CalculatedProperties &calcProps, const NonidealityCorrections corrections) noexcept
 {
 
 	try {
-		std::vector<Ion<IPReal>> ions = makeIonVector<IPReal>(chemSystem.ionicForms, icConcs);
-		correctIonicMobilities<IPReal>(ions, calcProps.ionicStrength, calcProps);
+		if (corrections & NonidealityCorrections::CORR_VISCOSITY)
+			correctIonicMobilitiesViscosity<IPReal>();
+		if (corrections & NonidealityCorrections::CORR_ONSAGER_FUOSS) {
+			std::vector<Ion<IPReal>> ions = makeIonVector<IPReal>(chemSystem.ionicForms, icConcs);
+			correctIonicMobilities<IPReal>(ions, calcProps.ionicStrength, calcProps);
+		}
 	} catch (std::bad_alloc &) {
 		return RetCode::E_NO_MEMORY;
 	} catch (std::length_error &) {

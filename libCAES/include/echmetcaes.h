@@ -51,8 +51,7 @@ public:
 	 */
 	ECHMET_WK_ENUM(Options, int32_t) {
 		NONE = 0,
-		IONIC_STRENGTH_CORRECTION = (1 << 0),	/*!< Enable ionic strength correction */
-		DISABLE_THREAD_SAFETY = (1 << 1)	/*!< Use thread-unsafe variant of the solver.
+		DISABLE_THREAD_SAFETY = (1 << 0)	/*!< Use thread-unsafe variant of the solver.
 							     This may improve performance in cases where the solver is not
 							     used from multiple threads.
 							     This option cannot be changed during solver's lifetime. */
@@ -135,7 +134,7 @@ protected:
 
 extern "C" {
 
-ECHMET_API Solver * ECHMET_CC createSolver(const SolverContext *ctx, const Solver::Options options) ECHMET_NOEXCEPT;
+ECHMET_API Solver * ECHMET_CC createSolver(const SolverContext *ctx, const NonidealityCorrections corrections, const Solver::Options options) ECHMET_NOEXCEPT;
 
 /*!
  * Creates a solver context for a given system and intializes

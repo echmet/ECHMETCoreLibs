@@ -95,7 +95,7 @@ public:
 						     Number of items in the vector shall be <tt>chargeHigh - chargeLow + 1</tt>.*/
 
 	InCFVec *complexForms;			/*!< If the constituent is a nucleus, this vector describes its complexation relations. */
-
+	ECHMETReal viscosityCoefficient;
 };
 IS_POD(InConstituent)
 
@@ -167,6 +167,7 @@ public:
 
 	size_t analyticalConcentrationIndex;			/*!< Index in the respective array with analytical concentration of the constituent */
 	size_t effectiveMobilityIndex;				/*!< Index in the respective array with effective mobility of the constituent */
+	ECHMETReal viscosityCoefficient;
 };
 IS_POD(Constituent)
 

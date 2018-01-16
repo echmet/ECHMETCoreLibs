@@ -104,6 +104,7 @@ void zeroInitializeINC(SysComp::InConstituent &c)
 	c.pKas = NULL;
 	c.chargeLow = 0;
 	c.chargeHigh = 0;
+	c.viscosityCoefficient = -1;
 }
 
 void JsonInputProcessor::makeSysCompInputInternal(SysComp::InConstituentVec *inCtuentVec, const constituent_array_t *input)
@@ -119,6 +120,7 @@ void JsonInputProcessor::makeSysCompInputInternal(SysComp::InConstituentVec *inC
 		scCtuent.ctype = (ctuent->ctype == ::LIGAND) ? SysComp::ConstituentType::LIGAND : SysComp::ConstituentType::NUCLEUS;
 		scCtuent.chargeLow = ctuent->chargeLow;
 		scCtuent.chargeHigh = ctuent->chargeHigh;
+		scCtuent.viscosityCoefficient = ctuent->viscosityCoefficient;
 
 		if (numpKas < 0) {
 			cleanupInConstituentVector(inCtuentVec);

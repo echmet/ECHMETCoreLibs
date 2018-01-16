@@ -48,8 +48,8 @@ extern "C" {
  * @retval RetCode::E_NO_MEMORY Insufficient memory to perform the calculation.
  * @retval RetCode::E_BUFFER_CAPACITY_UNSOLVABLE Buffer capacity cannot be calculated for the given system.
  */
-ECHMET_API RetCode ECHMET_CC calculateBufferCapacity(ECHMETReal &bufferCapacity, const SysComp::ChemicalSystem &chemSystem, const SysComp::CalculatedProperties &calcProps, const RealVec *analyticalConcentrations,
-						     const bool isCorrection) ECHMET_NOEXCEPT;
+ECHMET_API RetCode ECHMET_CC calculateBufferCapacity(ECHMETReal &bufferCapacity, const NonidealityCorrections corrections, const SysComp::ChemicalSystem &chemSystem, const SysComp::CalculatedProperties &calcProps,
+						     const RealVec *analyticalConcentrations) ECHMET_NOEXCEPT;
 
 /*!
  * Returns first derivatives of all ionic concentrations when the system is perturbed by a small
@@ -68,7 +68,7 @@ ECHMET_API RetCode ECHMET_CC calculateBufferCapacity(ECHMETReal &bufferCapacity,
  * @retval RetCode::E_NO_MEMORY Insufficient memory to perform the calculation.
  * @retval . Any other \p RetCode value returned by \p executor.
  */
-ECHMET_API RetCode ECHMET_CC calculateFirstConcentrationDerivatives(RealVec *&derivatives, ECHMETReal &conductivityDerivative, const ECHMETReal &H, const bool isCorrection, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const SysComp::Constituent *perturbedConstituent) ECHMET_NOEXCEPT;
+ECHMET_API RetCode ECHMET_CC calculateFirstConcentrationDerivatives(RealVec *&derivatives, ECHMETReal &conductivityDerivative, const ECHMETReal &H, const NonidealityCorrections corrections, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const SysComp::Constituent *perturbedConstituent) ECHMET_NOEXCEPT;
 
 /*!
  * Returns mixeed derivatives of all ionic concentrations when the system is perturbed by a small
@@ -88,7 +88,7 @@ ECHMET_API RetCode ECHMET_CC calculateFirstConcentrationDerivatives(RealVec *&de
  * @retval RetCode::E_NO_MEMORY Insufficient memory to perform the calculation.
  * @retval . Any other \p RetCode value returned by \p executor.
  */
-ECHMET_API RetCode ECHMET_CC calculateCrossConstituentDerivatives(RealVec *&derivatives, const ECHMETReal &H, const bool isCorrection, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const SysComp::Constituent *perturbedConstituentJ, const SysComp::Constituent *perturbedConstituentK) ECHMET_NOEXCEPT;
+ECHMET_API RetCode ECHMET_CC calculateCrossConstituentDerivatives(RealVec *&derivatives, const ECHMETReal &H, const NonidealityCorrections corrections, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const SysComp::Constituent *perturbedConstituentJ, const SysComp::Constituent *perturbedConstituentK) ECHMET_NOEXCEPT;
 
 /*!
  * Returns first derivatives of all ionic concentrations when the system is perturbed by a small
@@ -109,7 +109,7 @@ ECHMET_API RetCode ECHMET_CC calculateCrossConstituentDerivatives(RealVec *&deri
  * @retval RetCode::E_NO_MEMORY Insufficient memory to perform the calculation.
  * @retval . Any other \p RetCode value returned by \p executor.
  */
-ECHMET_API RetCode ECHMET_CC calculateFirstConcentrationDerivatives_prepared(RealVec *derivatives, ECHMETReal &conductivityDerivative, Solver *solver, const ECHMETReal &H, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const SysComp::Constituent *perturbedConstituent) ECHMET_NOEXCEPT;
+ECHMET_API RetCode ECHMET_CC calculateFirstConcentrationDerivatives_prepared(RealVec *derivatives, ECHMETReal &conductivityDerivative, Solver *solver, const ECHMETReal &H, const NonidealityCorrections corrections, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const SysComp::Constituent *perturbedConstituent) ECHMET_NOEXCEPT;
 
 /*!
  * Returns mixeed derivatives of all ionic concentrations when the system is perturbed by a small
@@ -163,7 +163,7 @@ ECHMET_API RetCode ECHMET_CC calculateDissocDegreesDerivatives(DDSContext *&ctx,
  * @retval RetCode::OK Success.
  * @retval RetCode::E_NO_MEMORY Insufficient memory to prepare the context.
  */
-ECHMET_API RetCode ECHMET_CC prepareDerivatorContext(RealVec *&derivatives, Solver *&solver, const SysComp::ChemicalSystem &chemSystem, const bool isCorrection) ECHMET_NOEXCEPT;
+ECHMET_API RetCode ECHMET_CC prepareDerivatorContext(RealVec *&derivatives, Solver *&solver, const SysComp::ChemicalSystem &chemSystem, const NonidealityCorrections corrections) ECHMET_NOEXCEPT;
 
 } // extern "C"
 

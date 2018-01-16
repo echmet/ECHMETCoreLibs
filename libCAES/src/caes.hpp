@@ -766,13 +766,13 @@ SolverMatrix<CAESReal> * prepareJacobian(const CNVec<CAESReal> *complexNuclei, c
 }
 
 template <typename CAESReal>
-Solver * createSolverInternal(const SolverContext *ctx, const Solver::Options options) noexcept
+Solver * createSolverInternal(const SolverContext *ctx, const NonidealityCorrections corrections, const Solver::Options options) noexcept
 {
 	const SolverContextImpl<CAESReal> *ctxImpl = dynamic_cast<const SolverContextImpl<CAESReal> *>(ctx);
 	if (ctxImpl == nullptr)
 		return nullptr;
 
-	return new (std::nothrow) SolverImpl<CAESReal>(ctxImpl, options);
+	return new (std::nothrow) SolverImpl<CAESReal>(ctxImpl, corrections, options);
 }
 
 /*!
