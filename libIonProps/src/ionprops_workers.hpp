@@ -131,6 +131,35 @@ void correctIonicMobilities(const std::vector<Ion<IPReal>> &ions, const IPReal &
 template <typename IPReal>
 void correctIonicMobilitiesViscosity(const SysComp::ChemicalSystem &chemSystem, SysComp::CalculatedProperties &calcProps, const RealVec *analyticalConcentrations)
 {
+	/*
+	 * This implements somewhat rudimentary visocity correcions base of the following logic:
+	 * From Stokes' law:
+	 *
+	 * n1 / n0 = v0 / v1
+	 *
+	 * where n is dynamic viscosity and v is velocity.
+	 * This can be directly applied to mobilities because
+	 *
+	 * v = u . E
+	 *
+	 * in electrophoresis.
+	 *
+	 * The ratio of n1 / n0 can be expressed as
+	 *
+	 * k = f * c + 1
+	 *
+	 * Where f is a visocisty effect of a compound and c its concentration.
+	 * Corrected mobility the becomes.
+	 *
+	 * u1 = u0 / f
+	 *
+	 * We assume that visocity effects of all compounds in the system are additive, therefore:
+	 *
+	 * k = SUM(k_i * c_i) + 1
+	 *
+	 * Further we assume that all compounds with non-zero f are affected to the same degree and
+	 * compounds with zero f are not affected at all by increased viscosity.
+	 */
 	auto calcIonicFormViscosityCoefficient = [](const SysComp::IonicForm *iF) {
 		IPReal viscosityCoefficient = 0.0;
 		const SysComp::IonicForm *next = iF;
