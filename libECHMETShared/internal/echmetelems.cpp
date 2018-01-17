@@ -112,10 +112,10 @@ bool ECHMET_CC nonidealityCorrectionIsSet(const NonidealityCorrections correctio
 	return corrections & static_cast<Type>(item);
 }
 
-NonidealityCorrections ECHMET_CC nonidealityCorrectionSet(NonidealityCorrections corrections, const NonidealityCorrectionsItems item) noexcept
+void ECHMET_CC nonidealityCorrectionSet(NonidealityCorrections &corrections, const NonidealityCorrectionsItems item) noexcept
 {
 	typedef typename std::underlying_type<NonidealityCorrectionsItems>::type Type;
-	return corrections | static_cast<Type>(item);
+	corrections = corrections | static_cast<Type>(item);
 }
 
 } // namespace ECHMET

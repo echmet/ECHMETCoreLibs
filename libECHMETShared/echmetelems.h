@@ -500,7 +500,7 @@ typedef ECHMET_ST_ENUM_UTYPE(NonidealityCorrectionsItems) NonidealityCorrections
 extern "C" {
 
 ECHMET_API bool ECHMET_CC nonidealityCorrectionIsSet(const NonidealityCorrections corrections, const NonidealityCorrectionsItems item) ECHMET_NOEXCEPT;
-ECHMET_API NonidealityCorrections ECHMET_CC nonidealityCorrectionSet(const NonidealityCorrections corrections, const NonidealityCorrectionsItems item) ECHMET_NOEXCEPT;
+ECHMET_API void ECHMET_CC nonidealityCorrectionSet(NonidealityCorrections &corrections, const NonidealityCorrectionsItems item) ECHMET_NOEXCEPT;
 
 /*!
  * Creates an <tt>ECHMET::Vec</tt> of doubles.
