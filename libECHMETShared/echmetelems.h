@@ -486,7 +486,7 @@ protected:
 
 typedef Vec<ECHMETReal> RealVec;
 
-ECHMET_ST_ENUM(NonidealityCorrections, int32_t) {
+ECHMET_WK_ENUM(NonidealityCorrections, int32_t) {
 	CORR_DEBYE_HUCKEL = 0x1,	/* Debye-Hückel correction of stablity constants. Requires ionic strength
 					   as input parameter. */
 	CORR_ONSAGER_FUOSS = 0x2,	/* Onsager-Fuoss correction of ionic mobilities. Requires ionic strength

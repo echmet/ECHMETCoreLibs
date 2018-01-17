@@ -129,8 +129,48 @@ void correctIonicMobilities(const std::vector<Ion<IPReal>> &ions, const IPReal &
 }
 
 template <typename IPReal>
-void correctIonicMobilitiesViscosity()
+void correctIonicMobilitiesViscosity(const SysComp::ChemicalSystem &chemSystem, SysComp::CalculatedProperties &calcProps, const RealVec *analyticalConcentrations)
 {
+	auto calcIonicFormViscosityCoefficient = [](const SysComp::IonicForm *iF) {
+		IPReal viscosityCoefficient = 0.0;
+		const SysComp::IonicForm *next = iF;
+
+		while (next->ancestor != nullptr) {
+			viscosityCoefficient += next->ligand->viscosityCoefficient;
+			next = next->ancestor;
+		}
+
+		viscosityCoefficient += iF->nucleus->viscosityCoefficient;
+
+		return viscosityCoefficient;
+	};
+
+	const IPReal ONE{1.0};
+	IPReal totalViscosityCoeff = IPReal(0.0);
+
+	for (size_t idx = 0; idx < chemSystem.constituents->size(); idx++) {
+		const SysComp::Constituent *ctuent = chemSystem.constituents->at(idx);
+		const IPReal c = IPReal{analyticalConcentrations->at(ctuent->analyticalConcentrationIndex)};
+
+		totalViscosityCoeff += IPReal(ctuent->viscosityCoefficient) * c;
+	}
+
+	const IPReal k = totalViscosityCoeff + ONE;
+
+	for (size_t idx = 0; idx < chemSystem.ionicForms->size(); idx++) {
+		const SysComp::IonicForm *iF = chemSystem.ionicForms->at(idx);
+
+		if (iF->ifType != SysComp::IonicFormType::CONSTITUENT)
+			continue;
+
+		const IPReal viscosityCoefficient = calcIonicFormViscosityCoefficient(iF);
+		if (viscosityCoefficient > 0.0) {
+			const IPReal uFree = (*calcProps.ionicMobilities)[iF->ionicMobilityIndex];
+			const IPReal u = uFree / k;
+
+			(*calcProps.ionicMobilities)[iF->ionicMobilityIndex] = IPRealToECHMETReal(u);
+		}
+	}
 }
 
 /*!
@@ -447,7 +487,7 @@ IPReal calculatepHWorker(const std::vector<IPReal> &icConcs, const SysComp::Calc
  *
  * @return \p std::vector of \p Ions.
  */
-std::vector<Ion<ECHMETReal>> makeIonVector(const SysComp::IonicFormVec *ifVec, const RealVec *icVec)
+std::vector<Ion<ECHMETReal>> makeIonVector(const SysComp::IonicFormVec *ifVec, const RealVec *icVec, const SysComp::CalculatedProperties &calcProps)
 {
 	std::vector<Ion<ECHMETReal>> ions;
 
@@ -457,13 +497,14 @@ std::vector<Ion<ECHMETReal>> makeIonVector(const SysComp::IonicFormVec *ifVec, c
 		const SysComp::IonicForm *iF = ifVec->at(idx);
 		const size_t icIdx = iF->ionicConcentrationIndex;
 		const ECHMETReal &ic = icVec->at(icIdx);
+		const ECHMETReal currentMobility = (*calcProps.ionicMobilities)[iF->ionicMobilityIndex];
 
 		ECHMET_DEBUG_CODE(fprintf(stderr, "IonVec c: %g\n", IPRealToDouble(ic)));
 
 		if (iF->totalCharge == 0)
 			continue;
 
-		ions.emplace_back(iF->ionicMobilityIndex, ic, iF->totalCharge, iF->limitMobility);
+		ions.emplace_back(iF->ionicMobilityIndex, ic, iF->totalCharge, currentMobility);
 	}
 
 	return ions;
@@ -479,7 +520,7 @@ std::vector<Ion<ECHMETReal>> makeIonVector(const SysComp::IonicFormVec *ifVec, c
  * @return \p std::vector of \p Ions.
  */
 template <typename IPReal>
-std::vector<Ion<IPReal>> makeIonVector(const SysComp::IonicFormVec *ifVec, const std::vector<IPReal> &icVec)
+std::vector<Ion<IPReal>> makeIonVector(const SysComp::IonicFormVec *ifVec, const std::vector<IPReal> &icVec, const SysComp::CalculatedProperties &calcProps)
 {
 	std::vector<Ion<IPReal>> ions;
 
@@ -489,25 +530,38 @@ std::vector<Ion<IPReal>> makeIonVector(const SysComp::IonicFormVec *ifVec, const
 		const SysComp::IonicForm *iF = ifVec->at(idx);
 		const size_t icIdx = iF->ionicConcentrationIndex;
 		const IPReal &ic = icVec.at(icIdx);
+		const ECHMETReal currentMobility = (*calcProps.ionicMobilities)[iF->ionicMobilityIndex];
 
 		ECHMET_DEBUG_CODE(fprintf(stderr, "IonVec c: %g\n", IPRealToDouble(ic)));
 
 		if (iF->totalCharge == 0)
 			continue;
 
-		ions.emplace_back(iF->ionicMobilityIndex, ic, iF->totalCharge, iF->limitMobility);
+		ions.emplace_back(iF->ionicMobilityIndex, ic, iF->totalCharge, currentMobility);
 	}
 
 	return ions;
 }
 
-RetCode correctMobilitiesWorker(const SysComp::ChemicalSystem &chemSystem, SysComp::CalculatedProperties &calcProps,const NonidealityCorrections corrections) noexcept
+/*!
+ * Internal implentation of cumulative mobility corrections.
+ *
+ * @param[in] chemSystem Chemical system to operate on
+ * @param[in] calcProps Calculated properties of chemical system
+ * @param[in] analyticalConcentrations Vector of analytical concentrations
+ * @param[in] corrections Nonideality corrections to perform
+ *
+ * @retval \p RetCode::OK On success
+ * @retval \p RetCode::E_MEMORY Insufficient memory to perform the correcions
+ * @retval \p RetCode::E_DATA_TOO_LARGE Size of the data exceeds maximum size of \p std::vector
+ */
+RetCode correctMobilitiesWorker(const SysComp::ChemicalSystem &chemSystem, SysComp::CalculatedProperties &calcProps, const RealVec *analyticalConcentrations, const NonidealityCorrections corrections) noexcept
 {
 	try {
 		if (corrections & NonidealityCorrections::CORR_VISCOSITY)
-			correctIonicMobilitiesViscosity<ECHMETReal>();
+			correctIonicMobilitiesViscosity<ECHMETReal>(chemSystem, calcProps, analyticalConcentrations);
 		if (corrections & NonidealityCorrections::CORR_ONSAGER_FUOSS) {
-			std::vector<Ion<ECHMETReal>> ions = makeIonVector(chemSystem.ionicForms, calcProps.ionicConcentrations);
+			std::vector<Ion<ECHMETReal>> ions = makeIonVector(chemSystem.ionicForms, calcProps.ionicConcentrations, calcProps);
 			correctIonicMobilities<ECHMETReal>(ions, calcProps.ionicStrength, calcProps);
 		}
 	} catch (std::bad_alloc &) {
@@ -519,15 +573,29 @@ RetCode correctMobilitiesWorker(const SysComp::ChemicalSystem &chemSystem, SysCo
 	return RetCode::OK;
 }
 
+/*!
+ * Templated nternal implentation of cumulative mobility corrections.
+ *
+ * @param[in] icConcs Vector of ionic concentrations
+ * @param[in] chemSystem Chemical system to operate on
+ * @param[in] calcProps Calculated properties of chemical system
+ * @param[in] analyticalConcentrations Vector of analytical concentrations
+ * @param[in] corrections Nonideality corrections to perform
+ *
+ * @retval \p RetCode::OK On success
+ * @retval \p RetCode::E_MEMORY Insufficient memory to perform the correcions
+ * @retval \p RetCode::E_DATA_TOO_LARGE Size of the data exceeds maximum size of \p std::vector
+ */
 template <typename IPReal>
-RetCode correctMobilitiesWorker(const std::vector<IPReal> &icConcs, const SysComp::ChemicalSystem &chemSystem, SysComp::CalculatedProperties &calcProps, const NonidealityCorrections corrections) noexcept
+RetCode correctMobilitiesWorker(const std::vector<IPReal> &icConcs, const SysComp::ChemicalSystem &chemSystem, SysComp::CalculatedProperties &calcProps, const RealVec *analyticalConcentrations,
+			        const NonidealityCorrections corrections) noexcept
 {
 
 	try {
 		if (corrections & NonidealityCorrections::CORR_VISCOSITY)
-			correctIonicMobilitiesViscosity<IPReal>();
+			correctIonicMobilitiesViscosity<IPReal>(chemSystem, calcProps, analyticalConcentrations);
 		if (corrections & NonidealityCorrections::CORR_ONSAGER_FUOSS) {
-			std::vector<Ion<IPReal>> ions = makeIonVector<IPReal>(chemSystem.ionicForms, icConcs);
+			std::vector<Ion<IPReal>> ions = makeIonVector<IPReal>(chemSystem.ionicForms, icConcs, calcProps);
 			correctIonicMobilities<IPReal>(ions, calcProps.ionicStrength, calcProps);
 		}
 	} catch (std::bad_alloc &) {

@@ -84,8 +84,8 @@ IPReal calculatepH_directInternal(const IPReal &cH, const IPReal &ionicStrength)
 }
 
 DEF_DISPATCHER(correctMobilities, RetCode,
-	       return correctMobilitiesWorker(ctxImpl->chemSystem, ctxImpl->calcProps, corrections),
-	       return correctMobilitiesWorker(ctxImpl->ionicConcentrations, ctxImpl->chemSystem, ctxImpl->calcProps, corrections),
+	       return correctMobilitiesWorker(ctxImpl->chemSystem, ctxImpl->calcProps, ctxImpl->analyticalConcentrations, corrections),
+	       return correctMobilitiesWorker(ctxImpl->ionicConcentrations, ctxImpl->chemSystem, ctxImpl->calcProps, ctxImpl->analyticalConcentrations, corrections),
 	       const ComputationContextImpl<IPReal> *ctxImpl, const NonidealityCorrections corrections);
 
 /*!

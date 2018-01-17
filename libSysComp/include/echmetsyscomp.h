@@ -167,7 +167,8 @@ public:
 
 	size_t analyticalConcentrationIndex;			/*!< Index in the respective array with analytical concentration of the constituent */
 	size_t effectiveMobilityIndex;				/*!< Index in the respective array with effective mobility of the constituent */
-	ECHMETReal viscosityCoefficient;
+
+	ECHMETReal viscosityCoefficient;			/*!< Amount of contribution of the constituent to overall viscosity of the solution */
 };
 IS_POD(Constituent)
 
