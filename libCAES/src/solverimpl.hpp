@@ -42,7 +42,7 @@ SolverImpl<CAESReal>::SolverImpl(const SolverContextImpl<CAESReal> *ctx, const N
 	m_ctx(ctx),
 	m_internalUnsafe(nullptr)
 {
-	m_correctDebyeHuckel = corrections & NonidealityCorrections::CORR_DEBYE_HUCKEL;
+	m_correctDebyeHuckel = nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_DEBYE_HUCKEL);
 
 	if (m_options & Options::DISABLE_THREAD_SAFETY)
 		m_internalUnsafe = new (std::nothrow) SolverInternal<CAESReal>(ctx);

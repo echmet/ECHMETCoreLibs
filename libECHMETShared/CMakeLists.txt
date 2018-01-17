@@ -47,4 +47,8 @@ install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/echmetelems.h"
               "${CMAKE_CURRENT_SOURCE_DIR}/echmetphchconsts.h"
         DESTINATION include/ECHMET/CoreLibs)
 install(DIRECTORY containers/ DESTINATION include/ECHMET/CoreLibs/containers FILES_MATCHING PATTERN "*.h")
+if (WIN32)
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libECHMETShared.lib" DESTINATION lib RENAME ECHMETShared.lib)
+	install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libECHMETShared.dll" DESTINATION lib RENAME ECHMETShared.dll)
+endif ()
 

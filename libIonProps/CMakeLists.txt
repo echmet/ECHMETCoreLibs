@@ -62,3 +62,7 @@ else ()
             LIBRARY DESTINATION lib
             PUBLIC_HEADER DESTINATION include/ECHMET/CoreLibs)
 endif ()
+if (WIN32)
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libIonProps.lib" DESTINATION lib RENAME IonProps.lib)
+	install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libIonProps.dll" DESTINATION lib RENAME IonProps.dll)
+endif ()

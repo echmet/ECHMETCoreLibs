@@ -132,7 +132,7 @@ template <typename IPReal>
 void correctIonicMobilitiesViscosity(const SysComp::ChemicalSystem &chemSystem, SysComp::CalculatedProperties &calcProps, const RealVec *analyticalConcentrations)
 {
 	/*
-	 * This implements somewhat rudimentary visocity correcions base of the following logic:
+	 * This implements somewhat rudimentary viscosity corrections base of the following logic:
 	 * From Stokes' law:
 	 *
 	 * n1 / n0 = v0 / v1
@@ -148,12 +148,12 @@ void correctIonicMobilitiesViscosity(const SysComp::ChemicalSystem &chemSystem, 
 	 *
 	 * k = f * c + 1
 	 *
-	 * Where f is a visocisty effect of a compound and c its concentration.
+	 * Where f is a viscosity  effect of a compound and c its concentration.
 	 * Corrected mobility the becomes.
 	 *
 	 * u1 = u0 / f
 	 *
-	 * We assume that visocity effects of all compounds in the system are additive, therefore:
+	 * We assume that viscosity effects of all compounds in the system are additive, therefore:
 	 *
 	 * k = SUM(k_i * c_i) + 1
 	 *
@@ -488,7 +488,7 @@ IPReal calculatepH_directWorker(const IPReal &cH, const IPReal &ionicStrength) n
  */
 ECHMETReal calculatepHWorker(const NonidealityCorrections corrections, const SysComp::CalculatedProperties &calcProps) noexcept
 {
-	const bool isCorrection = corrections & NonidealityCorrections::CORR_DEBYE_HUCKEL;
+	const bool isCorrection = nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_DEBYE_HUCKEL);
 
 	return calculatepH_directWorker(calcProps.ionicConcentrations->at(0), isCorrection ? calcProps.ionicStrength : 0.0);
 }
@@ -502,7 +502,7 @@ ECHMETReal calculatepHWorker(const NonidealityCorrections corrections, const Sys
 template <typename IPReal>
 IPReal calculatepHWorker(const std::vector<IPReal> &icConcs, const SysComp::CalculatedProperties &calcProps, const NonidealityCorrections corrections) noexcept
 {
-	const bool isCorrection = corrections & NonidealityCorrections::CORR_DEBYE_HUCKEL;
+	const bool isCorrection = nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_DEBYE_HUCKEL);
 
 	return calculatepH_directWorker<IPReal>(icConcs.at(0), isCorrection ? IPReal(calcProps.ionicStrength) : 0);
 }
@@ -595,9 +595,9 @@ std::vector<Ion<IPReal>> makeIonVector(const SysComp::IonicFormVec *ifVec, const
 RetCode correctMobilitiesWorker(const SysComp::ChemicalSystem &chemSystem, SysComp::CalculatedProperties &calcProps, const RealVec *analyticalConcentrations, const NonidealityCorrections corrections) noexcept
 {
 	try {
-		if (corrections & NonidealityCorrections::CORR_VISCOSITY)
+		if (nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_VISCOSITY))
 			correctIonicMobilitiesViscosity<ECHMETReal>(chemSystem, calcProps, analyticalConcentrations);
-		if (corrections & NonidealityCorrections::CORR_ONSAGER_FUOSS) {
+		if (nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_ONSAGER_FUOSS)) {
 			std::vector<Ion<ECHMETReal>> ions = makeIonVector(chemSystem.ionicForms, calcProps.ionicConcentrations, calcProps);
 			correctIonicMobilities<ECHMETReal>(ions, calcProps.ionicStrength, calcProps);
 		}
@@ -629,9 +629,9 @@ RetCode correctMobilitiesWorker(const std::vector<IPReal> &icConcs, const SysCom
 {
 
 	try {
-		if (corrections & NonidealityCorrections::CORR_VISCOSITY)
+		if (nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_VISCOSITY))
 			correctIonicMobilitiesViscosity<IPReal>(chemSystem, calcProps, analyticalConcentrations);
-		if (corrections & NonidealityCorrections::CORR_ONSAGER_FUOSS) {
+		if (nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_ONSAGER_FUOSS)) {
 			std::vector<Ion<IPReal>> ions = makeIonVector<IPReal>(chemSystem.ionicForms, icConcs, calcProps);
 			correctIonicMobilities<IPReal>(ions, calcProps.ionicStrength, calcProps);
 		}

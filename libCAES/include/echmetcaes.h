@@ -49,7 +49,7 @@ public:
 	/*!
 	 * Options that modify behavior of the solver.
 	 */
-	ECHMET_WK_ENUM(Options, int32_t) {
+	ECHMET_WK_ENUM(Options) {
 		NONE = 0,
 		DISABLE_THREAD_SAFETY = (1 << 0)	/*!< Use thread-unsafe variant of the solver.
 							     This may improve performance in cases where the solver is not

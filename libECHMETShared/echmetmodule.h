@@ -84,7 +84,7 @@
  * in the resulting binary as long as the following conditions are met:
  *
  *  - The binary is being build in DLL mode and ECHMET_DLL_BUILD is defined
- *  - Export is overriden by ECHMET_IMPORT_INTERNAL
+ *  - Export is overridden by ECHMET_IMPORT_INTERNAL
  *
  * If these conditions are not met, the symbol is marked for import (on Windows)
  * or not marked at all (on UNIX).
@@ -106,17 +106,31 @@
 #define ECHMET_CPP11_DETECTION_DONE
 
 #if __cplusplus >= 201103L
+	#define ECHMET_HAVE_CPP_11
+#endif
+
+/* Not funny, MSVC guys!!! */
+#ifndef ECHMET_HAVE_CPP_11
+	#if _MSC_VER >= 1900
+		#define ECHMET_HAVE_CPP_11
+	#endif
+#endif
+
+#ifdef ECHMET_HAVE_CPP_11
+	#include <type_traits>
 	#define ECHMET_NOEXCEPT noexcept
-	#define ECHMET_ST_ENUM(ename, etype) enum class ename : etype
-	#define ECHMET_WK_ENUM(ename, etype) enum ename : etype
+	#define ECHMET_ST_ENUM(ename) enum class ename : int32_t
+	#define ECHMET_WK_ENUM(ename) enum ename : int32_t
 	#define ECHMET_NULLPTR nullptr
 	#define ENUM_FORCE_INT32_SIZE(dummy)
+	#define ECHMET_ST_ENUM_UTYPE(ename) std::underlying_type<ename>::type
 #else /* C++11-unaware compiler */
 	#define ECHMET_NOEXCEPT throw()
-	#define ECHMET_ST_ENUM(ename, etype) enum ename
-	#define ECHMET_WK_ENUM(ename, etype) enum ename
+	#define ECHMET_ST_ENUM(ename) enum ename
+	#define ECHMET_WK_ENUM(ename) enum ename
 	#define ECHMET_NULLPTR 0x0
 	#define ENUM_FORCE_INT32_SIZE(ename) , __ECHMET_ST_ENUM_PLACEHOLDER ## ename = (1 << 31)
+	#define ECHMET_ST_ENUM_UTYPE(ename) int32_t
 #endif // __cplusplus
 
 #endif // ECHMET_CPP11_DETECTION_DONE

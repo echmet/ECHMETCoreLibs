@@ -58,3 +58,7 @@ endif ()
 install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/include/echmetcaes.h"
               "${CMAKE_CURRENT_SOURCE_DIR}/include/echmetcaes_extended.h"
         DESTINATION include/ECHMET/CoreLibs)
+if (WIN32)
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libCAES.lib" DESTINATION lib RENAME CAES.lib)
+	install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libCAES.dll" DESTINATION lib RENAME CAES.dll)
+endif ()

@@ -106,26 +106,16 @@ FixedString::~FixedString() noexcept {}
 
 template <> Vec<ECHMETReal>::~Vec() noexcept {}
 
-bool ECHMET_CC operator&(const NonidealityCorrections &lhs, const NonidealityCorrections &rhs) noexcept
+bool ECHMET_CC nonidealityCorrectionIsSet(const NonidealityCorrections corrections, const NonidealityCorrectionsItems item) noexcept
 {
-	typedef typename std::underlying_type<NonidealityCorrections>::type Type;
-	return static_cast<Type>(lhs) & static_cast<Type>(rhs);
+	typedef typename std::underlying_type<NonidealityCorrectionsItems>::type Type;
+	return corrections & static_cast<Type>(item);
 }
 
-NonidealityCorrections ECHMET_CC operator|(const NonidealityCorrections &lhs, const NonidealityCorrections &rhs) noexcept
+NonidealityCorrections ECHMET_CC nonidealityCorrectionSet(NonidealityCorrections corrections, const NonidealityCorrectionsItems item) noexcept
 {
-	typedef typename std::underlying_type<NonidealityCorrections>::type Type;
-	return static_cast<NonidealityCorrections>(static_cast<Type>(lhs) | static_cast<Type>(rhs));
-}
-
-NonidealityCorrections ECHMET_CC operator|=(NonidealityCorrections &lhs, const NonidealityCorrections &rhs) noexcept
-{
-	typedef typename std::underlying_type<NonidealityCorrections>::type Type;
-
-	Type n = static_cast<Type>(lhs) | static_cast<Type>(rhs);
-	lhs = static_cast<NonidealityCorrections>(n);
-
-	return lhs;
+	typedef typename std::underlying_type<NonidealityCorrectionsItems>::type Type;
+	return corrections | static_cast<Type>(item);
 }
 
 } // namespace ECHMET

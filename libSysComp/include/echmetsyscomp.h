@@ -32,7 +32,7 @@ typedef Vec<InLigandGroup> InLGVec;
 /*!
  * Allowed types of constituent
  */
-ECHMET_ST_ENUM(ConstituentType, int32_t) {
+ECHMET_ST_ENUM(ConstituentType) {
 	INVALID = 0,	/*!< Invalid or unknown type of constituent. */
 	NUCLEUS = 1,	/*!< Constituent is a nucleus. */
 	LIGAND = 2	/*!< Constituent is a ligand. */
@@ -112,7 +112,7 @@ IS_POD(ContainedLigandIonicForm)
 /*!
  * Type of component described by \p IonicForm.
  */
-ECHMET_ST_ENUM(IonicFormType, int32_t) {
+ECHMET_ST_ENUM(IonicFormType) {
 	CONSTITUENT = 0,			/*!< Component is a regular constituent. */
 	H = 1,					/*!< Component is a hydroxonium ion. */
 	OH = 2					/*!< Component is a hydroxyle ion. */

@@ -42,3 +42,7 @@ else ()
             LIBRARY DESTINATION lib
             PUBLIC_HEADER DESTINATION include/ECHMET/CoreLibs)
 endif ()
+if (WIN32)
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libSysComp.lib" DESTINATION lib RENAME SysComp.lib)
+	install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libSysComp.dll" DESTINATION lib RENAME SysComp.dll)
+endif ()

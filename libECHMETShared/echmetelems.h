@@ -54,7 +54,7 @@ typedef double ECHMETReal;
 /*!
  * Possible return values from public API calls.
  */
-ECHMET_ST_ENUM(RetCode, int32_t) {
+ECHMET_ST_ENUM(RetCode) {
 	/* Common error codes */
 	OK = 0,
 	E_NO_MEMORY = 0x1,			/*!< Insufficient memory to complete operation. */
@@ -486,7 +486,7 @@ protected:
 
 typedef Vec<ECHMETReal> RealVec;
 
-ECHMET_WK_ENUM(NonidealityCorrections, int32_t) {
+ECHMET_ST_ENUM(NonidealityCorrectionsItems) {
 	CORR_DEBYE_HUCKEL = 0x1,	/* Debye-Hückel correction of stablity constants. Requires ionic strength
 					   as input parameter. */
 	CORR_ONSAGER_FUOSS = 0x2,	/* Onsager-Fuoss correction of ionic mobilities. Requires ionic strength
@@ -495,11 +495,12 @@ ECHMET_WK_ENUM(NonidealityCorrections, int32_t) {
 					   as input parameter. */
 };
 
-ECHMET_API bool ECHMET_CC operator&(const NonidealityCorrections &lhs, const NonidealityCorrections &rhs) ECHMET_NOEXCEPT;
-ECHMET_API NonidealityCorrections ECHMET_CC operator|(const NonidealityCorrections &lhs, const NonidealityCorrections &rhs) ECHMET_NOEXCEPT;
-ECHMET_API NonidealityCorrections ECHMET_CC operator|=(NonidealityCorrections &lhs, const NonidealityCorrections &rhs) ECHMET_NOEXCEPT;
+typedef ECHMET_ST_ENUM_UTYPE(NonidealityCorrectionsItems) NonidealityCorrections;
 
 extern "C" {
+
+ECHMET_API bool ECHMET_CC nonidealityCorrectionIsSet(const NonidealityCorrections corrections, const NonidealityCorrectionsItems item) ECHMET_NOEXCEPT;
+ECHMET_API NonidealityCorrections ECHMET_CC nonidealityCorrectionSet(const NonidealityCorrections corrections, const NonidealityCorrectionsItems item) ECHMET_NOEXCEPT;
 
 /*!
  * Creates an <tt>ECHMET::Vec</tt> of doubles.
