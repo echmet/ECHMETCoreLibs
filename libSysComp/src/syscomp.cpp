@@ -180,6 +180,9 @@ RetCode buildConstituentVec(ConstituentVec *cVec, IonicFormVec *ifVec, const InC
 			if (mobility != 0.0 && charge == 0)
 				return RetCode::E_INVALID_CONSTITUENT;
 		}
+		/* Negative viscosity coefficients are not allowed */
+		if (ic.viscosityCoefficient < 0.0)
+			return RetCode::E_INVALID_CONSTITUENT;
 
 		try {
 			c = new Constituent();
@@ -286,6 +289,7 @@ RetCode buildConstituentVec(ConstituentVec *cVec, IonicFormVec *ifVec, const InC
 		c->ctype = ic.ctype;
 		c->chargeLow = ic.chargeLow;
 		c->chargeHigh = ic.chargeHigh;
+		c->viscosityCoefficient = ic.viscosityCoefficient;
 
 		return RetCode::OK;
 	};

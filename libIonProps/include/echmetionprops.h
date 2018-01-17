@@ -61,7 +61,7 @@ ECHMET_API RetCode ECHMET_CC calculateEffectiveMobilities(ComputationContext *ct
  *
  * @return pH value.
  */
-ECHMET_API ECHMETReal ECHMET_CC calculatepH(const ComputationContext *ctx, const bool isCorrection) ECHMET_NOEXCEPT;
+ECHMET_API ECHMETReal ECHMET_CC calculatepH(const ComputationContext *ctx, const NonidealityCorrections corrections) ECHMET_NOEXCEPT;
 
 /*!
  * Returns pH value corresponding to the given concentration of H<sub>3</sub>O<sup>+</sup> ions.
@@ -88,7 +88,7 @@ ECHMET_API ECHMETReal ECHMET_CC calculatepH_direct(const ECHMETReal &cH, const E
  * @retval RetCode::E_NO_MEMORY Insufficient memory to complete operation
  * @retval RetCode::E_DATA_TOO_LARGE System is too large to solve
  */
-ECHMET_API RetCode ECHMET_CC correctMobilities(ComputationContext *ctx) ECHMET_NOEXCEPT;
+ECHMET_API RetCode ECHMET_CC correctMobilities(ComputationContext *ctx, const NonidealityCorrections corrections) ECHMET_NOEXCEPT;
 
 /*!
  * Makes computation context for the given chemical system and analytical concentrations.

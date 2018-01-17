@@ -16,14 +16,16 @@ void applyConcentrations(ECHMET::RealVec *acVec, const ECHMET::JsonInputProcesso
 	}
 }
 
-ECHMET::CAES::Solver::Options makeSolverOpts(const bool correctForIS)
+ECHMET::NonidealityCorrections makeCorrections(const bool correctForDH, const bool correctForOF)
 {
-	ECHMET::CAES::Solver::Options opts = ECHMET::CAES::Solver::defaultOptions();
+	ECHMET::NonidealityCorrections corrs;
 
-	if (correctForIS)
-		opts |= ECHMET::CAES::Solver::Options::IONIC_STRENGTH_CORRECTION;
+	if (correctForDH)
+		corrs |= ECHMET::NonidealityCorrections::CORR_DEBYE_HUCKEL;
+	if (correctForOF)
+		corrs |= ECHMET::NonidealityCorrections::CORR_ONSAGER_FUOSS;
 
-	return opts;
+	return corrs;
 }
 
 void printEquilibrium(const ECHMET::SysComp::ChemicalSystem &chemSystem, const ECHMET::SysComp::CalculatedProperties &calcProps)
@@ -55,19 +57,21 @@ void printEquilibrium(const ECHMET::SysComp::ChemicalSystem &chemSystem, const E
 int launch(int argc, char **argv)
 {
 	const char *inputDataFile;
-	bool correctForIS;
+	bool correctForDH;
+	bool correctForOF;
 	ECHMET::JsonInputProcessor::InputDescription inputDesc;
 	ECHMET::RetCode tRet;
 
-	if (argc < 3) {
-		std::cout << "Usage: inputFile IS_CORRECTION(number)\n";
+	if (argc < 4) {
+		std::cout << "Usage: inputFile DH_CORRECTION(number), OF_CORRECTION(Number)\n";
 		return EXIT_FAILURE;
 	}
 
 	inputDataFile = argv[1];
 
 	try {
-		correctForIS = std::atoi(argv[2]) >= 1;
+		correctForDH = std::atoi(argv[2]) >= 1;
+		correctForOF = std::atoi(argv[3]) >= 1;
 	} catch (...) {
 		std::cerr << "ERROR: Invalid input parameters\n";
 
@@ -90,6 +94,7 @@ int launch(int argc, char **argv)
 	ECHMET::CAES::SolverContext *solverCtx;
 	ECHMET::CAES::Solver *solver;
 	double bufferCap = -1;
+	ECHMET::NonidealityCorrections corrs = makeCorrections(correctForDH, correctForOF);
 
 	tRet = ECHMET::SysComp::makeComposition(chemSystem, calcProps, inputDesc.BGEComposition);
 	if (tRet != ECHMET::RetCode::OK) {
@@ -111,7 +116,7 @@ int launch(int argc, char **argv)
 		goto out_1;
 	}
 
-	solver = createSolver(solverCtx, makeSolverOpts(correctForIS));
+	solver = createSolver(solverCtx, corrs, ECHMET::CAES::Solver::defaultOptions());
 	if (solver == nullptr) {
 		std::cerr << "Cannot create solver...";
 		goto out_2;
@@ -131,7 +136,7 @@ int launch(int argc, char **argv)
 
 	printEquilibrium(chemSystem, calcProps);
 
-	tRet = ECHMET::CAES::calculateBufferCapacity(bufferCap, chemSystem, calcProps, acVec, correctForIS);
+	tRet = ECHMET::CAES::calculateBufferCapacity(bufferCap, corrs, chemSystem, calcProps, acVec);
 	if (tRet != ECHMET::RetCode::OK) {
 		std::cerr << "Cannot calculate buffer capacity " << ECHMET::errorToString(tRet) << "\n";
 		goto out_3;

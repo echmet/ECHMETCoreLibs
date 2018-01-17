@@ -8,6 +8,7 @@
 			"chargeHigh": 1,
 			"concentrationBGE": 50.0,
 			"concentrationSample": 30.0,
+			"viscosityCoefficient": 0.0,
 			"pKas": [ 9.765, 2.3 ],
 			"mobilities": [ 26.7, 0.0, 29.2 ]
 		}

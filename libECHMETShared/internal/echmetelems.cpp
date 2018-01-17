@@ -106,4 +106,26 @@ FixedString::~FixedString() noexcept {}
 
 template <> Vec<ECHMETReal>::~Vec() noexcept {}
 
+bool ECHMET_CC operator&(const NonidealityCorrections &lhs, const NonidealityCorrections &rhs) noexcept
+{
+	typedef typename std::underlying_type<NonidealityCorrections>::type Type;
+	return static_cast<Type>(lhs) & static_cast<Type>(rhs);
+}
+
+NonidealityCorrections ECHMET_CC operator|(const NonidealityCorrections &lhs, const NonidealityCorrections &rhs) noexcept
+{
+	typedef typename std::underlying_type<NonidealityCorrections>::type Type;
+	return static_cast<NonidealityCorrections>(static_cast<Type>(lhs) | static_cast<Type>(rhs));
+}
+
+NonidealityCorrections ECHMET_CC operator|=(NonidealityCorrections &lhs, const NonidealityCorrections &rhs) noexcept
+{
+	typedef typename std::underlying_type<NonidealityCorrections>::type Type;
+
+	Type n = static_cast<Type>(lhs) | static_cast<Type>(rhs);
+	lhs = static_cast<NonidealityCorrections>(n);
+
+	return lhs;
+}
+
 } // namespace ECHMET

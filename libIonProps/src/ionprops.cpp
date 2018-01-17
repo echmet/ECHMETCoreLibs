@@ -13,9 +13,9 @@ RetCode ECHMET_CC calculateEffectiveMobilities(ComputationContext *ctx) noexcept
 	return calculateEffectiveMobilitiesInternal<ECHMETReal>(ctx);
 }
 
-ECHMETReal ECHMET_CC calculatepH(const ComputationContext *ctx, const bool isCorrection) noexcept
+ECHMETReal ECHMET_CC calculatepH(const ComputationContext *ctx, const NonidealityCorrections corrections) noexcept
 {
-	return calculatepHInternal<ECHMETReal>(ctx, isCorrection);
+	return calculatepHInternal<ECHMETReal>(ctx, corrections);
 }
 
 ECHMETReal ECHMET_CC calculatepH_direct(const ECHMETReal &cH, const ECHMETReal &ionicStrength) noexcept
@@ -23,9 +23,9 @@ ECHMETReal ECHMET_CC calculatepH_direct(const ECHMETReal &cH, const ECHMETReal &
 	return calculatepH_directInternal<ECHMETReal>(cH, ionicStrength);
 }
 
-RetCode ECHMET_CC correctMobilities(ComputationContext *ctx) noexcept
+RetCode ECHMET_CC correctMobilities(ComputationContext *ctx, const NonidealityCorrections corrections) noexcept
 {
-	return correctMobilitiesInternal<ECHMETReal>(ctx);
+	return correctMobilitiesInternal<ECHMETReal>(ctx, corrections);
 }
 
 ComputationContext * ECHMET_CC makeComputationContext(const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept

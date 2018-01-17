@@ -52,21 +52,21 @@ RetCode calculateEffectiveMobilitiesInternal(ComputationContext *ctx) noexcept
 
 
 DEF_DISPATCHER(calculatepH, IPReal,
-	       return calculatepHWorker(isCorrection, ctxImpl->calcProps),
-	       return calculatepHWorker<IPReal>(ctxImpl->ionicConcentrations, ctxImpl->calcProps, isCorrection),
-	       const ComputationContextImpl<IPReal> *ctxImpl, const bool isCorrection);
+	       return calculatepHWorker(corrections, ctxImpl->calcProps),
+	       return calculatepHWorker<IPReal>(ctxImpl->ionicConcentrations, ctxImpl->calcProps, corrections),
+	       const ComputationContextImpl<IPReal> *ctxImpl, const NonidealityCorrections corrections);
 
 /*!
  * Internal \p calculatepH dispatching function.
  */
 template <typename IPReal>
-IPReal calculatepHInternal(const ComputationContext *ctx, const bool isCorrection) noexcept
+IPReal calculatepHInternal(const ComputationContext *ctx, const NonidealityCorrections corrections) noexcept
 {
 	const ComputationContextImpl<IPReal> *ctxImpl = dynamic_cast<const ComputationContextImpl<IPReal> *>(ctx);
 	if (ctxImpl == nullptr)
 		return IPReal(0);
 
-	DISPATCH(calculatepH, ctxImpl, isCorrection);
+	DISPATCH(calculatepH, ctxImpl, corrections);
 }
 
 DEF_DISPATCHER(calculatepH_direct, IPReal,
@@ -84,21 +84,21 @@ IPReal calculatepH_directInternal(const IPReal &cH, const IPReal &ionicStrength)
 }
 
 DEF_DISPATCHER(correctMobilities, RetCode,
-	       return correctMobilitiesWorker(ctxImpl->chemSystem, ctxImpl->calcProps),
-	       return correctMobilitiesWorker(ctxImpl->ionicConcentrations, ctxImpl->chemSystem, ctxImpl->calcProps),
-	       const ComputationContextImpl<IPReal> *ctxImpl);
+	       return correctMobilitiesWorker(ctxImpl->chemSystem, ctxImpl->calcProps, ctxImpl->analyticalConcentrations, corrections),
+	       return correctMobilitiesWorker(ctxImpl->ionicConcentrations, ctxImpl->chemSystem, ctxImpl->calcProps, ctxImpl->analyticalConcentrations, corrections),
+	       const ComputationContextImpl<IPReal> *ctxImpl, const NonidealityCorrections corrections);
 
 /*!
  * Internal \p correctMobilities dispatching function.
  */
 template <typename IPReal>
-RetCode correctMobilitiesInternal(ComputationContext *ctx) noexcept
+RetCode correctMobilitiesInternal(ComputationContext *ctx, const NonidealityCorrections corrections) noexcept
 {
 	ComputationContextImpl<IPReal> *ctxImpl = dynamic_cast<ComputationContextImpl<IPReal> *>(ctx);
 	if (ctxImpl == nullptr)
 		return RetCode::E_INVALID_ARGUMENT;
 
-	DISPATCH(correctMobilities, ctxImpl);
+	DISPATCH(correctMobilities, ctxImpl, corrections);
 }
 
 DEF_DISPATCHER(calculateConductivity, IPReal,

@@ -3,9 +3,9 @@
 namespace ECHMET {
 namespace CAES {
 
-Solver * ECHMET_CC createSolver(const SolverContext *ctx, const Solver::Options options) noexcept
+Solver * ECHMET_CC createSolver(const SolverContext *ctx, const NonidealityCorrections corrections, const Solver::Options options) noexcept
 {
-	return createSolverInternal<ECHMETReal>(ctx, options);
+	return createSolverInternal<ECHMETReal>(ctx, corrections, options);
 }
 
 /*!

@@ -486,6 +486,19 @@ protected:
 
 typedef Vec<ECHMETReal> RealVec;
 
+ECHMET_WK_ENUM(NonidealityCorrections, int32_t) {
+	CORR_DEBYE_HUCKEL = 0x1,	/* Debye-Hückel correction of stablity constants. Requires ionic strength
+					   as input parameter. */
+	CORR_ONSAGER_FUOSS = 0x2,	/* Onsager-Fuoss correction of ionic mobilities. Requires ionic strength
+					   as input parameter. */
+	CORR_VISCOSITY = 0x4		/* Viscosity correction of ionic mobilities. Requires viscosity coefficients
+					   as input parameter. */
+};
+
+ECHMET_API bool ECHMET_CC operator&(const NonidealityCorrections &lhs, const NonidealityCorrections &rhs) ECHMET_NOEXCEPT;
+ECHMET_API NonidealityCorrections ECHMET_CC operator|(const NonidealityCorrections &lhs, const NonidealityCorrections &rhs) ECHMET_NOEXCEPT;
+ECHMET_API NonidealityCorrections ECHMET_CC operator|=(NonidealityCorrections &lhs, const NonidealityCorrections &rhs) ECHMET_NOEXCEPT;
+
 extern "C" {
 
 /*!
