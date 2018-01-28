@@ -513,6 +513,7 @@ IPReal calculatepHWorker(const std::vector<IPReal> &icConcs, const SysComp::Calc
  *
  * @param[in] ifVec Vector of \p SysComp::IonicForm objects for the corresponding chemical system.
  * @param[in] icVec Vector of ionic concentrations of all ionic forms in the system.
+ * @param[in] calcProps \p SysComp::CalculatedProperties for the corresponding chemical system.
  *
  * @return \p std::vector of \p Ions.
  */
@@ -549,6 +550,7 @@ std::vector<Ion<ECHMETReal>> makeIonVector(const SysComp::IonicFormVec *ifVec, c
  *
  * @param[in] ifVec Vector of \p SysComp::IonicForm objects for the corresponding chemical system.
  * @param[in] icVec Vector of ionic concentrations of all ionic forms in the system as \p IPReal.
+ * @param[in] calcProps \p SysComp::CalculatedProperties for the corresponding chemical system.
  *
  * @return \p std::vector of \p Ions.
  */
