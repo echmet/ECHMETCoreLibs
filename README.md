@@ -29,6 +29,7 @@ Building
 
 Prior to building ECHMETCoreLibs make sure that you have all the necessary dependencies installed. ECHMETCoreLibs depend on the following tools and libraries:
 
+ - C++11-aware C++ compiler. Recent versions of the GNU C Compiler or Clang are recommended.
  - [GNU Multiple Precision library (GMP)](https://gmplib.org/)
  - [GNU MPFR library](http://www.mpfr.org/)
  - [Eigen](http://eigen.tuxfamily.org/)
@@ -39,14 +40,16 @@ Prior to building ECHMETCoreLibs make sure that you have all the necessary depen
 
 In order to configure the project, proceed as follows
 
-`cd` into the project's source directory
-create a build directory (`mkdir build`) and `cd` into it
-run `cmake -DCMAKE_BUILD_TYPE=Release`
-run `make && make install`
+1. `cd` into the project's source directory
+2. create a build directory (`mkdir build`) and `cd` into it
+3. run `cmake -DCMAKE_BUILD_TYPE=Release`
+4. run `make && make install`
+
+Custom install path can be set with `-DCMAKE_INSTALL_PREFIX=<path>` parameter.
 
 If you do not have a system-wide installation of the Eigen library, you may specify a custom path with additional `-DEIGEN_INCLUDE_DIR=<path>` CMake parameter.
 
-Similarly, if you do not have a system-wide installation of the GMP and MPFR libraries, you may specify custom paths with the following sequence of parameters: `-DMANUAL_HIPREC_LIBS_PATH=ON -DGMP_LIBRARY_BIN=<path_to_libgmp.so> -DMPFR_LIBRARY_BIN=<path_to_libmpfr.so> -DGMP_INCLUDE_DIR=<path_to_gmp.h> -DMPFR_INCLUDE_DIR=<path_to_mpfr.h>`
+Similarly, if you do not have a system-wide installation of the GMP and MPFR libraries, you may specify custom paths with the following sequence of parameters: `-DMANUAL_HIPREC_LIBS_PATH=ON -DGMP_LIBRARY_BIN=<path_to_libgmp.so> -DMPFR_LIBRARY_BIN=<path_to_libmpfr.so> -DGMP_INCLUDE_DIR=<path_to_gmp.h> -DMPFR_INCLUDE_DIR=<path_to_mpfr.h>`.
 
 ### Windows
 

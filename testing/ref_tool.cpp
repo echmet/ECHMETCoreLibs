@@ -16,14 +16,16 @@ void applyConcentrations(ECHMET::RealVec *acVec, const ECHMET::JsonInputProcesso
 	}
 }
 
-ECHMET::NonidealityCorrections makeCorrections(const bool correctForDH, const bool correctForOF)
+ECHMET::NonidealityCorrections makeCorrections(const bool correctForDH, const bool correctForOF, const bool correctForVS)
 {
 	ECHMET::NonidealityCorrections corrs;
 
 	if (correctForDH)
-		corrs |= ECHMET::NonidealityCorrections::CORR_DEBYE_HUCKEL;
+		ECHMET::nonidealityCorrectionSet(corrs, ECHMET::NonidealityCorrectionsItems::CORR_DEBYE_HUCKEL);
 	if (correctForOF)
-		corrs |= ECHMET::NonidealityCorrections::CORR_ONSAGER_FUOSS;
+		ECHMET::nonidealityCorrectionSet(corrs, ECHMET::NonidealityCorrectionsItems::CORR_ONSAGER_FUOSS);
+	if (correctForVS)
+		ECHMET::nonidealityCorrectionSet(corrs, ECHMET::NonidealityCorrectionsItems::CORR_VISCOSITY);
 
 	return corrs;
 }
@@ -59,11 +61,12 @@ int launch(int argc, char **argv)
 	const char *inputDataFile;
 	bool correctForDH;
 	bool correctForOF;
+	bool correctForVS;
 	ECHMET::JsonInputProcessor::InputDescription inputDesc;
 	ECHMET::RetCode tRet;
 
-	if (argc < 4) {
-		std::cout << "Usage: inputFile DH_CORRECTION(number), OF_CORRECTION(Number)\n";
+	if (argc < 5) {
+		std::cout << "Usage: inputFile DH_CORRECTION(number), OF_CORRECTION(Number), VS_CORRECTION(Number)\n";
 		return EXIT_FAILURE;
 	}
 
@@ -72,6 +75,7 @@ int launch(int argc, char **argv)
 	try {
 		correctForDH = std::atoi(argv[2]) >= 1;
 		correctForOF = std::atoi(argv[3]) >= 1;
+		correctForVS = std::atoi(argv[4]) >= 1;
 	} catch (...) {
 		std::cerr << "ERROR: Invalid input parameters\n";
 
@@ -94,7 +98,7 @@ int launch(int argc, char **argv)
 	ECHMET::CAES::SolverContext *solverCtx;
 	ECHMET::CAES::Solver *solver;
 	double bufferCap = -1;
-	ECHMET::NonidealityCorrections corrs = makeCorrections(correctForDH, correctForOF);
+	ECHMET::NonidealityCorrections corrs = makeCorrections(correctForDH, correctForOF, correctForVS);
 
 	tRet = ECHMET::SysComp::makeComposition(chemSystem, calcProps, inputDesc.BGEComposition);
 	if (tRet != ECHMET::RetCode::OK) {
