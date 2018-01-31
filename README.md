@@ -60,6 +60,8 @@ Examples
 
 There is a sample reference tool included in the `testing` directory that demonstrates the intended use of the libraries and their API. The tool takes input from a JSON file. JSON files with some sample chemical systems can be found in `testing\testdata` directory. You may need to update the shell scripts in the `testing` directory to get the reference tool to build and run properly.
 
+Unfortunately, there is no further documentation for the reference tool available at the moment. We suggest that you read the code in `ref_tool.cpp` to figure out how it works.
+
 Licensing
 ---
 
