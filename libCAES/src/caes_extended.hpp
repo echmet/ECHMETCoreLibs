@@ -152,7 +152,7 @@ void calculateDDSForFreeForms(const pKaShiftedConstituentsVec<CAESReal> &shCVec,
 template <typename CAESReal>
 ERVec<CAESReal> calculatePeakMasterWitchcraft(const TotalEquilibrium<CAESReal> &te, const CAESReal &v)
 {
-	const CAESReal DELTA = 1.0e-25;	/* No, there is no actual reason why I picked this specific value for delta */
+	const CAESReal DELTA = 1.0e-17;	/* No, there is no actual reason why I picked this specific value for delta */
 	const ERVec<CAESReal> dist = te.distribution(v);
 	ERVec<CAESReal> results{};
 	CAESReal GOneLow;

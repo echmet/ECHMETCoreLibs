@@ -6,6 +6,20 @@
 namespace ECHMET {
 namespace CAES {
 
+class PrecisionResetter {
+public:
+	explicit PrecisionResetter(const long prec) :
+		m_prec{prec}
+	{}
+	~PrecisionResetter()
+	{
+		mpfr::mpreal::set_default_prec(m_prec);
+	}
+
+private:
+	const long m_prec;
+};
+
 DDSContextImpl::DDSContextImpl(const DissocDegreesDerivativesMap &&ddsMapping) :
 	m_ddsMapping(ddsMapping)
 {
@@ -486,9 +500,12 @@ RetCode calculateMixedConcentrationDerivatives(RealVec *derivatives, Solver *sol
 RetCode ECHMET_CC calculateDissocDegreesDerivatives(DDSContext *&ctx, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const SysComp::CalculatedProperties &calcProps) noexcept
 {
 	const mpfr::mpreal cH = calcProps.ionicConcentrations->at(0) / 1000.0;
+	const PrecisionResetter resetter{mpfr::mpreal::get_default_prec()};
 	DissocDegreesDerivativesMap mapping;
 
 	try {
+		mpfr::mpreal::set_default_prec(mpfr::digits2bits(200));
+
 		const pKaShiftedConstituentsVec<mpfr::mpreal> shCVec = makeShiftedConstituentsVector<mpfr::mpreal>(chemSystem.constituents, cH, calcProps.ionicConcentrations);
 		const pBShiftedIonicFormsVec<mpfr::mpreal> shIFsVec = makepBShiftedIonicFormsVector<mpfr::mpreal>(chemSystem.constituents, calcProps.ionicConcentrations);
 
