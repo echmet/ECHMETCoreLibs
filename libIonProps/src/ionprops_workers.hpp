@@ -86,7 +86,7 @@ void correctIonicMobilities(const std::vector<Ion<IPReal>> &ions, const IPReal &
 		}
 	}
 
-	/* Calculate higher Rs for all analytes */
+	/* Calculate higher Rs for all constituents */
 	for (size_t rdx = 1; rdx < PhChConsts::RCsCount; rdx++) {
 		for (size_t idx = 0; idx < N; idx++) {
 			IPReal sum = 0.0;
