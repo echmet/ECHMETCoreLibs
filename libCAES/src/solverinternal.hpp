@@ -117,7 +117,7 @@ void SolverInternal<CAESReal>::ACalculateF(SolverVector<CAESReal> &Fx, const Sol
 			const size_t freeCAIdx = rowCounter;
 
 			/* Cell in the Fx vector corresponding to the lowest free ionic form of the
-			 * analyte is used to calculate mass balance for the given analyte,
+			 * nucleus is used to calculate mass balance for the given nucleus,
 			 * cells in the Fx vector for higher free ionic froms are used
 			 * to calculate acidobazic equilibira */
 			if (charge == cn->chargeLow) { /* Lowest ionic form, calculate mass balance */
@@ -126,12 +126,12 @@ void SolverInternal<CAESReal>::ACalculateF(SolverVector<CAESReal> &Fx, const Sol
 
 				//ECHMET_DEBUG_CODE(std::cerr << cc->name << " IIresC=" << resC << "\n");
 
-				/* Iterate over all substances that contain the given analyte */
+				/* Iterate over all substances that contain the given nucleus */
 				for (int iCharge = cn->chargeLow; iCharge <= cn->chargeHigh; iCharge++) {
 					const size_t iFormsCount = cn->forms.at(iCharge - cn->chargeLow).size();
 
 					for (size_t iCtr = 1; iCtr < iFormsCount; iCtr++)
-						resC -= CVI(m_rCx, iRowCounter++); /* Subtract concentration of all forms that contain the given analyte */
+						resC -= CVI(m_rCx, iRowCounter++); /* Subtract concentration of all forms that contain the given nucleus */
 
 					resC -= CVI(m_rCx, iRowCounter++); /* Subtract concentration of free higher ionic form */
 					//ECHMET_DEBUG_CODE(std::cerr << cn->name << " --resC=" << resC << "\n");
@@ -438,7 +438,7 @@ CAESReal SolverInternal<CAESReal>::calculateIonicStrength() const
 	CAESReal ionicStrength = 0.0;
 	size_t colCounter = 2;
 
-	/* Analytes and their complex forms */
+	/* Nuclei and their complex forms */
 	for (const ComplexNucleus<CAESReal> *cn : *m_complexNuclei) {
 		for (int charge = cn->chargeLow; charge <= cn->chargeHigh; charge++) {
 			const size_t chIdx = charge - cn->chargeLow;
@@ -452,7 +452,7 @@ CAESReal SolverInternal<CAESReal>::calculateIonicStrength() const
 		}
 	}
 
-	/* Selectors */
+	/* Ligands */
 	for (const LigandIonicForm<CAESReal> *l : *m_allLigandIFs) {
 			ionicStrength += CVI(m_rCx, colCounter) * m_chargesSquared.at(std::abs(l->charge));
 
@@ -484,7 +484,7 @@ void SolverInternal<CAESReal>::initializepACoeffs()
 {
 	m_chargeMax = 1;
 
-	/* Analytes and their complex forms */
+	/* Nuclei and their complex forms */
 	for (const ComplexNucleus<CAESReal> *cn : *m_complexNuclei) {
 		for (int charge = cn->chargeLow; charge <= cn->chargeHigh; charge++) {
 			const size_t chIdx = charge - cn->chargeLow;
