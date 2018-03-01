@@ -20,16 +20,6 @@ private:
 	const long m_prec;
 };
 
-DDSContextImpl::DDSContextImpl(const DissocDegreesDerivativesMap &&ddsMapping) :
-	m_ddsMapping(ddsMapping)
-{
-}
-
-void ECHMET_CC DDSContextImpl::destroy() const noexcept
-{
-	delete this;
-}
-
 template<typename TN, typename TH>
 TN firstDerivativeCalculator2O(const TN &low, const TN &high, const TH &H)
 {
