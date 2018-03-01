@@ -30,18 +30,6 @@ void ECHMET_CC DDSContextImpl::destroy() const noexcept
 	delete this;
 }
 
-RetCode ECHMET_CC DDSContextImpl::findDissocDegreeDerivative(ECHMETReal &value, const FixedString *ionicFormName) const noexcept
-{
-	const std::string name{ionicFormName->c_str()};
-
-	if (m_ddsMapping.find(name) == m_ddsMapping.end())
-		return RetCode::E_NOT_FOUND;
-
-	value = m_ddsMapping.at(name);
-
-	return RetCode::OK;
-}
-
 template<typename TN, typename TH>
 TN firstDerivativeCalculator2O(const TN &low, const TN &high, const TH &H)
 {
@@ -358,14 +346,14 @@ RetCode ECHMET_CC calculateFirstConcentrationDerivatives_prepared(RealVec *deriv
 	return derivatorSkin<ECHMETReal &, const SysComp::Constituent *>(derivatives, H, solver, chemSystem, analyticalConcentrations, executor, conductivityDerivative, perturbedConstituent);
 }
 
-RetCode ECHMET_CC calculateCrossConstituentDerivatives(RealVec *&derivatives, const ECHMETReal &H, const NonidealityCorrections corrections, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const SysComp::Constituent *perturbedConstituentJ, const SysComp::Constituent *perturbedConstituentK) noexcept
+RetCode ECHMET_CC calculateCrossConcentrationDerivatives(RealVec *&derivatives, const ECHMETReal &H, const NonidealityCorrections corrections, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const SysComp::Constituent *perturbedConstituentJ, const SysComp::Constituent *perturbedConstituentK) noexcept
 {
 	Solver *solver;
 	RetCode tRet = prepareDerivatorContext(derivatives, solver, chemSystem, corrections);
 	if (tRet != RetCode::OK)
 		return tRet;
 
-	tRet = calculateCrossConstituentDerivatives_prepared(derivatives, solver, H, chemSystem, analyticalConcentrations, perturbedConstituentJ, perturbedConstituentK);
+	tRet = calculateCrossConcentrationDerivatives_prepared(derivatives, solver, H, chemSystem, analyticalConcentrations, perturbedConstituentJ, perturbedConstituentK);
 
 	solver->context()->destroy();
 	solver->destroy();
@@ -373,7 +361,7 @@ RetCode ECHMET_CC calculateCrossConstituentDerivatives(RealVec *&derivatives, co
 	return tRet;
 }
 
-RetCode ECHMET_CC calculateCrossConstituentDerivatives_prepared(RealVec *derivatives, Solver *solver, const ECHMETReal &H, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const SysComp::Constituent *perturbedConstituentJ, const SysComp::Constituent *perturbedConstituentK) noexcept
+RetCode ECHMET_CC calculateCrossConcentrationDerivatives_prepared(RealVec *derivatives, Solver *solver, const ECHMETReal &H, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const SysComp::Constituent *perturbedConstituentJ, const SysComp::Constituent *perturbedConstituentK) noexcept
 {
 	if (*(perturbedConstituentJ->name) == *(perturbedConstituentK->name))
 		return calculateSecondConcentrationDerivatives(derivatives, solver, H, chemSystem, analyticalConcentrations, perturbedConstituentJ);
@@ -495,31 +483,6 @@ RetCode calculateMixedConcentrationDerivatives(RealVec *derivatives, Solver *sol
 	};
 
 	return derivatorSkin(derivatives, H, solver, chemSystem, analyticalConcentrations, executor, perturbedConstituentJ, perturbedConstituentK);
-}
-
-RetCode ECHMET_CC calculateDissocDegreesDerivatives(DDSContext *&ctx, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const SysComp::CalculatedProperties &calcProps) noexcept
-{
-	const mpfr::mpreal cH = calcProps.ionicConcentrations->at(0) / 1000.0;
-	const PrecisionResetter resetter{mpfr::mpreal::get_default_prec()};
-	DissocDegreesDerivativesMap mapping;
-
-	try {
-		mpfr::mpreal::set_default_prec(mpfr::digits2bits(200));
-
-		const pKaShiftedConstituentsVec<mpfr::mpreal> shCVec = makeShiftedConstituentsVector<mpfr::mpreal>(chemSystem.constituents, cH, calcProps.ionicConcentrations);
-		const pBShiftedIonicFormsVec<mpfr::mpreal> shIFsVec = makepBShiftedIonicFormsVector<mpfr::mpreal>(chemSystem.constituents, calcProps.ionicConcentrations);
-
-		calculateDDSForFreeForms(shCVec, cH, mapping, analyticalConcentrations);
-		calculateDDSForComplexes(shIFsVec, mapping, analyticalConcentrations);
-
-		ctx = new DDSContextImpl{std::move(mapping)};
-	} catch (std::bad_alloc &) {
-		return RetCode::E_NO_MEMORY;
-	} catch (std::logic_error &) {
-		return RetCode::E_LOGIC_ERROR;
-	}
-
-	return RetCode::OK;
 }
 
 RetCode ECHMET_CC prepareDerivatorContext(RealVec *&derivatives, Solver *&solver, const SysComp::ChemicalSystem &chemSystem, const NonidealityCorrections corrections) noexcept

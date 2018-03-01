@@ -71,7 +71,7 @@ ECHMET_API RetCode ECHMET_CC calculateBufferCapacity(ECHMETReal &bufferCapacity,
 ECHMET_API RetCode ECHMET_CC calculateFirstConcentrationDerivatives(RealVec *&derivatives, ECHMETReal &conductivityDerivative, const ECHMETReal &H, const NonidealityCorrections corrections, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const SysComp::Constituent *perturbedConstituent) ECHMET_NOEXCEPT;
 
 /*!
- * Returns mixeed derivatives of all ionic concentrations when the system is perturbed by a small
+ * Returns mixed derivatives of all ionic concentrations when the system is perturbed by a small
  * change of concentration of two constituents. If the two constituents are the same, second derivative
  * is returned instead.
  *
@@ -88,7 +88,7 @@ ECHMET_API RetCode ECHMET_CC calculateFirstConcentrationDerivatives(RealVec *&de
  * @retval RetCode::E_NO_MEMORY Insufficient memory to perform the calculation.
  * @retval . Any other \p RetCode value returned by \p executor.
  */
-ECHMET_API RetCode ECHMET_CC calculateCrossConstituentDerivatives(RealVec *&derivatives, const ECHMETReal &H, const NonidealityCorrections corrections, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const SysComp::Constituent *perturbedConstituentJ, const SysComp::Constituent *perturbedConstituentK) ECHMET_NOEXCEPT;
+ECHMET_API RetCode ECHMET_CC calculateCrossConcentrationDerivatives(RealVec *&derivatives, const ECHMETReal &H, const NonidealityCorrections corrections, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const SysComp::Constituent *perturbedConstituentJ, const SysComp::Constituent *perturbedConstituentK) ECHMET_NOEXCEPT;
 
 /*!
  * Returns first derivatives of all ionic concentrations when the system is perturbed by a small
@@ -112,7 +112,7 @@ ECHMET_API RetCode ECHMET_CC calculateCrossConstituentDerivatives(RealVec *&deri
 ECHMET_API RetCode ECHMET_CC calculateFirstConcentrationDerivatives_prepared(RealVec *derivatives, ECHMETReal &conductivityDerivative, Solver *solver, const ECHMETReal &H, const NonidealityCorrections corrections, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const SysComp::Constituent *perturbedConstituent) ECHMET_NOEXCEPT;
 
 /*!
- * Returns mixeed derivatives of all ionic concentrations when the system is perturbed by a small
+ * Returns mixed derivatives of all ionic concentrations when the system is perturbed by a small
  * change of concentration of two constituents. If the two constituents are the same, second derivative
  * is returned instead. This function accepts already initialized \p Solver and RealVec to store
  * the derivatives. Passing mismatching Solver, vector of derivatives and \p ChemicalSystem may
@@ -131,26 +131,7 @@ ECHMET_API RetCode ECHMET_CC calculateFirstConcentrationDerivatives_prepared(Rea
  * @retval RetCode::E_NO_MEMORY Insufficient memory to perform the calculation.
  * @retval . Any other \p RetCode value returned by \p executor.
  */
-ECHMET_API RetCode ECHMET_CC calculateCrossConstituentDerivatives_prepared(RealVec *derivatives, Solver *solver, const ECHMETReal &H, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const SysComp::Constituent *perturbedConstituentJ, const SysComp::Constituent *perturbedConstituentK) ECHMET_NOEXCEPT;
-
-/*!
- * Calculates dissociation degrees derivatives for all ionic forms
- * in the system. Equilibrium ionic concentrations of in the system
- * have to be solved prior to calling this function.
- *
- * @param[out] ctx \p DDSContext that can be used to retrieve values of dissociation
- *	       degrees derivatives for individual ionic forms. This value is not altered
- *	       if the computation fails.
- * @param[in] chemSystem The chemical system to solve.
- * @param[in] analyticalConcentrations Vector of analytical concentrations of all constituents.
- * @param[in] calcProps Calculated properties of the chemical system. Note that the given analytical
- *	      concentrations must match these calculated properties.
- *
- * @retval RetCode::OK Success
- * @retval RetCode::E_NO_MEMORY Insufficient memory to perform the calculation
- * @retval RetCode::E_LOGIC_ERROR Internal logic error occured during calculation
- */
-ECHMET_API RetCode ECHMET_CC calculateDissocDegreesDerivatives(DDSContext *&ctx, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const SysComp::CalculatedProperties &calcProps) ECHMET_NOEXCEPT;
+ECHMET_API RetCode ECHMET_CC calculateCrossConcentrationDerivatives_prepared(RealVec *derivatives, Solver *solver, const ECHMETReal &H, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const SysComp::Constituent *perturbedConstituentJ, const SysComp::Constituent *perturbedConstituentK) ECHMET_NOEXCEPT;
 
 /*!
  * Prepares solver and output vector of results for derivators.
