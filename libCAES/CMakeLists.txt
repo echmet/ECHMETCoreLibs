@@ -41,8 +41,8 @@ endif()
 add_library(CAES SHARED ${libCAES_SRCS})
 target_include_directories(CAES PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 set_target_properties(CAES
-                      PROPERTIES VERSION 0.1
-                                 SOVERSION 0.1)
+                      PROPERTIES VERSION 0.2
+                                 SOVERSION 0.2)
 target_link_libraries(CAES
                       PRIVATE ${CAES_LINK_LIBS})
 
