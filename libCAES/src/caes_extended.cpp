@@ -23,7 +23,7 @@ private:
 template<typename TN, typename TH>
 TN firstDerivativeCalculator2O(const TN &low, const TN &high, const TH &H)
 {
-	const TH TWO{2.0};
+	thread_local static const TH TWO{2.0};
 	const TN t = (high - low) / (TWO * H);
 
 	return t;
