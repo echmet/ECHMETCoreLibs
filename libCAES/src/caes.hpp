@@ -826,7 +826,7 @@ RetCode createSolverContextInternal(SolverContext *&ctx, const SysComp::Chemical
 	fullDim = allForms->size() + allLigandIFs->size() + 2;
 
 	try {
-		ctx = new SolverContextImpl<CAESReal>(allLigands, allLigandIFs, complexNuclei, allForms, preJacobian, fullDim);
+		ctx = new SolverContextImpl<CAESReal>(allLigands, allLigandIFs, complexNuclei, allForms, preJacobian, fullDim, chemSystem.constituents->size());
 	} catch (std::bad_alloc &) {
 		tRet = RetCode::E_NO_MEMORY;
 

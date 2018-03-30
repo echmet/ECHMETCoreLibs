@@ -44,6 +44,9 @@ SolverImpl<CAESReal>::SolverImpl(const SolverContextImpl<CAESReal> *ctx, const N
 {
 	m_correctDebyeHuckel = nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_DEBYE_HUCKEL);
 
+	m_anCVec = SolverVector<CAESReal>(ctx->analyticalConcentrationCount);
+	m_estimatedConcentrations = SolverVector<CAESReal>(ctx->concentrationCount);
+
 	if (m_options & Options::DISABLE_THREAD_SAFETY)
 		m_internalUnsafe = new (std::nothrow) SolverInternal<CAESReal>(ctx);
 }
@@ -101,6 +104,13 @@ RetCode ECHMET_CC SolverImpl<CAESReal>::setContext(const SolverContext *ctx) ECH
 	const SolverContextImpl<CAESReal> *ctxImpl = dynamic_cast<const SolverContextImpl<CAESReal> *>(ctx);
 	if (ctxImpl == nullptr)
 		return RetCode::E_INVALID_ARGUMENT;
+
+	try {
+		m_anCVec = SolverVector<CAESReal>(ctxImpl->analyticalConcentrationCount);
+		m_estimatedConcentrations = SolverVector<CAESReal>(ctxImpl->concentrationCount);
+	} catch (const std::bad_alloc &) {
+		return RetCode::E_NO_MEMORY;
+	}
 
 	return setContextInternal(ctxImpl);
 }
@@ -165,6 +175,7 @@ RetCode ECHMET_CC SolverImpl<CAESReal>::setOptions(const Options options) ECHMET
  * @retval RetCode::E_NRS_STUCK Greatest change of X-value calculated by the Newton-Raphson solver is below the precision threshold.
  * @retval RetCode::E_NRS_NO_SOLUTION System appears to have no solution.
  * @retval RetCode::E_IS_NO_CONVERGENCE Solver failed to find a solution within the given number of iterations.
+ * @retval RetCode::E_INVALID_ARGUMENT Vector of analytical concentrations has invalid size.
  */
 template <typename CAESReal>
 RetCode ECHMET_CC SolverImpl<CAESReal>::solve(const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps, const size_t iterations, SolverIterations *iterationsNeeded) ECHMET_NOEXCEPT
@@ -178,17 +189,17 @@ RetCode ECHMET_CC SolverImpl<CAESReal>::solve(const RealVec *analyticalConcentra
 	if (internal == nullptr)
 		return RetCode::E_SOLVER_NOT_INITIALIZED;
 
-	try {
-		SolverVector<CAESReal> anCVec{analyticalConcentrations->size()};
-		SolverVector<CAESReal> estimatedConcentrations{calcProps.ionicConcentrations->size()};
+	if (analyticalConcentrations->size() != static_cast<size_t>(m_anCVec.rows()))
+		return RetCode::E_INVALID_ARGUMENT;
 
+	try {
 		for (size_t idx = 0; idx < analyticalConcentrations->size(); idx++)
-			anCVec(idx) = analyticalConcentrations->at(idx);
+			m_anCVec(idx) = analyticalConcentrations->at(idx);
 
 		for (size_t idx = 0; idx < calcProps.ionicConcentrations->size(); idx++)
-			estimatedConcentrations(idx) = calcProps.ionicConcentrations->at(idx);
+			m_estimatedConcentrations(idx) = calcProps.ionicConcentrations->at(idx);
 
-		const RetCode tRet = internal->solve(&anCVec, estimatedConcentrations, m_correctDebyeHuckel, iterations);
+		const RetCode tRet = internal->solve(&m_anCVec, m_estimatedConcentrations, m_correctDebyeHuckel, iterations);
 		if (tRet != RetCode::OK) {
 			releaseSolverInternal(internal, freeMPFRCache<CAESReal>());
 

@@ -18,13 +18,16 @@ namespace CAES {
 template <typename CAESReal>
 SolverContextImpl<CAESReal>::SolverContextImpl(const LigandVec<CAESReal> *allLigands, const LigandIonicFormVec<CAESReal> *allLigandIFs,
 					       const CNVec<CAESReal> *complexNuclei, const FormVec<CAESReal> *allForms,
-					       const SolverMatrix<CAESReal> *preJacobian, const size_t concentrationCount) noexcept :
+					       const SolverMatrix<CAESReal> *preJacobian,
+					       const size_t concentrationCount,
+					       const size_t analyticalConcentrationCount) noexcept :
 	allLigands(allLigands),
 	allLigandIFs(allLigandIFs),
 	complexNuclei(complexNuclei),
 	allForms(allForms),
 	preJacobian(preJacobian),
-	concentrationCount(concentrationCount)
+	concentrationCount(concentrationCount),
+	analyticalConcentrationCount(analyticalConcentrationCount)
 {
 }
 

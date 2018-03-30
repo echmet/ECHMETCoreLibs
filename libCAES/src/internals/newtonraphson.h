@@ -54,9 +54,7 @@ public:
 	NRReal const xPrecision;
 	NRReal const fPrecision;
 
-	NewtonRaphson();
-	NewtonRaphson(SolverVector<NRReal> const & matrix);
-	NewtonRaphson(SolverVector<NRReal> *matrix);
+	explicit NewtonRaphson(const int elements);
 	NewtonRaphson(NewtonRaphson const &) = delete;
 	virtual ~NewtonRaphson();
 
@@ -86,14 +84,12 @@ private:
 
 	SolverVector<NRReal> *m_px;
 
-	SolverVector<NRReal> m_xInternal;
 	SolverVector<NRReal> m_f;
 	SolverMatrix<NRReal> m_j;
-	SolverMatrix<NRReal> m_dx;
+	SolverVector<NRReal> m_dx;
 
 	void ZConstructor();
-	void ZXAssign(SolverVector<NRReal> const &ax);
-	void ZCalculateMeasures(SolverMatrix<NRReal> const &m, NRReal &min, NRReal &max);
+	void ZCalculateMeasures(SolverVector<NRReal> const &v, NRReal &min, NRReal &max);
 	void ZCheckStatus();
 
 	static size_t defaultMaxIterations() noexcept
@@ -141,15 +137,13 @@ void NewtonRaphson<NRReal>::ZConstructor()
 
 //---------------------------------------------------------------------------
 template <typename NRReal>
-void NewtonRaphson<NRReal>::ZCalculateMeasures(SolverMatrix<NRReal> const &m, NRReal &min, NRReal &max)
+void NewtonRaphson<NRReal>::ZCalculateMeasures(SolverVector<NRReal> const &v, NRReal &min, NRReal &max)
 {
-	min = VMath::abs(m(0, 0));
+	min = VMath::abs(v(0));
 	max = min;
 
-	for (int row = 1; row < m.rows(); row++) {
-		const SolverVector<NRReal> &v = m.row(row);
-
-		const NRReal val = VMath::abs(v(0));
+	for (int row = 1; row < v.rows(); row++) {
+		const NRReal val = VMath::abs(v(row));
 
 		if (val > max)
 			max = val;
@@ -168,14 +162,6 @@ void NewtonRaphson<NRReal>::ZCheckStatus()
 	else if (m_iteration == 0)                         m_status = Status::CONTINUE;
 	else if (m_dxMax <= xPrecision)                    m_status = Status::STUCK;
 	else                                               m_status = Status::CONTINUE;
-}
-
-template <typename NRReal>
-SolverVector<NRReal> const & NewtonRaphson<NRReal>::ASolve(SolverVector<NRReal> const &x_)
-{
-	ZXAssign(x_);
-
-	return ASolve();
 }
 
 template <typename NRReal>

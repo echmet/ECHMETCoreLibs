@@ -47,6 +47,7 @@ private:
 	CAESReal pACoeff(const int charge);
 	void recalculatepACoeffs(const CAESReal &is);
 	void validateMatrix(const SolverMatrix<CAESReal> &m);
+	void validateVector(const SolverVector<CAESReal> &v);
 
 	const SolverContextImpl<CAESReal> *m_ctx;		/*!< Back pointer to the context used to initialize the object */
 	const FormVec<CAESReal> *m_allForms;			/*!< Vector of all complex forms and free complex nuclei in the system */

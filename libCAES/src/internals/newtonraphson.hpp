@@ -5,15 +5,28 @@ namespace ECHMET {
 namespace CAES {
 
 template <typename NRReal>
-void NewtonRaphson<NRReal>::AInit()
-{}
+NewtonRaphson<NRReal>::NewtonRaphson(const int elements) :
+	maxIterations(defaultMaxIterations()),
+	xPrecision(defaultDxPrecision()),
+	fPrecision(defaultFPrecision())
+{
+	ZConstructor();
+
+	m_f = SolverVector<NRReal>::Zero(elements);
+	m_j = SolverMatrix<NRReal>::Zero(elements, elements);
+	m_dx = SolverVector<NRReal>::Zero(elements);
+}
 
 template <typename NRReal>
 NewtonRaphson<NRReal>::~NewtonRaphson()
 {}
 
 template <typename NRReal>
-SolverVector<NRReal> const & NewtonRaphson<NRReal>::ASolve ()
+void NewtonRaphson<NRReal>::AInit()
+{}
+
+template <typename NRReal>
+SolverVector<NRReal> const & NewtonRaphson<NRReal>::ASolve()
 {
 
 	// INIT
@@ -21,10 +34,6 @@ SolverVector<NRReal> const & NewtonRaphson<NRReal>::ASolve ()
 	SolverVector<NRReal> &x = *m_px;
 
 	m_iteration = 0;
-
-	m_f = SolverVector<NRReal>::Zero(x.rows());
-	m_j = SolverMatrix<NRReal>::Zero(x.rows(), x.cols());
-	m_dx = SolverMatrix<NRReal>::Zero(x.rows(), x.cols());
 
 	AInit();
 
@@ -64,35 +73,6 @@ SolverVector<NRReal> const & NewtonRaphson<NRReal>::ASolve ()
 //---------------------------------------------------------------------------
 
 template <typename NRReal>
-NewtonRaphson<NRReal>::NewtonRaphson() :
-	maxIterations(defaultMaxIterations()),
-	xPrecision(defaultDxPrecision()),
-	fPrecision(defaultFPrecision())
-{
-	ZConstructor();
-}
-
-template <typename NRReal>
-NewtonRaphson<NRReal>::NewtonRaphson(SolverVector<NRReal> const &x_) :
-	maxIterations(defaultMaxIterations()),
-	xPrecision(defaultDxPrecision()),
-	fPrecision(defaultFPrecision())
-{
-	ZConstructor();
-	ZXAssign(x_);
-}
-
-template <typename NRReal>
-NewtonRaphson<NRReal>::NewtonRaphson(SolverVector<NRReal> *x_) :
-	maxIterations(defaultMaxIterations()),
-	xPrecision(defaultDxPrecision()),
-	fPrecision(defaultFPrecision())
-{
-	ZConstructor();
-	m_px = x_;
-}
-
-template <typename NRReal>
 int NewtonRaphson<NRReal>::GetIterations() const
 { return m_iteration; }
 
@@ -126,17 +106,6 @@ NRReal NewtonRaphson<NRReal>::GetMinF() const
 template <typename NRReal>
 NRReal NewtonRaphson<NRReal>::GetMaxF() const
 { return m_fMax; }
-
-template <typename NRReal>
-void NewtonRaphson<NRReal>::ZXAssign(SolverVector<NRReal> const &ax)
-{
-	if (m_xInternal.size() != ax.size())
-		m_xInternal.resize(ax.rows(), ax.cols());
-
-	m_xInternal = ax;
-
-	m_px = &m_xInternal;
-}
 
 } // namespace Math
 } // namespace ECHMET

@@ -4,6 +4,8 @@
 #include "funcs.h"
 #include <internal/phchconsts_calcs.hpp>
 
+#include <cassert>
+
 /* For debugging purposes only */
 #ifdef ECHMET_DEBUG_OUTPUT
 #include <iostream>
@@ -60,7 +62,7 @@ const char * SolverInternal<CAESReal>::NumericErrorException::what() const noexc
 
 template <typename CAESReal>
 SolverInternal<CAESReal>::SolverInternal(const SolverContextImpl<CAESReal> *ctx) :
-	NewtonRaphson<CAESReal>(),
+	NewtonRaphson<CAESReal>(ctx->preJacobian->rows()),
 	m_ctx(ctx),
 	m_allForms(ctx->allForms),
 	m_allLigandIFs(ctx->allLigandIFs),
@@ -90,7 +92,7 @@ void SolverInternal<CAESReal>::ACalculateF(SolverVector<CAESReal> &Fx, const Sol
 
 	ECHMET_DEBUG_CODE(fprintf(stderr, "\n*** Iteration #: %zu\n***\n", this->m_iteration));
 
-	validateMatrix(pCx);
+	validateVector(pCx);
 
 	/* Precalculate actual values of concetrations */
 	for (int idx = 0; idx < pCx.rows(); idx++)
@@ -284,7 +286,7 @@ void SolverInternal<CAESReal>::ACalculateF(SolverVector<CAESReal> &Fx, const Sol
 	ECHMET_DEBUG_CODE(std::cerr << "--- rCx:\n" << m_rCx << "\n");
 	ECHMET_DEBUG_CODE(std::cerr << "--- Fx:\n" << Fx << "\n");
 
-	validateMatrix(Fx);
+	validateVector(Fx);
 
 	//m_loopIterationCtr++;
 }
@@ -300,8 +302,7 @@ void SolverInternal<CAESReal>::ACalculateJ(SolverMatrix<CAESReal> &Jx, const Sol
 {
 	static_cast<void>(pCx);
 
-	if (Jx.size() != m_preJacobian->size())
-		  Jx.resize(m_preJacobian->rows(), m_preJacobian->cols());
+	assert(Jx.size() == m_preJacobian->size());
 
 	Jx = *m_preJacobian;
 
@@ -591,6 +592,8 @@ void SolverInternal<CAESReal>::recalculatepACoeffs(const CAESReal &is)
 template<typename CAESReal>
 RetCode SolverInternal<CAESReal>::solve(const SolverVector<CAESReal> *analyticalConcentrations, const SolverVector<CAESReal> &estimatedConcentrations, const bool isCorrection, const size_t iterations) noexcept
 {
+	assert(estimatedConcentrations.rows() == m_pCx.rows());
+
 	const size_t maxOuterIterations = 100;
 	uint32_t totalIterationsCtr = 0;
 	uint32_t outerIterationsCtr = 0;
@@ -724,6 +727,24 @@ void SolverInternal<CAESReal>::validateMatrix(const SolverMatrix<CAESReal> &m)
 			if (VMath::isnan(m(row, col)))
 				throw NumericErrorException(NumericErrorException::ExType::ET_NAN);
 		}
+	}
+}
+
+/*!
+ * Checks if a vector contains valid numbers
+ *
+ * Checks if a vector contains valid numbers. Anything besides INF and NAN
+ * is considered valid. An exception is thrown if an invalid value is found.
+ */
+template <typename CAESReal>
+void SolverInternal<CAESReal>::validateVector(const SolverVector<CAESReal> &v)
+{
+	for (int row = 0; row < v.rows(); row++) {
+		if (VMath::isinf(v(row)))
+			throw NumericErrorException(NumericErrorException::ExType::ET_INF);
+
+		if (VMath::isnan(v(row)))
+			throw NumericErrorException(NumericErrorException::ExType::ET_NAN);
 	}
 }
 

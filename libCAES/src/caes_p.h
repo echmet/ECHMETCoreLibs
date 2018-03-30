@@ -107,6 +107,9 @@ private:
 	const SolverContextImpl<CAESReal> *m_ctx;		/*!< Associated solver context */
 	SolverInternal<CAESReal> *m_internalUnsafe;		/*!< Internal solver used by thread-unsafe variant of the solver */
 
+	SolverVector<CAESReal> m_anCVec;
+	SolverVector<CAESReal> m_estimatedConcentrations;
+
 	RetCode setContextInternal(const SolverContextImpl<CAESReal> *ctx) noexcept;
 };
 
