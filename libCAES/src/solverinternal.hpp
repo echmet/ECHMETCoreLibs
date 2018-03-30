@@ -70,6 +70,8 @@ SolverInternal<CAESReal>::SolverInternal(const SolverContextImpl<CAESReal> *ctx)
 {
 	m_pCx = SolverVector<CAESReal>(ctx->concentrationCount);
 	m_rCx = SolverVector<CAESReal>(ctx->concentrationCount);
+
+	initializepACoeffs();
 }
 
 /*!
@@ -608,12 +610,6 @@ RetCode SolverInternal<CAESReal>::solve(const SolverVector<CAESReal> *analytical
 		CVI(m_pCx, rowCounter) = pX(estimatedConcentrations(idx));
 		ECHMET_DEBUG_CODE(fprintf(stderr, "%g\n", CAESRealToDouble(CVI(m_pCx, rowCounter))));
 		rowCounter++;
-	}
-
-	try {
-		initializepACoeffs();
-	} catch (std::bad_alloc &) {
-		return RetCode::E_NO_MEMORY;
 	}
 
 	this->maxIterations = iterations;

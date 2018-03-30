@@ -48,7 +48,7 @@ elseif (UNIX)
 
     if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" OR
         ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -std=c++11 -Wall -Wextra -pedantic -Wno-unused-function -fvisibility=hidden")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -std=c++11 -Wall -Wextra -pedantic -Wno-unused-function -fvisibility=hidden -g")
         add_definitions("-DECHMET_COMPILER_GCC_LIKE ")
     endif()
 

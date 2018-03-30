@@ -26,6 +26,7 @@ public:
 
 		SysComp::InConstituentVec *BGEComposition;
 		ConcentrationMap BGEConcentrations;
+		ConcentrationMap SampleConcentrations;
 	};
 
 	InputDescription process(const constituent_array_t *input);
