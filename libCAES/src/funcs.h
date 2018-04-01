@@ -97,6 +97,12 @@ static inline T X10(const T &t)
 	return VMath::pow<T>(10.0, -t);
 }
 
+template<>
+inline double X10(const double &t)
+{
+	return ::std::exp(-t * 2.302585092994046);
+}
+
 /*!
  * Checks if a given vector of ligand ionic forms contains the given ionic form
  *
