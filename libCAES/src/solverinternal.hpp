@@ -98,11 +98,11 @@ void SolverInternal<CAESReal>::ACalculateF(SolverVector<CAESReal> &Fx, const Sol
 	for (int idx = 0; idx < pCx.rows(); idx++)
 		CVI(m_rCx, idx) = X10(CVI(pCx, idx));
 
-	/* Zeroize Fx to handle cases where a variable is constant
-	   Remove this as part of optimization */
-	for (int idx = 0; idx < Fx.rows(); idx++)
+	/* Zeroize ligand block of Fx */
+	for (int idx = LGBlockOffset; idx < Fx.rows(); idx++)
 		CVI(Fx, idx) = 0.0;
 
+	CVI(Fx, 1) = 0.0;
 	/* Water ionic product */
 	CVI(Fx, 0) = 8.0 - pH - pOH;
 	/* Ionic strength correction */
