@@ -55,14 +55,7 @@ SolverVector<NRReal> const & NewtonRaphson<NRReal>::ASolve()
 
 		this->m_iteration++;
 
-		/* FIXME: Eigen does non throw if there is no solution!!! */
-		try {
-			//m_dx = arma::solve(m_j, m_f, arma::solve_opts::equilibrate + arma::solve_opts::no_approx);
-			m_dx = m_j.lu().solve(m_f);
-		} catch (std::runtime_error &) {
-			m_status = Status::NO_SOLUTION;
-			return x;
-		}
+		m_dx = m_j.partialPivLu().solve(m_f);
 
 		x -= m_dx;
 	};
