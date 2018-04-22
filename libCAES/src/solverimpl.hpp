@@ -4,8 +4,12 @@
 #include "caes_p.h"
 #include "solverinternal.h"
 
+#include <x86intrin.h>
+
 namespace ECHMET {
 namespace CAES {
+
+InstructionSet detectInstructionSet();
 
 template <typename CAESReal, bool V = std::is_same<CAESReal, mpfr::mpreal>::value>
 FreeMPFRCacheSwitch<V> freeMPFRCache()
@@ -14,18 +18,18 @@ FreeMPFRCacheSwitch<V> freeMPFRCache()
 }
 
 template <typename CAESReal>
-void SolverImpl<CAESReal>::releaseSolverInternal(SolverInternal<CAESReal> *internal, FreeMPFRCacheSwitch<true>) noexcept
+void SolverImpl<CAESReal>::releaseSolverInternal(SolverInternalBase<CAESReal> *internal, FreeMPFRCacheSwitch<true>) noexcept
 {
-	if (!(m_options & Options::DISABLE_THREAD_SAFETY)) {
+	if (!(m_ctx->options() & SolverContext::Options::DISABLE_THREAD_SAFETY)) {
 		delete internal;
 		mpfr_free_cache();
 	}
 }
 
 template <typename CAESReal>
-void SolverImpl<CAESReal>::releaseSolverInternal(SolverInternal<CAESReal> *internal, FreeMPFRCacheSwitch<false>) noexcept
+void SolverImpl<CAESReal>::releaseSolverInternal(SolverInternalBase<CAESReal> *internal, FreeMPFRCacheSwitch<false>) noexcept
 {
-	if (!(m_options & Options::DISABLE_THREAD_SAFETY))
+	if (!(m_ctx->options() & SolverContext::Options::DISABLE_THREAD_SAFETY))
 		delete internal;
 }
 
@@ -37,18 +41,27 @@ void SolverImpl<CAESReal>::releaseSolverInternal(SolverInternal<CAESReal> *inter
  * @param[in] options Solver options.
  */
 template <typename CAESReal>
-SolverImpl<CAESReal>::SolverImpl(const SolverContextImpl<CAESReal> *ctx, const NonidealityCorrections corrections, const Options options) noexcept :
-	m_options(options),
+SolverImpl<CAESReal>::SolverImpl(SolverContextImpl<CAESReal> *ctx, const NonidealityCorrections corrections) :
 	m_ctx(ctx),
-	m_internalUnsafe(nullptr)
+	m_internalUnsafe(nullptr),
+	m_anCVecUnsafe(nullptr),
+	m_estimatedConcentrationsUnsafe(nullptr),
+	m_instructionSet(detectInstructionSet())
 {
 	m_correctDebyeHuckel = nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_DEBYE_HUCKEL);
 
-	m_anCVec = SolverVector<CAESReal>(ctx->analyticalConcentrationCount);
-	m_estimatedConcentrations = SolverVector<CAESReal>(ctx->concentrationCount);
+	if (m_ctx->options() & SolverContext::Options::DISABLE_THREAD_SAFETY) {
+		try {
+			m_anCVecUnsafe = new SolverVector<CAESReal>(ctx->analyticalConcentrationCount);
+			m_estimatedConcentrationsUnsafe = alignedAlloc<CAESReal>(ctx->concentrationCount);
+			m_internalUnsafe = makeSolverInternal(ctx);
+		} catch (const std::bad_alloc &up) {
+			delete m_anCVecUnsafe;
+			alignedFree(m_estimatedConcentrationsUnsafe);
 
-	if (m_options & Options::DISABLE_THREAD_SAFETY)
-		m_internalUnsafe = new (std::nothrow) SolverInternal<CAESReal>(ctx);
+			throw up;
+		}
+	}
 }
 
 /*!
@@ -58,6 +71,8 @@ template <typename CAESReal>
 SolverImpl<CAESReal>::~SolverImpl() ECHMET_NOEXCEPT
 {
 	delete m_internalUnsafe;
+	delete m_anCVecUnsafe;
+	alignedFree(m_estimatedConcentrationsUnsafe);
 }
 
 /*!
@@ -66,7 +81,7 @@ SolverImpl<CAESReal>::~SolverImpl() ECHMET_NOEXCEPT
  * @return Pointer to \p SolverContext object.
  */
 template <typename CAESReal>
-const SolverContext * ECHMET_CC SolverImpl<CAESReal>::context() const ECHMET_NOEXCEPT
+SolverContext * ECHMET_CC SolverImpl<CAESReal>::context() ECHMET_NOEXCEPT
 {
 	return m_ctx;
 }
@@ -78,14 +93,24 @@ void ECHMET_CC SolverImpl<CAESReal>::destroy() const ECHMET_NOEXCEPT
 }
 
 /*!
- * Returns the current options of the solver.
+ * Makes appropriate \p SolverInternal object
+ * based on available SIMD instruction set
  *
- * @return Solver options.
+ * @retval Pointer to \p SolverInternal object
  */
 template <typename CAESReal>
-typename SolverImpl<CAESReal>::Options ECHMET_CC SolverImpl<CAESReal>::options() const ECHMET_NOEXCEPT
+SolverInternalBase<CAESReal> * SolverImpl<CAESReal>::makeSolverInternal(const SolverContextImpl<CAESReal> *ctx) const
 {
-	return m_options;
+	switch (m_instructionSet) {
+	case InstructionSet::SSE2:
+		return new SolverInternal<CAESReal, InstructionSet::SSE2>(ctx);
+	case InstructionSet::AVX:
+		return new SolverInternal<CAESReal, InstructionSet::AVX>(ctx);
+	case InstructionSet::FMA3:
+		return new SolverInternal<CAESReal, InstructionSet::FMA3>(ctx);
+	default:
+		return new SolverInternal<CAESReal, InstructionSet::GENERIC>(ctx);
+	}
 }
 
 /*!
@@ -96,21 +121,19 @@ typename SolverImpl<CAESReal>::Options ECHMET_CC SolverImpl<CAESReal>::options()
  *
  * @retval RetCode::OK Success.
  * @retval RetCode::E_INVALID_ARGUMENT SolverContext not castable to SolverContextImpl.
+ * @retval RetCode::E_INVALID_ARGUMENT Change of thread safetiness is not allowed.
  * @retval RetCode::E_NO_MEMORY Not enough memory to allocate new \p SolverInternal object.
  */
 template <typename CAESReal>
-RetCode ECHMET_CC SolverImpl<CAESReal>::setContext(const SolverContext *ctx) ECHMET_NOEXCEPT
+RetCode ECHMET_CC SolverImpl<CAESReal>::setContext(SolverContext *ctx) ECHMET_NOEXCEPT
 {
-	const SolverContextImpl<CAESReal> *ctxImpl = dynamic_cast<const SolverContextImpl<CAESReal> *>(ctx);
+	SolverContextImpl<CAESReal> *ctxImpl = dynamic_cast<SolverContextImpl<CAESReal> *>(ctx);
 	if (ctxImpl == nullptr)
 		return RetCode::E_INVALID_ARGUMENT;
 
-	try {
-		m_anCVec = SolverVector<CAESReal>(ctxImpl->analyticalConcentrationCount);
-		m_estimatedConcentrations = SolverVector<CAESReal>(ctxImpl->concentrationCount);
-	} catch (const std::bad_alloc &) {
-		return RetCode::E_NO_MEMORY;
-	}
+	if ((m_ctx->options() & SolverContext::Options::DISABLE_THREAD_SAFETY) !=
+	    (ctxImpl->options() & SolverContext::Options::DISABLE_THREAD_SAFETY))
+		return RetCode::E_INVALID_ARGUMENT;
 
 	return setContextInternal(ctxImpl);
 }
@@ -124,37 +147,29 @@ RetCode ECHMET_CC SolverImpl<CAESReal>::setContext(const SolverContext *ctx) ECH
  * @retval RetCode::E_NO_MEMORY Not enough memory to allocate new \p SolverInternal object.
  */
 template <typename CAESReal>
-RetCode SolverImpl<CAESReal>::setContextInternal(const SolverContextImpl<CAESReal> *ctx) noexcept
+RetCode SolverImpl<CAESReal>::setContextInternal(SolverContextImpl<CAESReal> *ctx) noexcept
 {
-	if (m_options & Options::DISABLE_THREAD_SAFETY) {
+	if (ctx->options() & SolverContext::Options::DISABLE_THREAD_SAFETY) {
 		delete m_internalUnsafe;
+		delete m_anCVecUnsafe;
+		alignedFree(m_estimatedConcentrationsUnsafe);
 
-		m_internalUnsafe = new (std::nothrow) SolverInternal<CAESReal>(ctx);
+		m_internalUnsafe = nullptr;
+		m_anCVecUnsafe = nullptr;
+		m_estimatedConcentrationsUnsafe = nullptr;
 
-		if (m_internalUnsafe == nullptr)
+		try {
+			m_internalUnsafe = makeSolverInternal(ctx);
+			m_anCVecUnsafe = new SolverVector<CAESReal>(ctx->analyticalConcentrationCount);
+			m_estimatedConcentrationsUnsafe = alignedAlloc<CAESReal>(ctx->concentrationCount);
+		} catch (const std::bad_alloc &) {
+			delete m_anCVecUnsafe;
+			delete m_internalUnsafe;
+
 			return RetCode::E_NO_MEMORY;
+		}
 	}
 	m_ctx = ctx;
-
-	return RetCode::OK;
-}
-
-/*!
- * Sets new solver options.
- *
- * @param[in] options New options.
- *
- * @retval RetCode::OK Success.
- * @retval RetCode::E_INVALID_ARGUMENT Nonsensical option value was passed as the argument.
- */
-template <typename CAESReal>
-RetCode ECHMET_CC SolverImpl<CAESReal>::setOptions(const Options options) ECHMET_NOEXCEPT
-{
-	/* Changing thread-safetiness is not allowed */
-	if ((m_options & Options::DISABLE_THREAD_SAFETY) != (options & Options::DISABLE_THREAD_SAFETY))
-		return RetCode::E_INVALID_ARGUMENT;
-
-	m_options = options;
 
 	return RetCode::OK;
 }
@@ -168,7 +183,6 @@ RetCode ECHMET_CC SolverImpl<CAESReal>::setOptions(const Options options) ECHMET
  * @param[in,out] iterationsNeeded If given it returns the number of iterations needed for the solver to converge. The passed object is not altered if the solver fails to converge.
  *
  * @retval RetCode::OK Success.
- * @retval RetCode::E_SOLVER_NOT_INITIALIZED Solver was not initialized prior to calling this function.
  * @retval RetCode::E_NO_MEMORY Not enough memory to perform the calculation.
  * @retval RetCode::E_NRS_FAILURE Newton-Rapshon solver encountered an error during calculation.
  * @retval RetCode::E_NRS_NO_CONVERGENCE Newton-Raphson solver failed to converge within the given number of iterations
@@ -180,28 +194,51 @@ RetCode ECHMET_CC SolverImpl<CAESReal>::setOptions(const Options options) ECHMET
 template <typename CAESReal>
 RetCode ECHMET_CC SolverImpl<CAESReal>::solve(const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps, const size_t iterations, SolverIterations *iterationsNeeded) ECHMET_NOEXCEPT
 {
-	SolverInternal<CAESReal> *internal = nullptr;
-	if (m_options & Options::DISABLE_THREAD_SAFETY)
+	SolverInternalBase<CAESReal> *internal = nullptr;
+	SolverVector<CAESReal> *anCVec = nullptr;
+	CAESReal *estimatedConcentrations = nullptr;
+
+	const auto releaseResources = [&]() {
+		releaseSolverInternal(internal, freeMPFRCache<CAESReal>());
+		if (!(m_ctx->options() & SolverContext::Options::DISABLE_THREAD_SAFETY)) {
+			delete anCVec;
+			alignedFree(estimatedConcentrations);
+		}
+	};
+
+	if (m_ctx->options() & SolverContext::Options::DISABLE_THREAD_SAFETY) {
 		internal = m_internalUnsafe;
-	else
-		internal = new (std::nothrow) SolverInternal<CAESReal>(m_ctx);
+		anCVec = m_anCVecUnsafe;
+		estimatedConcentrations = m_estimatedConcentrationsUnsafe;
+	} else {
+		try {
+			internal = makeSolverInternal(m_ctx);
+			anCVec = new SolverVector<CAESReal>(m_ctx->analyticalConcentrationCount);
+			estimatedConcentrations = alignedAlloc<CAESReal>(m_ctx->concentrationCount);
+		} catch (const std::bad_alloc &) {
+			delete anCVec;
+			delete internal;
+			return RetCode::E_NO_MEMORY;
+		}
+	}
 
-	if (internal == nullptr)
-		return RetCode::E_SOLVER_NOT_INITIALIZED;
 
-	if (analyticalConcentrations->size() != static_cast<size_t>(m_anCVec.rows()))
+	if (analyticalConcentrations->size() != static_cast<size_t>(anCVec->rows())) {
+		releaseResources();
+
 		return RetCode::E_INVALID_ARGUMENT;
+	}
 
 	try {
 		for (size_t idx = 0; idx < analyticalConcentrations->size(); idx++)
-			m_anCVec(idx) = analyticalConcentrations->at(idx);
+			(*anCVec)(idx) = analyticalConcentrations->elem(idx);
 
 		for (size_t idx = 0; idx < calcProps.ionicConcentrations->size(); idx++)
-			m_estimatedConcentrations(idx) = calcProps.ionicConcentrations->at(idx);
+			estimatedConcentrations[idx] = calcProps.ionicConcentrations->elem(idx);
 
-		const RetCode tRet = internal->solve(&m_anCVec, m_estimatedConcentrations, m_correctDebyeHuckel, iterations);
+		const RetCode tRet = internal->solve(anCVec, estimatedConcentrations, m_correctDebyeHuckel, iterations);
 		if (tRet != RetCode::OK) {
-			releaseSolverInternal(internal, freeMPFRCache<CAESReal>());
+			releaseResources();
 
 			return tRet;
 		}
@@ -211,11 +248,11 @@ RetCode ECHMET_CC SolverImpl<CAESReal>::solve(const RealVec *analyticalConcentra
 		if (iterationsNeeded != nullptr)
 			*iterationsNeeded = internal->iterations();
 
-		releaseSolverInternal(internal, freeMPFRCache<CAESReal>());
+		releaseResources();
 
 		return RetCode::OK;
 	} catch (std::bad_alloc &) {
-		releaseSolverInternal(internal, freeMPFRCache<CAESReal>());
+		releaseResources();
 
 		return RetCode::E_NO_MEMORY;
 	}
@@ -243,18 +280,34 @@ RetCode ECHMET_CC SolverImpl<CAESReal>::solve(const RealVec *analyticalConcentra
 template <typename CAESReal>
 RetCode SolverImpl<CAESReal>::solveRaw(SolverVector<CAESReal> &concentrations, CAESReal &ionicStrength, const SolverVector<CAESReal> *anCVec, const SolverVector<CAESReal> &estimatedConcentrations, const size_t iterations, SolverIterations *iterationsNeeded) noexcept
 {
-	SolverInternal<CAESReal> *internal = nullptr;
-	if (m_options & Options::DISABLE_THREAD_SAFETY)
-		internal = m_internalUnsafe;
-	else
-		internal = new (std::nothrow) SolverInternal<CAESReal>(m_ctx);
+	SolverInternalBase<CAESReal> *internal = nullptr;
+	CAESReal *estimatedConcentrationsInternal = nullptr;
 
-	if (internal == nullptr)
-		return RetCode::E_SOLVER_NOT_INITIALIZED;
-
-	const RetCode tRet = internal->solve(anCVec, estimatedConcentrations, m_correctDebyeHuckel, iterations);
-	if (tRet != RetCode::OK) {
+	const auto releaseResources = [&]() {
 		releaseSolverInternal(internal, freeMPFRCache<CAESReal>());
+		if (!(m_ctx->options() & SolverContext::Options::DISABLE_THREAD_SAFETY))
+			alignedFree(estimatedConcentrationsInternal);
+	};
+
+	if (m_ctx->options() & SolverContext::Options::DISABLE_THREAD_SAFETY) {
+		internal = m_internalUnsafe;
+		estimatedConcentrationsInternal = m_estimatedConcentrationsUnsafe;
+	} else {
+		try {
+			internal = makeSolverInternal(m_ctx);
+			estimatedConcentrationsInternal = alignedAlloc<CAESReal>(m_ctx->concentrationCount);
+		} catch (const std::bad_alloc &) {
+			delete internal;
+			return RetCode::E_NO_MEMORY;
+		}
+	}
+
+	for (int idx = 0; idx < estimatedConcentrations.rows(); idx++)
+		estimatedConcentrationsInternal[idx] = estimatedConcentrations(idx);
+
+	const RetCode tRet = internal->solve(anCVec, estimatedConcentrationsInternal, m_correctDebyeHuckel, iterations);
+	if (tRet != RetCode::OK) {
+		releaseResources();
 
 		return tRet;
 	}
@@ -262,7 +315,7 @@ RetCode SolverImpl<CAESReal>::solveRaw(SolverVector<CAESReal> &concentrations, C
 	try {
 		concentrations = internal->rawConcentrations();
 	} catch (std::bad_alloc &) {
-		releaseSolverInternal(internal, freeMPFRCache<CAESReal>());
+		releaseResources();
 
 		return RetCode::E_NO_MEMORY;
 	}
@@ -270,7 +323,7 @@ RetCode SolverImpl<CAESReal>::solveRaw(SolverVector<CAESReal> &concentrations, C
 	if (iterationsNeeded != nullptr)
 		*iterationsNeeded = internal->iterations();
 
-	releaseSolverInternal(internal, freeMPFRCache<CAESReal>());
+	releaseResources();
 
 	return RetCode::OK;
 }

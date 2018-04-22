@@ -98,13 +98,13 @@ RetCode calculatepHResponse(ECHMETReal &bufferCapacity, const ECHMETReal &H, con
 		return total;
 	}();
 
-	tRet = createSolverContextInternal<mpfr::mpreal>(solverCtx, chemSystem);
+	const SolverContext::Options opts = SolverContext::defaultOptions();
+	tRet = createSolverContextInternal<mpfr::mpreal>(solverCtx, opts, chemSystem);
 	if (tRet != RetCode::OK)
 		return tRet;
 
-	const Solver::Options opts = Solver::defaultOptions();
 	try {
-		solver = new SolverImpl<mpfr::mpreal>(static_cast<SolverContextImpl<mpfr::mpreal> *>(solverCtx), corrections, opts);
+		solver = new SolverImpl<mpfr::mpreal>(static_cast<SolverContextImpl<mpfr::mpreal> *>(solverCtx), corrections);
 	} catch (std::bad_alloc &) {
 		solverCtx->destroy();
 
@@ -479,14 +479,14 @@ RetCode ECHMET_CC prepareDerivatorContext(RealVec *&derivatives, Solver *&solver
 {
 	const size_t N = chemSystem.ionicForms->size();
 
+	const SolverContext::Options opts = SolverContext::defaultOptions();
 	SolverContext *solverCtx;
-	RetCode tRet = createSolverContextInternal<mpfr::mpreal>(solverCtx, chemSystem);
+	RetCode tRet = createSolverContextInternal<mpfr::mpreal>(solverCtx, opts, chemSystem);
 	if (tRet != RetCode::OK)
 		return tRet;
 
-	const Solver::Options opts = Solver::defaultOptions();
 	try {
-		solver = new SolverImpl<mpfr::mpreal>(static_cast<SolverContextImpl<mpfr::mpreal> *>(solverCtx), corrections, opts);
+		solver = new SolverImpl<mpfr::mpreal>(static_cast<SolverContextImpl<mpfr::mpreal> *>(solverCtx), corrections);
 	} catch (std::bad_alloc &) {
 		solverCtx->destroy();
 

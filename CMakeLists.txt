@@ -8,6 +8,8 @@ option(MANUAL_HIPREC_LIBS_PATH "Use manually specified paths to GMP and MPFR lib
 
 if (CMAKE_BUILD_TYPE MATCHES Debug)
     add_definitions("-DECHMET_DEBUG_OUTPUT")
+else()
+    add_definitions("-DEIGEN_NO_DEBUG")
 endif()
 
 if (ECHMET_USE_HIGH_PRECISION)
@@ -33,10 +35,10 @@ if (WIN32)
     include_directories(SYSTEM ${ECHMET_HIPREC_INCLUDE_DIR})
 
     if (MINGW)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -pedantic -fvisibility=hidden")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -pedantic -fvisibility=hidden -ftree-vectorize")
 	add_definitions("-DECHMET_COMPILER_MINGW")
     elseif (MSYS)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -pedantic -fvisibility=hidden")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -pedantic -fvisibility=hidden -ftree-vectorize")
 	add_definitions("-DECHMET_COMPILER_MSYS")
     elseif (MSVC)
         add_definitions("-DECHMET_COMPILER_MSVC")
@@ -48,7 +50,7 @@ elseif (UNIX)
 
     if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" OR
         ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -std=c++11 -Wall -Wextra -pedantic -Wno-unused-function -fvisibility=hidden -g")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -std=c++14 -Wall -Wextra -pedantic -Wno-unused-function -fvisibility=hidden -g -O3")
         add_definitions("-DECHMET_COMPILER_GCC_LIKE ")
     endif()
 

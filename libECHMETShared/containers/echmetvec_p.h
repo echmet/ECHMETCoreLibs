@@ -78,6 +78,11 @@ public:
 		delete this;
 	}
 
+	virtual const T & ECHMET_CC elem(const size_t idx) const noexcept override
+	{
+		return m_stlVec[idx];
+	}
+
 	virtual const T & ECHMET_CC front() const noexcept override
 	{
 		if (m_stlVec.size() < 1)
@@ -175,9 +180,6 @@ public:
 
 	virtual T & ECHMET_CC operator[](const size_t idx) noexcept override
 	{
-		if (idx >= m_stlVec.size())
-			std::terminate();
-
 		return m_stlVec[idx];
 	}
 

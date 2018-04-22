@@ -2,9 +2,13 @@
 #define ECHMET_CAES_SOLVERINTERNAL_HPP
 
 #include "funcs.h"
+#include "vecmath/vecmath.h"
 #include <internal/phchconsts_calcs.hpp>
-
+#include <x86intrin.h>
 #include <cassert>
+
+namespace ECHMET {
+namespace CAES {
 
 /* For debugging purposes only */
 #ifdef ECHMET_DEBUG_OUTPUT
@@ -26,23 +30,44 @@ std::ostream & operator<<(std::ostream &ostr, const ECHMET::CAES::SolverMatrix<C
 /* END: For debugging purposes only */
 #endif // ECHMET_DEBUG_OUTPUT
 
-namespace ECHMET {
-namespace CAES {
+template <> template <>
+__attribute__((target("sse2")))
+void SolverInternal<double, InstructionSet::SSE2>::VectorizedDelogifier<InstructionSet::SSE2>::operator()(double  *__restrict__ dst, const double *__restrict__ src);
 
-template <typename CAESReal>
-const char * SolverInternal<CAESReal>::NumericErrorException::infError = "Result of numeric operation is infinity";
+template <> template <>
+__attribute__((target("sse2")))
+void SolverInternal<double, InstructionSet::SSE2>::VectorizedLogifier<InstructionSet::SSE2>::operator()(double  *__restrict__ dst, const double *__restrict__ src);
 
-template <typename CAESReal>
-const char * SolverInternal<CAESReal>::NumericErrorException::nanError = "Result of numeric operation is not a number";
+template <> template <>
+__attribute__((target("avx")))
+void SolverInternal<double, InstructionSet::AVX>::VectorizedDelogifier<InstructionSet::AVX>::operator()(double  *__restrict__ dst, const double *__restrict__ src);
 
-template <typename CAESReal>
-SolverInternal<CAESReal>::NumericErrorException::NumericErrorException(const ExType t) : std::exception(),
+template <> template <>
+__attribute__((target("avx")))
+void SolverInternal<double, InstructionSet::AVX>::VectorizedLogifier<InstructionSet::AVX>::operator()(double  *__restrict__ dst, const double *__restrict__ src);
+
+template <> template <>
+__attribute__((target("fma")))
+void SolverInternal<double, InstructionSet::FMA3>::VectorizedDelogifier<InstructionSet::FMA3>::operator()(double  *__restrict__ dst, const double *__restrict__ src);
+
+template <> template <>
+__attribute__((target("fma")))
+void SolverInternal<double, InstructionSet::FMA3>::VectorizedLogifier<InstructionSet::FMA3>::operator()(double  *__restrict__ dst, const double *__restrict__ src);
+
+template <typename CAESReal, InstructionSet ISet>
+const char * SolverInternal<CAESReal, ISet>::NumericErrorException::infError = "Result of numeric operation is infinity";
+
+template <typename CAESReal, InstructionSet ISet>
+const char * SolverInternal<CAESReal, ISet>::NumericErrorException::nanError = "Result of numeric operation is not a number";
+
+template <typename CAESReal, InstructionSet ISet>
+SolverInternal<CAESReal, ISet>::NumericErrorException::NumericErrorException(const ExType t) : std::exception(),
 	m_t(t)
 {
 }
 
-template <typename CAESReal>
-const char * SolverInternal<CAESReal>::NumericErrorException::what() const noexcept
+template <typename CAESReal, InstructionSet ISet>
+const char * SolverInternal<CAESReal, ISet>::NumericErrorException::what() const noexcept
 {
 	switch (m_t) {
 	case ExType::ET_INF:
@@ -59,21 +84,43 @@ const char * SolverInternal<CAESReal>::NumericErrorException::what() const noexc
  *
  * @param[in] ctx SolverContext
  */
-
-template <typename CAESReal>
-SolverInternal<CAESReal>::SolverInternal(const SolverContextImpl<CAESReal> *ctx) :
+template <typename CAESReal, InstructionSet ISet>
+SolverInternal<CAESReal, ISet>::SolverInternal(const SolverContextImpl<CAESReal> *ctx) :
 	NewtonRaphson<CAESReal>(ctx->preJacobian->rows()),
 	m_ctx(ctx),
 	m_allForms(ctx->allForms),
 	m_allLigandIFs(ctx->allLigandIFs),
 	m_allLigands(ctx->allLigands),
 	m_complexNuclei(ctx->complexNuclei),
-	m_preJacobian(ctx->preJacobian)
+	m_preJacobian(ctx->preJacobian),
+	/* This is horrible but Eigen::Map won't let us do this in a sane way */
+	m_pCx_raw(alignedAlloc<CAESReal>(ctx->concentrationCount)),
+	m_rCx_raw(alignedAlloc<CAESReal>(ctx->concentrationCount)),
+	m_pCx(m_pCx_raw, ctx->concentrationCount),
+	m_rCx(m_rCx_raw, ctx->concentrationCount),
+	m_vecMath(new VecMath<ISet>()),
+	m_vecDelog(*m_vecMath, ctx->concentrationCount)
 {
-	m_pCx = SolverVector<CAESReal>(ctx->concentrationCount);
-	m_rCx = SolverVector<CAESReal>(ctx->concentrationCount);
+	if (m_pCx_raw == nullptr || m_rCx_raw == nullptr) {
+		delete m_vecMath;
+
+		alignedFree(m_pCx_raw);
+		alignedFree(m_rCx_raw);
+		throw std::bad_alloc{};
+	}
 
 	initializepACoeffs();
+
+	ECHMET_DEBUG_CODE(std::cerr << "Using instruction set " << ISet << "\n");
+}
+
+template <typename CAESReal, InstructionSet ISet>
+SolverInternal<CAESReal, ISet>::~SolverInternal()
+{
+	delete m_vecMath;
+
+	alignedFree(m_pCx_raw);
+	alignedFree(m_rCx_raw);
 }
 
 /*!
@@ -82,8 +129,8 @@ SolverInternal<CAESReal>::SolverInternal(const SolverContextImpl<CAESReal> *ctx)
  * @param[in,out] Fx Column vector Fx to be calculated
  * @param[in] pCx Column vector of concentrations calculated by the previous iteration of the computation
  */
-template <typename CAESReal>
-void SolverInternal<CAESReal>::ACalculateF(SolverVector<CAESReal> &Fx, const SolverVector<CAESReal> &pCx)
+template <typename CAESReal, InstructionSet ISet>
+void SolverInternal<CAESReal, ISet>::ACalculateF(SolverVector<CAESReal> &Fx, const typename NewtonRaphson<CAESReal>::TX &pCx)
 {
 	const size_t LGBlockOffset = m_allForms->size() + 2;
 	const CAESReal pH = CVI(pCx, 0);
@@ -95,8 +142,9 @@ void SolverInternal<CAESReal>::ACalculateF(SolverVector<CAESReal> &Fx, const Sol
 	validateVector(pCx);
 
 	/* Precalculate actual values of concetrations */
-	for (int idx = 0; idx < pCx.rows(); idx++)
-		CVI(m_rCx, idx) = X10(CVI(pCx, idx));
+	/*for (size_t idx = 0; idx < pCx.rows(); idx++)
+			m_rCx_raw[idx] = X10(m_pCx_raw[idx]);*/
+	m_vecDelog(m_rCx_raw, m_pCx_raw);
 
 	/* Zeroize ligand block of Fx */
 	for (int idx = LGBlockOffset; idx < Fx.rows(); idx++)
@@ -160,8 +208,7 @@ void SolverInternal<CAESReal>::ACalculateF(SolverVector<CAESReal> &Fx, const Sol
 			prevFreeCAIdx = freeCAIdx;
 
 			/* Electroneutrality */
-			if (charge != 0)
-				CVI(Fx, 1) += CVI(m_rCx, rowCounter) * charge;
+			CVI(Fx, 1) += CVI(m_rCx, rowCounter) * charge;
 
 			rowCounter++;
 			/* The following cells are a result of pML(n) - pML(n - 1) - pL - pB = x */
@@ -202,8 +249,7 @@ void SolverInternal<CAESReal>::ACalculateF(SolverVector<CAESReal> &Fx, const Sol
 				}
 				/* Electroneutrality */
 				//ECHMET_DEBUG_CODE(std::cerr << "Form " << f->name << " total charge = " << totalCharge << "\n");
-				if (f->totalCharge != 0)
-					CVI(Fx, 1) += CVI(m_rCx, rowCounter) * f->totalCharge;
+				CVI(Fx, 1) += CVI(m_rCx, rowCounter) * f->totalCharge;
 
 				{
 					const int ligandCharge = m_allLigandIFs->at(f->ligandIFIdx)->charge;
@@ -271,8 +317,7 @@ void SolverInternal<CAESReal>::ACalculateF(SolverVector<CAESReal> &Fx, const Sol
 			}
 
 			/* Electroneutrality */
-			if (charge != 0)
-				CVI(Fx, 1) += CVI(m_rCx, rowCounter + LGBlockOffset) * charge;
+			CVI(Fx, 1) += CVI(m_rCx, rowCounter + LGBlockOffset) * charge;
 
 			rowCounter++;
 		}
@@ -287,8 +332,6 @@ void SolverInternal<CAESReal>::ACalculateF(SolverVector<CAESReal> &Fx, const Sol
 	ECHMET_DEBUG_CODE(std::cerr << "--- Fx:\n" << Fx << "\n");
 
 	validateVector(Fx);
-
-	//m_loopIterationCtr++;
 }
 
 /*!
@@ -297,8 +340,8 @@ void SolverInternal<CAESReal>::ACalculateF(SolverVector<CAESReal> &Fx, const Sol
  * @param[in,out] Jx Jacobian matrix to be completed
  * @param[in] pCx Column vector of concentrations calculated by the previous iteration of the computation
  */
-template <typename CAESReal>
-void SolverInternal<CAESReal>::ACalculateJ(SolverMatrix<CAESReal> &Jx, const SolverVector<CAESReal> &pCx)
+template <typename CAESReal, InstructionSet ISet>
+void SolverInternal<CAESReal, ISet>::ACalculateJ(SolverMatrix<CAESReal> &Jx, const typename NewtonRaphson<CAESReal>::TX &pCx)
 {
 	static_cast<void>(pCx);
 
@@ -373,8 +416,7 @@ void SolverInternal<CAESReal>::ACalculateJ(SolverMatrix<CAESReal> &Jx, const Sol
 				const FormVec<CAESReal> &chForms = cn->forms.at(chIdx);
 
 				for (const Form<CAESReal> *f : chForms) {
-					if (f->totalCharge != 0)
-						Jx(1, colCounter) = -CVI(m_rCx, colCounter) * f->totalCharge * M_LN10;
+					Jx(1, colCounter) = -CVI(m_rCx, colCounter) * f->totalCharge * M_LN10;
 
 					colCounter++;
 				}
@@ -383,8 +425,7 @@ void SolverInternal<CAESReal>::ACalculateJ(SolverMatrix<CAESReal> &Jx, const Sol
 
 		/* Ligand ionic forms */
 		for (const LigandIonicForm<CAESReal> *l : *m_allLigandIFs) {
-			if (l->charge != 0)
-				Jx(1, colCounter) = -CVI(m_rCx, colCounter) * l->charge * M_LN10;
+			Jx(1, colCounter) = -CVI(m_rCx, colCounter) * l->charge * M_LN10;
 
 			colCounter++;
 		}
@@ -430,8 +471,8 @@ void SolverInternal<CAESReal>::ACalculateJ(SolverMatrix<CAESReal> &Jx, const Sol
  *
  * @return Ionic strength of the solution
  */
-template<typename CAESReal>
-CAESReal SolverInternal<CAESReal>::calculateIonicStrength() const
+template<typename CAESReal, InstructionSet ISet>
+CAESReal SolverInternal<CAESReal, ISet>::calculateIonicStrength() const
 {
 	/* NOTE: This function is called after ASolve() of the NR-Solver has updated the current
 	 *       concentrations. Matrix m_rCx is recalculated in the process so we can use it to calculate
@@ -473,8 +514,8 @@ CAESReal SolverInternal<CAESReal>::calculateIonicStrength() const
  * Returns a pointer to \p SolverContext object that stores the system
  * composition data structures.
  */
-template <typename CAESReal>
-const SolverContext * SolverInternal<CAESReal>::context() const noexcept
+template <typename CAESReal, InstructionSet ISet>
+const SolverContext * SolverInternal<CAESReal, ISet>::context() const noexcept
 {
 	return m_ctx;
 }
@@ -482,8 +523,8 @@ const SolverContext * SolverInternal<CAESReal>::context() const noexcept
 /*!
  * Initializes the vector of p-scaled activity coefficients.
  */
-template <typename CAESReal>
-void SolverInternal<CAESReal>::initializepACoeffs()
+template <typename CAESReal, InstructionSet ISet>
+void SolverInternal<CAESReal, ISet>::initializepACoeffs()
 {
 	m_chargeMax = 1;
 
@@ -530,8 +571,8 @@ void SolverInternal<CAESReal>::initializepACoeffs()
  * @return Number of total iterations. Zero if the system has not been
  * solved or no solution has been found.
  */
-template <typename CAESReal>
-SolverIterations SolverInternal<CAESReal>::iterations() const noexcept
+template <typename CAESReal, InstructionSet ISet>
+SolverIterations SolverInternal<CAESReal, ISet>::iterations() const noexcept
 {
 	SolverIterations iterations;
 
@@ -548,8 +589,8 @@ SolverIterations SolverInternal<CAESReal>::iterations() const noexcept
  *
  * @return p-scaled activity coefficient.
  */
-template<typename CAESReal>
-CAESReal SolverInternal<CAESReal>::pACoeff(const int charge)
+template<typename CAESReal, InstructionSet ISet>
+CAESReal SolverInternal<CAESReal, ISet>::pACoeff(const int charge)
 {
 	return m_pACoeffs.at(std::abs(charge));
 }
@@ -559,8 +600,8 @@ CAESReal SolverInternal<CAESReal>::pACoeff(const int charge)
  *
  * @param[in] is Ionic strength.
  */
-template<typename CAESReal>
-void SolverInternal<CAESReal>::recalculatepACoeffs(const CAESReal &is)
+template<typename CAESReal, InstructionSet ISet>
+void SolverInternal<CAESReal, ISet>::recalculatepACoeffs(const CAESReal &is)
 {
 	/* McInnes approximation */
 	const CAESReal sqrtIs = VMath::sqrt(is);
@@ -586,18 +627,14 @@ void SolverInternal<CAESReal>::recalculatepACoeffs(const CAESReal &is)
  * @retval RetCode::E_NRS_FAILURE Newton-Rapshon solver encountered an error during calculation.
  * @retval RetCode::E_NRS_NO_CONVERGENCE Newton-Raphson solver failed to converge within the given number of iterations
  * @retval RetCode::E_NRS_STUCK Greatest change of X-value calculated by the Newton-Raphson solver is below the precision threshold.
- * @retval RetCode::E_NRS_NO_SOLUTION System appears to have no solution.
  * @retval RetCode::E_IS_NO_CONVERGENCE Solver failed to find a solution within the given number of iterations.
  */
-template<typename CAESReal>
-RetCode SolverInternal<CAESReal>::solve(const SolverVector<CAESReal> *analyticalConcentrations, const SolverVector<CAESReal> &estimatedConcentrations, const bool isCorrection, const size_t iterations) noexcept
+template <typename CAESReal, InstructionSet ISet>
+RetCode SolverInternal<CAESReal, ISet>::solve(const SolverVector<CAESReal> *analyticalConcentrations, const CAESReal *estimatedConcentrations, const bool isCorrection, const size_t iterations) noexcept
 {
-	assert(estimatedConcentrations.rows() == m_pCx.rows());
-
 	const size_t maxOuterIterations = 100;
 	uint32_t totalIterationsCtr = 0;
 	uint32_t outerIterationsCtr = 0;
-	size_t rowCounter;
 	CAESReal prevIonicStrength;
 
 	m_totalIterations = 0;
@@ -607,13 +644,8 @@ RetCode SolverInternal<CAESReal>::solve(const SolverVector<CAESReal> *analytical
 	CAESReal ionicStrength = 0.0;
 	m_analyticalConcentrations = analyticalConcentrations;
 
-	rowCounter = 0;
-	ECHMET_DEBUG_CODE(fprintf(stderr, "Input ICs\n"));
-	for (int idx = 0; idx < estimatedConcentrations.size(); idx++) {
-		CVI(m_pCx, rowCounter) = pX(estimatedConcentrations(idx));
-		ECHMET_DEBUG_CODE(fprintf(stderr, "%g\n", CAESRealToDouble(CVI(m_pCx, rowCounter))));
-		rowCounter++;
-	}
+	for (int idx = 0; idx < m_pCx.rows(); idx++)
+		CVI(m_pCx, idx) = pX(estimatedConcentrations[idx]);
 
 	this->maxIterations = iterations;
 
@@ -672,8 +704,8 @@ RetCode SolverInternal<CAESReal>::solve(const SolverVector<CAESReal> *analytical
  *
  * @return A \p SolverVector<CAESReal> object.
  */
-template <typename CAESReal>
-SolverVector<CAESReal> SolverInternal<CAESReal>::rawConcentrations() const
+template <typename CAESReal, InstructionSet ISet>
+SolverVector<CAESReal> SolverInternal<CAESReal, ISet>::rawConcentrations() const
 {
 	SolverVector<CAESReal> concentrations(m_pCx.rows());
 
@@ -688,8 +720,8 @@ SolverVector<CAESReal> SolverInternal<CAESReal>::rawConcentrations() const
  *
  * @return Value of ionic strength in <tt>mol/dm3</tt>.
  */
-template <typename CAESReal>
-CAESReal SolverInternal<CAESReal>::rawIonicStrength() const
+template <typename CAESReal, InstructionSet ISet>
+CAESReal SolverInternal<CAESReal, ISet>::rawIonicStrength() const
 {
 	return m_finalIonicStrength;
 }
@@ -699,8 +731,8 @@ CAESReal SolverInternal<CAESReal>::rawIonicStrength() const
  *
  * @param[in,out] calcProps The \p SysComp::CalculatedProperties struct to fill.
  */
-template <typename CAESReal>
-void SolverInternal<CAESReal>::resultsToOutput(SysComp::CalculatedProperties &calcProps) noexcept
+template <typename CAESReal, InstructionSet ISet>
+void SolverInternal<CAESReal, ISet>::resultsToOutput(SysComp::CalculatedProperties &calcProps) noexcept
 {
 	/* This relies on the assumption that H+ and OH- are always on the top
 	 * of the ionic concentrations vector */
@@ -716,8 +748,8 @@ void SolverInternal<CAESReal>::resultsToOutput(SysComp::CalculatedProperties &ca
  * Checks if a matrix contains valid numbers. Anything besides INF and NAN
  * is considered valid. An exception is thrown if an invalid value is found.
  */
-template <typename CAESReal>
-void SolverInternal<CAESReal>::validateMatrix(const SolverMatrix<CAESReal> &m)
+template <typename CAESReal, InstructionSet ISet>
+void SolverInternal<CAESReal, ISet>::validateMatrix(const SolverMatrix<CAESReal> &m)
 {
 	for (int row = 0; row < m.rows(); row++) {
 		for (int col = 0; col < m.cols(); col++) {
@@ -736,8 +768,26 @@ void SolverInternal<CAESReal>::validateMatrix(const SolverMatrix<CAESReal> &m)
  * Checks if a vector contains valid numbers. Anything besides INF and NAN
  * is considered valid. An exception is thrown if an invalid value is found.
  */
-template <typename CAESReal>
-void SolverInternal<CAESReal>::validateVector(const SolverVector<CAESReal> &v)
+template <typename CAESReal, InstructionSet ISet>
+void SolverInternal<CAESReal, ISet>::validateVector(const typename NewtonRaphson<CAESReal>::TX &v)
+{
+	for (int row = 0; row < v.rows(); row++) {
+		if (VMath::isinf(v(row)))
+			throw NumericErrorException(NumericErrorException::ExType::ET_INF);
+
+		if (VMath::isnan(v(row)))
+			throw NumericErrorException(NumericErrorException::ExType::ET_NAN);
+	}
+}
+
+/*!
+ * Checks if a vector contains valid numbers
+ *
+ * Checks if a vector contains valid numbers. Anything besides INF and NAN
+ * is considered valid. An exception is thrown if an invalid value is found.
+ */
+template <typename CAESReal, InstructionSet ISet>
+void SolverInternal<CAESReal, ISet>::validateVector(const SolverVector<CAESReal> &v)
 {
 	for (int row = 0; row < v.rows(); row++) {
 		if (VMath::isinf(v(row)))

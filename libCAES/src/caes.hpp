@@ -3,6 +3,7 @@
 
 #include "funcs.h"
 #include "solvercontextimpl.h"
+#include <algorithm>
 #include <cassert>
 
 #define ECHMET_IMPORT_INTERNAL
@@ -12,167 +13,28 @@ namespace ECHMET {
 namespace CAES {
 
 /*!
- * TotalEquilibrium c-tor.
- *
- * @param[in] numLow Lowest equilibrium index.
- * @param[in] numHigh Highest equilibirium index.
- * @param[in] pBs Vector of consecutive equilibrium constants.
- * @param[in] concentration Analytical concentration of the constituent.
- */
-template <typename CAESReal>
-TotalEquilibrium<CAESReal>::TotalEquilibrium(const int numLow, const int numHigh, const std::vector<CAESReal> &pBs, const CAESReal &concentration) :
-	concentration(concentration),
-	Ls(calculateLs(pBs)),
-	numLow(numLow),
-	numHigh(numHigh)
-{
-}
-
-/*!
- * TotalEquilibrium move c-tor.
- *
- * @param[in] other TotalEquilibrium object being moved.
- */
-template <typename CAESReal>
-TotalEquilibrium<CAESReal>::TotalEquilibrium(TotalEquilibrium &&other) :
-	concentration(std::move(other.concentration)),
-	Ls(std::move(other.Ls)),
-	numLow(other.numLow),
-	numHigh(other.numHigh)
-{
-}
-
-template <typename CAESReal>
-std::vector<CAESReal> TotalEquilibrium<CAESReal>::concentrations(const CAESReal &v) const
-{
-	CAESReal X = 0.0;
-	const std::vector<CAESReal> _Ts = Ts(v, X);
-	std::vector<CAESReal> concentrations;
-	concentrations.resize(_Ts.size());
-
-	size_t ctr = 0;
-	for (const CAESReal &T : _Ts) {
-		const CAESReal fC = concentration * T / X;
-
-		concentrations[ctr] = fC;
-
-		ctr++;
-	}
-
-	return concentrations;
-}
-
-template <typename CAESReal>
-std::vector<CAESReal> TotalEquilibrium<CAESReal>::distribution(const CAESReal &v) const
-{
-	CAESReal X = 0.0;
-	const std::vector<CAESReal> _Ts = Ts(v, X);
-	std::vector<CAESReal> dist;
-	dist.resize(_Ts.size());
-
-	size_t ctr = 0;
-	for (const CAESReal &T : _Ts) {
-		const CAESReal fC = T / X;
-
-		dist[ctr] = fC;
-
-		ctr++;
-	}
-
-	return dist;
-}
-
-template <typename CAESReal>
-std::vector<CAESReal> TotalEquilibrium<CAESReal>::Ts(const CAESReal &v, CAESReal &X) const
-{
-	const size_t len = Ls.size();
-	std::vector<CAESReal> Ts;
-	X = 0.0;
-
-	Ts.resize(len);
-
-	assert(len == static_cast<size_t>(numHigh - numLow + 1));
-
-	for (size_t idx = 0; idx < len; idx++) {
-		const int num = idx + numLow;
-		const CAESReal T = Ls.at(idx) * VMath::pow<CAESReal>(v, num);
-
-		Ts[idx] = T;
-		X += T;
-	}
-
-	return Ts;
-}
-
-/*!
- * Calculates total equilibrium constants from constecutive constants
- *
- * @param[in] pBs Consecutive equilibrium constants
- *
- * @return Vector of total equilibrium constants
- */
-template <typename CAESReal>
-std::vector<CAESReal> TotalEquilibrium<CAESReal>::calculateLs(const std::vector<CAESReal> &pBs)
-{
-	std::vector<CAESReal> _pBs;
-	std::vector<CAESReal> _Ls;
-
-	_pBs.resize(pBs.size());
-	std::copy(pBs.cbegin(), pBs.cend(), _pBs.begin());
-
-	_pBs.emplace_back(0.0);
-
-	const size_t len = _pBs.size();
-
-	_Ls.resize(len);
-
-	for (size_t idx = 0; idx < len; idx++) {
-		auto calcL = [](const std::vector<CAESReal> &pXs, const size_t to) {
-			CAESReal pL = 0.0;
-
-			/* TODO: Optimize this!!! */
-			size_t idx = pXs.size() - 1;
-			for (;;) {
-				pL += pXs.at(idx);
-
-				if (idx == to || idx == 0)
-					break;
-				else
-					idx--;
-			}
-
-			ECHMET_DEBUG_CODE(fprintf(stderr, "pL = %g\n", CAESRealToDouble(pL)));
-
-			return X10(pL);
-		};
-
-		_Ls[idx] = calcL(_pBs, idx);
-	}
-
-	return _Ls;
-}
-
-/*!
  * Calculates distribution of concentrations of given species.
  *
  * @param[in] v Variable in the equilibrium equations.
  * @param[in,out] distribution Resulting vector of concentrations. The vector has to be resized by the caller to accomodate all individual concentrations.
  * @param[in] totalEquilibria Vector of objects that descibe the given equilibria.
  */
-template <typename CAESReal>
-void calculateDistribution(const CAESReal &v, SolverVector<CAESReal> &distribution, const std::vector<TotalEquilibrium<CAESReal>> &totalEquilibria)
+template <typename CAESReal, bool ThreadSafe>
+void calculateDistribution(const CAESReal &v, SolverVector<CAESReal> &distribution, std::vector<TotalEquilibriumBase *> &totalEquilibria, const RealVec *analyticalConcentrations)
 {
 	size_t rowCounter = 2;
 
-	for (const TotalEquilibrium<CAESReal> &te : totalEquilibria) {
+	for (TotalEquilibriumBase *teb : totalEquilibria) {
+		auto *te = static_cast<TotalEquilibrium<CAESReal, ThreadSafe> *>(teb);
 		CAESReal X = 0.0;
-		const std::vector<CAESReal> Ts = te.Ts(v, X);
+		const std::vector<CAESReal> & Ts = te->Ts(v, X);
 
-		int num = te.numLow;
+		int num = te->numLow;
+		const CAESReal &c = analyticalConcentrations->elem(te->concentrationIndex);
 		for (const CAESReal &T : Ts) {
-			const CAESReal fC = te.concentration * T / X;
+			const CAESReal fC = c * T / X;
 
-			distribution[rowCounter] = fC;
+			distribution(rowCounter) = fC;
 
 			num++;
 			rowCounter++;
@@ -219,7 +81,7 @@ void estimateComplexesDistribution(const CNVec<CAESReal> *complexNuclei, const L
 			for (size_t idx = 1; idx < forms.size(); idx++) {
 				const Form<CAESReal> *f = forms.at(idx);
 
-				const CAESReal complexConcentration = X10(f->pB + 3.0) * estimatedConcentrations(f->ancestorGlobalIdx + 2) * estimatedConcentrations(f->ligandIFIdx + LGBlockOffset);
+				CAESReal complexConcentration = X10(f->pB + 3.0) * estimatedConcentrations(f->ancestorGlobalIdx + 2) * estimatedConcentrations(f->ligandIFIdx + LGBlockOffset);
 				ECHMET_DEBUG_CODE(fprintf(stderr, "N: %s, myIdx: %zu, GAIdx: %zu, LFIdx: %zu, CC: %g\n", f->name.c_str(), f->myIdx + 2, f->ancestorGlobalIdx + 2, f->ligandIFIdx + LGBlockOffset, CAESRealToDouble(complexConcentration)));
 				ECHMET_DEBUG_CODE(fprintf(stderr, "   [GA]=%g, [L]=%g, Kx=%g\n", CAESRealToDouble(estimatedConcentrations(f->ancestorGlobalIdx + 2)),
 												 CAESRealToDouble(estimatedConcentrations(f->ligandIFIdx + LGBlockOffset)),
@@ -244,53 +106,35 @@ void estimateComplexesDistribution(const CNVec<CAESReal> *complexNuclei, const L
  * @retval RetCode::E_NO_MEMORY Not enough memory to estimate distribution.
  */
 template <typename CAESReal>
-RetCode estimateDistributionInternal(const SolverContext *ctx, const RealVec *analyticalConcentrations, SolverVector<CAESReal> &estimatedConcentrations) noexcept
+RetCode estimateDistributionInternal(SolverContext *ctx, const RealVec *analyticalConcentrations, SolverVector<CAESReal> &estimatedConcentrations) noexcept
 {
-	std::vector<TotalEquilibrium<CAESReal>> totalEquilibria{};
-
-	if (ctx == nullptr)
-		return RetCode::E_INVALID_ARGUMENT;
-
-	const SolverContextImpl<CAESReal> *ctxImpl = dynamic_cast<const SolverContextImpl<CAESReal> *>(ctx);
+	SolverContextImpl<CAESReal> *ctxImpl = dynamic_cast<SolverContextImpl<CAESReal> *>(ctx);
 	if (ctxImpl == nullptr)
 		return RetCode::E_INVALID_ARGUMENT;
 
-	try {
-		estimatedConcentrations.resize(ctxImpl->concentrationCount);
-	} catch (std::bad_alloc &) {
-		return RetCode::E_NO_MEMORY;
-	}
-
-	const CNVec<CAESReal> *complexNuclei = ctxImpl->complexNuclei;
-	const LigandVec<CAESReal> *allLigands = ctxImpl->allLigands;
+	estimatedConcentrations.resize(ctxImpl->concentrationCount);
 
 	try {
-		totalEquilibria.reserve(complexNuclei->size() + allLigands->size());
-	} catch (std::bad_alloc &) {
-		return RetCode::E_NO_MEMORY;
-	}
-
-	try {
-		/* Estimate pH of the system by ignoring any complexation */
-		for (const ComplexNucleus<CAESReal> *cn : *complexNuclei)
-			totalEquilibria.emplace_back(cn->chargeLow, cn->chargeHigh, cn->pKas, analyticalConcentrations->at(cn->analyticalConcentrationIndex) / 1000.0);
-
-		for (const Ligand<CAESReal> *l : *allLigands)
-			totalEquilibria.emplace_back(l->chargeLow, l->chargeHigh, l->pKas, analyticalConcentrations->at(l->analyticalConcentrationIndex) / 1000.0);
-
-		const SolverVector<CAESReal> estConcentrations = estimatepH<CAESReal>(totalEquilibria);
+		const SolverVector<CAESReal> estConcentrations = [&]() {
+			if (ctxImpl->options() & SolverContext::Options::DISABLE_THREAD_SAFETY)
+				return estimatepH<CAESReal, false>(ctxImpl->totalEquilibria, analyticalConcentrations, ctxImpl->estimatedIonicConcentrations);
+			else {
+				SolverVector<CAESReal> icConcs(ctxImpl->TECount);
+				return estimatepH<CAESReal, true>(ctxImpl->totalEquilibria, analyticalConcentrations, icConcs);
+			}
+		}();
 
 		ECHMET_DEBUG_CODE(for (int idx = 0; idx < estConcentrations.size(); idx++) {
-				const CAESReal &v = estConcentrations(idx);
-				fprintf(stderr, "estC: %.4g, pX: %.4g\n", CAESRealToDouble(v), CAESRealToDouble(pX(v)));
-				});
+				  const CAESReal &v = estConcentrations(idx);
+				  fprintf(stderr, "estC: %.4g, pX: %.4g\n", CAESRealToDouble(v), CAESRealToDouble(pX(v)));
+				  });
 
-		ECHMET_DEBUG_CODE(fprintf(stderr, "Estimated pH = %g\n", CAESRealToDouble(pX(estConcentrations(0) + 3.0))));
+		ECHMET_DEBUG_CODE(fprintf(stderr, "Estimated pH = %g\n", CAESRealToDouble(pX(estConcentrations(0)))));
 		/* H+ and OH- are expected to be the first and second item in the vector */
 		estimatedConcentrations(0) = estConcentrations(0);
 		estimatedConcentrations(1) = estConcentrations(1);
 
-		estimateComplexesDistribution<CAESReal>(complexNuclei, allLigands, estConcentrations, ctxImpl->allForms->size() + 2, estimatedConcentrations);
+		estimateComplexesDistribution<CAESReal>(ctxImpl->complexNuclei, ctxImpl->allLigands, estConcentrations, ctxImpl->allForms->size() + 2, estimatedConcentrations);
 	} catch (std::bad_alloc &) {
 		return RetCode::E_NO_MEMORY;
 	}
@@ -305,33 +149,23 @@ RetCode estimateDistributionInternal(const SolverContext *ctx, const RealVec *an
  *
  * @return Vector of concentrations of all ionic forms including \p H+ and \p OH-
  */
-template <typename CAESReal>
-SolverVector<CAESReal> estimatepH(const std::vector<TotalEquilibrium<CAESReal>> &totalEquilibria)
+template <typename CAESReal, bool ThreadSafe>
+SolverVector<CAESReal> estimatepH(std::vector<TotalEquilibriumBase *> &totalEquilibria, const RealVec *analyticalConcentrations, SolverVector<CAESReal> &icConcs)
 {
-	const CAESReal KW_298 = CAESReal(PhChConsts::KW_298);
+	const CAESReal KW_298 = CAESReal(PhChConsts::KW_298) * 1e6;
 	const CAESReal threshold = electroneturalityPrecision<CAESReal>();
 	size_t ctr = 0;
-	CAESReal cH = 1.0e-7;
+	CAESReal cH = 1.0e-4;
 	CAESReal leftWall = 0.0;
-	CAESReal rightWall = 100.0;
+	CAESReal rightWall = 100000.0;
 
-	SolverVector<CAESReal> icConcs;
-
-	{
-		size_t sz = 0;
-
-		for (const TotalEquilibrium<CAESReal> &te : totalEquilibria)
-			sz += te.numHigh - te.numLow + 1;
-
-		icConcs.resize(sz + 2);
-	}
-
-	auto calcTotalCharge = [](const SolverVector<CAESReal> &icConcs, const std::vector<TotalEquilibrium<CAESReal>> &totalEquilibria) {
+	auto calcTotalCharge = [](const SolverVector<CAESReal> &icConcs, const std::vector<TotalEquilibriumBase *> &totalEquilibria) {
 		CAESReal z = 0;
 		size_t rowCounter = 2;
 
-		for (const TotalEquilibrium<CAESReal> &te : totalEquilibria) {
-			for (int charge = te.numLow; charge <= te.numHigh; charge++)
+		for (const TotalEquilibriumBase *teb : totalEquilibria) {
+			const auto *te = static_cast<const TotalEquilibrium<CAESReal, ThreadSafe> *>(teb);
+			for (int charge = te->numLow; charge <= te->numHigh; charge++)
 				z += icConcs(rowCounter++) * charge;
 
 		}
@@ -340,7 +174,7 @@ SolverVector<CAESReal> estimatepH(const std::vector<TotalEquilibrium<CAESReal>> 
 	};
 
 	for (;;) {
-		calculateDistribution(cH, icConcs, totalEquilibria);
+		calculateDistribution<CAESReal, ThreadSafe>(cH, icConcs, totalEquilibria, analyticalConcentrations);
 
 		CAESReal z = calcTotalCharge(icConcs, totalEquilibria);
 
@@ -352,8 +186,8 @@ SolverVector<CAESReal> estimatepH(const std::vector<TotalEquilibrium<CAESReal>> 
 		/* Maximum number of iterations exceeded, return what we have so far and
 		 * hope for the best */
 		if (ctr++ > 1000) {
-			icConcs[0] = cH;
-			icConcs[1] = KW_298 / cH;
+			icConcs(0) = cH;
+			icConcs(1) = KW_298 / cH;
 			return icConcs;
 		}
 
@@ -369,9 +203,6 @@ SolverVector<CAESReal> estimatepH(const std::vector<TotalEquilibrium<CAESReal>> 
 
 	icConcs(0) = cH;
 	icConcs(1) = KW_298 / cH;
-
-	for (int idx = 0; idx < icConcs.size(); idx++)
-		icConcs(idx) = icConcs(idx) * 1000.0;
 
 	return icConcs;
 }
@@ -406,7 +237,7 @@ RetCode globalDataToInternal(LigandVec<CAESReal> *allLigands, LigandIonicFormVec
 		}
 
 		for (size_t idx = 0; idx < gcVec->size(); idx++) {
-			const SysComp::Constituent *ic = gcVec->at(idx);
+			const SysComp::Constituent *ic = gcVec->elem(idx);
 
 			if (ic->ctype == SysComp::ConstituentType::LIGAND) {
 				std::vector<CAESReal> pKas;
@@ -473,7 +304,7 @@ RetCode globalDataToInternal(LigandVec<CAESReal> *allLigands, LigandIonicFormVec
 		}
 
 		for (size_t idx = 0; idx < gcVec->size(); idx++) {
-			const SysComp::Constituent *ic = gcVec->at(idx);
+			const SysComp::Constituent *ic = gcVec->elem(idx);
 
 			if (ic->ctype == SysComp::ConstituentType::NUCLEUS) {
 				ComplexNucleus<CAESReal> *cn;
@@ -545,7 +376,7 @@ RetCode initializeForms(ComplexNucleus<CAESReal> *cn, FormVec<CAESReal> *allForm
 		const std::string lName(l->name->c_str());
 
 		for (size_t idx = 0; idx < allLigandIFs->size(); idx++) {
-			const LigandIonicForm<CAESReal> *lIF = allLigandIFs->at(idx);
+			const LigandIonicForm<CAESReal> *lIF = (*allLigandIFs)[idx];
 
 			if (lIF->base->name == lName && lIF->charge == charge)
 				return idx;
@@ -560,7 +391,7 @@ RetCode initializeForms(ComplexNucleus<CAESReal> *cn, FormVec<CAESReal> *allForm
 
 		const SysComp::IonicForm *ancestor = iForm->ancestor;
 		for (size_t idx = 0; idx < gIfVec->size(); idx++) {
-			const SysComp::IonicForm *otherIForm = gIfVec->at(idx);
+			const SysComp::IonicForm *otherIForm = gIfVec->elem(idx);
 
 			if (*(ancestor->name) == *(otherIForm->name))
 				return idx;
@@ -596,7 +427,7 @@ RetCode initializeForms(ComplexNucleus<CAESReal> *cn, FormVec<CAESReal> *allForm
 		std::vector<Form<CAESReal> *> cnForms;
 
 		for (; fIdx < ic->ionicForms->size(); fIdx++) {
-			const SysComp::IonicForm *iForm = ic->ionicForms->at(fIdx);
+			const SysComp::IonicForm *iForm = ic->ionicForms->elem(fIdx);
 			Form<CAESReal> *f;
 
 			/* We have traversed through all ionic forms for the given charge of
@@ -612,7 +443,7 @@ RetCode initializeForms(ComplexNucleus<CAESReal> *cn, FormVec<CAESReal> *allForm
 				const size_t myIdx = allForms->size();
 				const size_t ancestorIdx = getAncestorIdx(iForm->ancestor->name->c_str(), cnForms);
 				const size_t globalAncestorIdx = getGlobalAncestorIdx(iForm, gIfVec);
-				const ContainedLigandIonicForm<CAESReal> cl(iForm->ligandCount, allLigandIFs->at(ligandIFIdx));
+				const ContainedLigandIonicForm<CAESReal> cl(iForm->ligandCount, (*allLigandIFs)[ligandIFIdx]);
 
 				if (VMath::isnan(iForm->pB))
 					return RetCode::E_MISSING_PB;
@@ -620,7 +451,7 @@ RetCode initializeForms(ComplexNucleus<CAESReal> *cn, FormVec<CAESReal> *allForm
 				if (ligandIFIdx == SIZE_MAX || ancestorIdx == SIZE_MAX || globalAncestorIdx == SIZE_MAX)
 					return RetCode::E_INVALID_COMPOSITION;
 
-				const Form<CAESReal> *ancestor = allForms->at(globalAncestorIdx);
+				const Form<CAESReal> *ancestor = (*allForms)[globalAncestorIdx];
 
 				ECHMET_DEBUG_CODE(fprintf(stderr, "N:(%s) AN:(%s),  AIDX %zu, GAIDX %zu\n", iForm->name->c_str(), iForm->ancestor->name->c_str(), ancestorIdx, globalAncestorIdx));
 				ContainedLigandIonicFormVec<CAESReal> ligandsContained = ancestor->ligandsContained;
@@ -662,7 +493,7 @@ SolverMatrix<CAESReal> * prepareJacobian(const CNVec<CAESReal> *complexNuclei, c
 	{
 		size_t rowCounter = 2;
 
-		/* Complexing components */
+		/* Complex nuclei */
 		for (const ComplexNucleus<CAESReal> *cn : *complexNuclei) {
 			size_t prevFreeCAIdx;
 
@@ -766,13 +597,13 @@ SolverMatrix<CAESReal> * prepareJacobian(const CNVec<CAESReal> *complexNuclei, c
 }
 
 template <typename CAESReal>
-Solver * createSolverInternal(const SolverContext *ctx, const NonidealityCorrections corrections, const Solver::Options options) noexcept
+Solver * createSolverInternal(SolverContext *ctx, const NonidealityCorrections corrections) noexcept
 {
-	const SolverContextImpl<CAESReal> *ctxImpl = dynamic_cast<const SolverContextImpl<CAESReal> *>(ctx);
+	SolverContextImpl<CAESReal> *ctxImpl = dynamic_cast<SolverContextImpl<CAESReal> *>(ctx);
 	if (ctxImpl == nullptr)
 		return nullptr;
 
-	return new (std::nothrow) SolverImpl<CAESReal>(ctxImpl, corrections, options);
+	return new (std::nothrow) SolverImpl<CAESReal>(ctxImpl, corrections);
 }
 
 /*!
@@ -788,13 +619,30 @@ Solver * createSolverInternal(const SolverContext *ctx, const NonidealityCorrect
  * @retval RetCode::E_MISSING_PB Complexation constant was not set.
  */
 template <typename CAESReal>
-RetCode createSolverContextInternal(SolverContext *&ctx, const SysComp::ChemicalSystem &chemSystem) noexcept
+RetCode createSolverContextInternal(SolverContext *&ctx, const SolverContext::Options options, const SysComp::ChemicalSystem &chemSystem) noexcept
 {
+	auto makeTotalEquilibrium = [options](const auto *ct) -> TotalEquilibriumBase * {
+		if (options & SolverContext::Options::DISABLE_THREAD_SAFETY)
+			return new TotalEquilibrium<CAESReal, false>(ct->chargeLow, ct->chargeHigh, ct->pKas, ct->analyticalConcentrationIndex);
+		return new TotalEquilibrium<CAESReal, true>(ct->chargeLow, ct->chargeHigh, ct->pKas, ct->analyticalConcentrationIndex);
+	};
+
+	auto countTEForms = [](const auto &TEVec, const auto &caster) {
+		int TECount = 0;
+		for (const auto *teb : TEVec) {
+			const auto *te = caster(teb);
+			TECount += te->numHigh - te->numLow + 1;
+		}
+		return TECount;
+	};
+
 	LigandVec<CAESReal> *allLigands = nullptr;
 	LigandIonicFormVec<CAESReal> *allLigandIFs = nullptr;
 	CNVec<CAESReal> *complexNuclei = nullptr;
 	FormVec<CAESReal> *allForms = nullptr;
 	SolverMatrix<CAESReal> *preJacobian = nullptr;
+	int TECount = 0;
+	std::vector<TotalEquilibriumBase *> totalEquilibria;
 	RetCode tRet;
 	size_t fullDim;
 
@@ -826,7 +674,28 @@ RetCode createSolverContextInternal(SolverContext *&ctx, const SysComp::Chemical
 	fullDim = allForms->size() + allLigandIFs->size() + 2;
 
 	try {
-		ctx = new SolverContextImpl<CAESReal>(allLigands, allLigandIFs, complexNuclei, allForms, preJacobian, fullDim, chemSystem.constituents->size());
+		totalEquilibria.reserve(complexNuclei->size() + allLigands->size());
+
+		/* Estimate pH of the system by ignoring any complexation */
+		for (const ComplexNucleus<CAESReal> *cn : *complexNuclei)
+			totalEquilibria.emplace_back(makeTotalEquilibrium(cn));
+
+		for (const Ligand<CAESReal> *l : *allLigands)
+			totalEquilibria.emplace_back(makeTotalEquilibrium(l));
+
+
+		if (options & SolverContext::Options::DISABLE_THREAD_SAFETY)
+			TECount = countTEForms(totalEquilibria, [](const TotalEquilibriumBase *teb) { return static_cast<const TotalEquilibrium<CAESReal, false> *>(teb); });
+		else
+			TECount = countTEForms(totalEquilibria, [](const TotalEquilibriumBase *teb) { return static_cast<const TotalEquilibrium<CAESReal, true> *>(teb); });
+	} catch (const std::bad_alloc &) {
+		return RetCode::E_NO_MEMORY;
+	}
+
+	try {
+		ctx = new SolverContextImpl<CAESReal>(allLigands, allLigandIFs, complexNuclei, allForms, preJacobian,
+						      fullDim, chemSystem.constituents->size(),
+						      std::move(totalEquilibria), options, TECount + 2);
 	} catch (std::bad_alloc &) {
 		tRet = RetCode::E_NO_MEMORY;
 

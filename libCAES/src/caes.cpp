@@ -3,9 +3,9 @@
 namespace ECHMET {
 namespace CAES {
 
-Solver * ECHMET_CC createSolver(const SolverContext *ctx, const NonidealityCorrections corrections, const Solver::Options options) noexcept
+Solver * ECHMET_CC createSolver(SolverContext *ctx, const NonidealityCorrections corrections) noexcept
 {
-	return createSolverInternal<ECHMETReal>(ctx, corrections, options);
+	return createSolverInternal<ECHMETReal>(ctx, corrections);
 }
 
 /*!
@@ -20,9 +20,9 @@ Solver * ECHMET_CC createSolver(const SolverContext *ctx, const NonidealityCorre
  * @retval RetCode::E_BAD_INPUT Nonsensical input data.
  * @retval RetCode::E_MISSING_PB Complexation constant was not set.
  */
-RetCode ECHMET_CC createSolverContext(SolverContext *&ctx, const SysComp::ChemicalSystem &chemSystem) noexcept
+RetCode ECHMET_CC createSolverContext(SolverContext *&ctx, const SolverContext::Options options, const SysComp::ChemicalSystem &chemSystem) noexcept
 {
-	return createSolverContextInternal<ECHMETReal>(ctx, chemSystem);
+	return createSolverContextInternal<ECHMETReal>(ctx, options, chemSystem);
 }
 
 /*!
@@ -37,11 +37,11 @@ RetCode ECHMET_CC createSolverContext(SolverContext *&ctx, const SysComp::Chemic
  *         pointer is not castable to \SolverContextImpl
  * @retval RetCode::E_NO_MEMORY Not enough memory to estimate distribution
  */
-RetCode estimateDistribution(const Solver *ctx, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept
+RetCode estimateDistribution(SolverContext *ctx, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept
 {
 	SolverVector<ECHMETReal> estC{};
 
-	RetCode tRet = estimateDistributionInternal<ECHMETReal>(ctx->context(), analyticalConcentrations, estC);
+	RetCode tRet = estimateDistributionInternal<ECHMETReal>(ctx, analyticalConcentrations, estC);
 	if (tRet != RetCode::OK)
 		return tRet;
 

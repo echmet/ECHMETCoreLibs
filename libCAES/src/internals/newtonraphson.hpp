@@ -8,13 +8,16 @@ template <typename NRReal>
 NewtonRaphson<NRReal>::NewtonRaphson(const int elements) :
 	maxIterations(defaultMaxIterations()),
 	xPrecision(defaultDxPrecision()),
-	fPrecision(defaultFPrecision())
+	fPrecision(defaultFPrecision()),
+	m_lu(elements)
 {
 	ZConstructor();
 
 	m_f = SolverVector<NRReal>::Zero(elements);
 	m_j = SolverMatrix<NRReal>::Zero(elements, elements);
 	m_dx = SolverVector<NRReal>::Zero(elements);
+
+	ECHMET_DEBUG_CODE(fprintf(stderr, "Fx rows %ld, Jx dims %ld,%ld, Dx rows %ld\n", m_f.rows(), m_j.rows(), m_j.cols(), m_dx.rows()));
 }
 
 template <typename NRReal>
@@ -26,14 +29,10 @@ void NewtonRaphson<NRReal>::AInit()
 {}
 
 template <typename NRReal>
-SolverVector<NRReal> const & NewtonRaphson<NRReal>::ASolve()
+typename NewtonRaphson<NRReal>::TX const & NewtonRaphson<NRReal>::ASolve()
 {
-
-	// INIT
-
-	SolverVector<NRReal> &x = *m_px;
-
 	m_iteration = 0;
+	m_stuckCounter = 0;
 
 	AInit();
 
@@ -42,8 +41,8 @@ SolverVector<NRReal> const & NewtonRaphson<NRReal>::ASolve()
 	while (true)
 	{
 		// !2
-		ACalculateF(m_f, x);
-		ACalculateJ(m_j, x);
+		ACalculateF(m_f, *m_px);
+		ACalculateJ(m_j, *m_px);
 
 		ZCalculateMeasures(m_f, m_fMin, m_fMax);
 		ZCalculateMeasures(m_dx, m_dxMin, m_dxMax);                                  // 1
@@ -51,13 +50,15 @@ SolverVector<NRReal> const & NewtonRaphson<NRReal>::ASolve()
 		ZCheckStatus();
 
 		if (m_status != Status::CONTINUE)
-			return x;
+			return *m_px;
 
 		this->m_iteration++;
 
-		m_dx = m_j.partialPivLu().solve(m_f);
+		//m_dx = m_j.partialPivLu().solve(m_f);
+		m_lu.compute(m_j);
+		m_dx = m_lu.solve(m_f);
 
-		x -= m_dx;
+		*m_px -= m_dx;
 	};
 
 }

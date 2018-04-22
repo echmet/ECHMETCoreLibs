@@ -34,19 +34,6 @@ IS_POD(SolverIterations)
 class SolverContext {
 public:
 	/*!
-	 * Frees resources claimed by the object.
-	 */
-	virtual void ECHMET_CC destroy() const ECHMET_NOEXCEPT = 0;
-protected:
-	virtual ~SolverContext() ECHMET_NOEXCEPT = 0;
-};
-
-/*!
- * Equilibria solver interface.
- */
-class Solver {
-public:
-	/*!
 	 * Options that modify behavior of the solver.
 	 */
 	ECHMET_WK_ENUM(Options) {
@@ -57,13 +44,6 @@ public:
 							     This option cannot be changed during solver's lifetime. */
 		ENUM_FORCE_INT32_SIZE(CAESOptions)
 	};
-
-	/*!
-	 * Returns a pointer to the context assigned to the solver.
-	 *
-	 * @return Pointer to \p SolverContext object.
-	 */
-	virtual const SolverContext * ECHMET_CC context() const ECHMET_NOEXCEPT = 0;
 
 	/*!
 	 * Frees resources claimed by the object.
@@ -78,17 +58,6 @@ public:
 	virtual Options ECHMET_CC options() const ECHMET_NOEXCEPT = 0;
 
 	/*!
-	 * Sets a new context for the solver.
-	 *
-	 * @param[in] ctx New context.
-	 *
-	 * @retval RetCode::OK Success
-	 * @retval RetCode::E_INVALID_ARGUMENT \p SolverContext not castable to \p SolverContextImpl.
-	 * @retval RetCode::E_NO_MEMORY Not enough memory to allocate new \p SolverInternal object.
-	 */
-	virtual RetCode ECHMET_CC setContext(const SolverContext *ctx) ECHMET_NOEXCEPT = 0;
-
-	/*!
 	 * Sets new options for the solver.
 	 *
 	 * @param[in] options The new options to set.
@@ -97,6 +66,48 @@ public:
 	 * @retval RetCode::E_INVALID_ARGUMENT Nonsensical options passed as the argument
 	 */
 	virtual RetCode ECHMET_CC setOptions(const Options options) ECHMET_NOEXCEPT = 0;
+
+	/*!
+	 * Returns default solver options.
+	 *
+	 * @return Default options.
+	 */
+	static Options ECHMET_CC defaultOptions() ECHMET_NOEXCEPT
+	{
+		return static_cast<Options>(0);
+	}
+
+protected:
+	virtual ~SolverContext() ECHMET_NOEXCEPT = 0;
+};
+
+/*!
+ * Equilibria solver interface.
+ */
+class Solver {
+public:
+	/*!
+	 * Returns a pointer to the context assigned to the solver.
+	 *
+	 * @return Pointer to \p SolverContext object.
+	 */
+	virtual SolverContext * ECHMET_CC context() ECHMET_NOEXCEPT = 0;
+
+	/*!
+	 * Frees resources claimed by the object.
+	 */
+	virtual void ECHMET_CC destroy() const ECHMET_NOEXCEPT = 0;
+
+	/*!
+	 * Sets a new context for the solver.
+	 *
+	 * @param[in] ctx New context.
+	 *
+	 * @retval RetCode::OK Success
+	 * @retval RetCode::E_INVALID_ARGUMENT \p SolverContext not castable to \p SolverContextImpl.
+	 * @retval RetCode::E_NO_MEMORY Not enough memory to allocate new \p SolverInternal object.
+	 */
+	virtual RetCode ECHMET_CC setContext(SolverContext *ctx) ECHMET_NOEXCEPT = 0;
 
 	/*!
 	 * Calculates the equilibrium ionic distribution of the system.
@@ -118,23 +129,13 @@ public:
 	 */
 	virtual RetCode ECHMET_CC solve(const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps, const size_t iterations, SolverIterations *iterationsNeeded = ECHMET_NULLPTR) ECHMET_NOEXCEPT = 0;
 
-	/*!
-	 * Returns default solver options.
-	 *
-	 * @return Default options.
-	 */
-	static Options ECHMET_CC defaultOptions() ECHMET_NOEXCEPT
-	{
-		return static_cast<Options>(0);
-	}
-
 protected:
 	virtual ~Solver() ECHMET_NOEXCEPT = 0;
 };
 
 extern "C" {
 
-ECHMET_API Solver * ECHMET_CC createSolver(const SolverContext *ctx, const NonidealityCorrections corrections, const Solver::Options options) ECHMET_NOEXCEPT;
+ECHMET_API Solver * ECHMET_CC createSolver(SolverContext *ctx, const NonidealityCorrections corrections) ECHMET_NOEXCEPT;
 
 /*!
  * Creates a solver context for a given system and intializes
@@ -148,12 +149,12 @@ ECHMET_API Solver * ECHMET_CC createSolver(const SolverContext *ctx, const Nonid
  * @retval RetCode::E_BAD_INPUT Nonsensical input data.
  * @retval RetCode::E_MISSING_PB Complexation constant was not set.
  */
-ECHMET_API RetCode ECHMET_CC createSolverContext(SolverContext *&ctx, const SysComp::ChemicalSystem &chemSystem) ECHMET_NOEXCEPT;
+ECHMET_API RetCode ECHMET_CC createSolverContext(SolverContext *&ctx, const SolverContext::Options options, const SysComp::ChemicalSystem &chemSystem) ECHMET_NOEXCEPT;
 
 /*!
  * Calculates the initial estimation of concentration of all species in the system.
  *
- * @param[in] solver Solver to utilize.
+ * @param[in] solver SolverContext to utilize.
  * @param[in] analyticalConcentrations Vector of analytical concentrations of all compounds in the system.
  * @param{in,out] calcProps \p CalculatedProperties object associated with the system that is being solved.
  *
@@ -162,7 +163,7 @@ ECHMET_API RetCode ECHMET_CC createSolverContext(SolverContext *&ctx, const SysC
  *         pointer is not castable to internal solver implementation.
  * @retval RetCode::E_NO_MEMORY Not enough memory to estimate distribution.
  */
-ECHMET_API RetCode ECHMET_CC estimateDistribution(const Solver *solver, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) ECHMET_NOEXCEPT;
+ECHMET_API RetCode ECHMET_CC estimateDistribution(SolverContext *ctx, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) ECHMET_NOEXCEPT;
 
 } // extern "C"
 

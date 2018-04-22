@@ -60,11 +60,8 @@ public:
 
 	inline void               Report()        const;
 
-	//SolverMatrix const &  GetX()    const;
-
 	int                GetIterations() const;
 	Status             GetStatus()     const;
-	//SolverMatrix const &  GetF()          const;
 	SolverMatrix<NRReal> const &  GetJ()          const;
 	SolverMatrix<NRReal> const &  GetdX()         const;
 
@@ -75,6 +72,9 @@ public:
 
 	void operator=(NewtonRaphson const &) = delete;
 
+protected:
+	typedef Eigen::Map<SolverVector<NRReal>, Eigen::AlignmentType::Aligned64> TX;
+
 private:
 	Status m_status;
 	NRReal m_dxMin;
@@ -82,11 +82,15 @@ private:
 	NRReal m_fMin;
 	NRReal m_fMax;
 
-	SolverVector<NRReal> *m_px;
+	TX *m_px;
 
 	SolverVector<NRReal> m_f;
 	SolverMatrix<NRReal> m_j;
 	SolverVector<NRReal> m_dx;
+
+	Eigen::PartialPivLU<SolverMatrix<NRReal>> m_lu;
+
+	int m_stuckCounter;
 
 	void ZConstructor();
 	void ZCalculateMeasures(SolverVector<NRReal> const &v, NRReal &min, NRReal &max);
@@ -108,12 +112,12 @@ private:
 	}
 
 protected:
+
 	virtual void AInit();
-	virtual void ACalculateF(SolverVector<NRReal> &, SolverVector<NRReal> const &) = 0;
-	virtual void ACalculateJ(SolverMatrix<NRReal> &, SolverVector<NRReal> const &) = 0;
-	SolverVector<NRReal> const & ASolve();
-	inline SolverVector<NRReal> const & ASolve(SolverVector<NRReal> const &);
-	inline SolverVector<NRReal> const & ASolve(SolverVector<NRReal> *);
+	virtual void ACalculateF(SolverVector<NRReal> &, TX const &) = 0;
+	virtual void ACalculateJ(SolverMatrix<NRReal> &, TX const &) = 0;
+	TX const & ASolve();
+	TX const & ASolve(TX *);
 	size_t m_iteration;
 };
 
@@ -157,15 +161,22 @@ void NewtonRaphson<NRReal>::ZCheckStatus()
 {
 	// order of ifs matters
 
-	if (m_fMax <= fPrecision && m_dxMax <= xPrecision) m_status = Status::SUCCEEDED;
-	else if (m_iteration >= maxIterations)             m_status = Status::NO_CONVERGENCE;
-	else if (m_iteration == 0)                         m_status = Status::CONTINUE;
-	else if (m_dxMax <= xPrecision)                    m_status = Status::STUCK;
-	else                                               m_status = Status::CONTINUE;
+	if (m_fMax <= fPrecision /*&& m_dxMax <= xPrecision*/)
+		m_status = Status::SUCCEEDED;
+	else if (m_iteration >= maxIterations)
+		m_status = Status::NO_CONVERGENCE;
+	else if (m_iteration == 0)
+		m_status = Status::CONTINUE;
+	else if (m_dxMax <= xPrecision && m_stuckCounter++ > 20)
+		m_status = Status::STUCK;
+	else {
+		m_status = Status::CONTINUE;
+		m_stuckCounter = 0;
+	}
 }
 
 template <typename NRReal>
-SolverVector<NRReal> const & NewtonRaphson<NRReal>::ASolve(SolverVector<NRReal> *x_)
+typename NewtonRaphson<NRReal>::TX const & NewtonRaphson<NRReal>::ASolve(TX *x_)
 {
 	m_px = x_;
 

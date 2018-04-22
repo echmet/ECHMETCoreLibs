@@ -19,7 +19,14 @@ endif()
 
 set(libCAES_SRCS
     src/caes.cpp
-    src/caes_extended.cpp)
+    src/caes_extended.cpp
+    src/solverimpl.cpp
+    src/solverinternal.cpp
+    src/cpufeatures.cpp
+    src/vecmath/vecmath.cpp
+    src/vecmath/vecmath_avx.cpp
+    src/vecmath/vecmath_sse2.cpp
+    src/vecmath/vecmath_fma3.cpp)
 
 include_directories(${INCLUDE_DIRECTORIES}
                     "${CMAKE_CURRENT_SOURCE_DIR}/include"

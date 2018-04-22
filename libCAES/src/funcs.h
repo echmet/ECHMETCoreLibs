@@ -100,7 +100,7 @@ static inline T X10(const T &t)
 template<>
 inline double X10(const double &t)
 {
-	return ::std::exp(-t * 2.302585092994046);
+	return ::std::exp(-t * M_LN10);
 }
 
 /*!
