@@ -247,6 +247,9 @@ SolverVector<CAESReal> estimatepHFast(const CAESReal &cHInitial, std::vector<Tot
 
 		//fprintf(stderr, "cH %g, z %g, dZ %g, cHNew, %g\n", CAESRealToDouble(cH), CAESRealToDouble(z), CAESRealToDouble(dZ), CAESRealToDouble(cHNew));
 
+		if (cHNew <= 0.0)
+			throw FastEstimateFailureException{};
+
 		if (VMath::abs(cHNew - cH) < threshold)
 			break;
 
@@ -261,9 +264,6 @@ SolverVector<CAESReal> estimatepHFast(const CAESReal &cHInitial, std::vector<Tot
 	}
 
 	ECHMET_DEBUG_CODE(fprintf(stderr, "cH = %g\n", CAESRealToDouble(cH)));
-
-	if (cH <= 0.0)
-		throw FastEstimateFailureException{};
 
 	icConcs(0) = cH;
 	icConcs(1) = KW_298 / cH;
