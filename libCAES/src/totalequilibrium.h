@@ -69,6 +69,8 @@ private:
 template <typename CAESReal>
 class TotalEquilibrium<CAESReal, true> : public TotalEquilibriumBase {
 public:
+	typedef std::tuple<std::vector<CAESReal>, std::vector<CAESReal>> DDPack;
+
 	TotalEquilibrium();
 
 	/*!
@@ -92,7 +94,9 @@ public:
 	TotalEquilibrium(const TotalEquilibrium &other);
 	TotalEquilibrium(TotalEquilibrium &&other);
 	std::vector<CAESReal> concentrations(const CAESReal &v, const RealVec *analyticalConcentrations) const;
+	DDPack distributionAnddDistdV(const CAESReal &v) const;
 	std::vector<CAESReal> distribution(const CAESReal &v) const;
+	std::vector<CAESReal> dTsdV(const CAESReal &v, CAESReal &X) const;
 	std::vector<CAESReal> Ts(const CAESReal &v, CAESReal &X) const;
 
 	const size_t concentrationIndex;	/*!< Analytical concentration index of the constituent */
@@ -129,6 +133,8 @@ private:
 template <typename CAESReal>
 class TotalEquilibrium<CAESReal, false> : public TotalEquilibriumBase {
 public:
+	typedef std::tuple<const std::vector<CAESReal> &, const std::vector<CAESReal> &> DDPack;
+
 	TotalEquilibrium();
 
 	/*!
@@ -148,6 +154,8 @@ public:
 	{
 		m_concentrations.resize(Ls.size());
 		m_distribution.resize(Ls.size());
+		m_dDistdV.resize(Ls.size());
+		m_dTsdV.resize(Ls.size());
 		m_Ts.resize(Ls.size());
 	}
 
@@ -155,7 +163,9 @@ public:
 	TotalEquilibrium(const TotalEquilibrium &other);
 	TotalEquilibrium(TotalEquilibrium &&other);
 	const std::vector<CAESReal> & concentrations(const CAESReal &v, const RealVec *analyticalConcentrations);
+	DDPack distributionAnddDistdV(const CAESReal &v);
 	const std::vector<CAESReal> & distribution(const CAESReal &v);
+	std::vector<CAESReal> & dTsdV(const CAESReal &v, CAESReal &X);
 	const std::vector<CAESReal> & Ts(const CAESReal &v, CAESReal &X);
 
 	const size_t concentrationIndex;	/*!< Analytical concentration index of the constituent */
@@ -191,6 +201,8 @@ private:
 
 	std::vector<CAESReal> m_concentrations;
 	std::vector<CAESReal> m_distribution;
+	std::vector<CAESReal> m_dDistdV;
+	std::vector<CAESReal> m_dTsdV;
 	std::vector<CAESReal> m_Ts;
 };
 

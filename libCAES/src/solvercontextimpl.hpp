@@ -36,6 +36,7 @@ SolverContextImpl<CAESReal>::SolverContextImpl(const LigandVec<CAESReal> *allLig
 	m_options(options)
 {
 	estimatedIonicConcentrations.resize(TECount);
+	dEstimatedIonicConcentrationsdH.resize(TECount);
 }
 
 /*!

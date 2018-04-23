@@ -37,11 +37,26 @@ RetCode ECHMET_CC createSolverContext(SolverContext *&ctx, const SolverContext::
  *         pointer is not castable to \SolverContextImpl
  * @retval RetCode::E_NO_MEMORY Not enough memory to estimate distribution
  */
-RetCode estimateDistribution(SolverContext *ctx, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept
+RetCode estimateDistributionSafe(SolverContext *ctx, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept
+{
+	const ECHMETReal dummy = 0.0;	/* Unused */
+	SolverVector<ECHMETReal> estC{};
+
+	RetCode tRet = estimateDistributionInternal<ECHMETReal>(dummy, ctx, analyticalConcentrations, estC, false);
+	if (tRet != RetCode::OK)
+		return tRet;
+
+	for (int idx = 0; idx < estC.size(); idx++)
+		(*calcProps.ionicConcentrations)[idx] = estC(idx);
+
+	return RetCode::OK;
+}
+
+RetCode estimateDistributionFast(const ECHMETReal &cHInitial, SolverContext *ctx, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept
 {
 	SolverVector<ECHMETReal> estC{};
 
-	RetCode tRet = estimateDistributionInternal<ECHMETReal>(ctx, analyticalConcentrations, estC);
+	RetCode tRet = estimateDistributionInternal<ECHMETReal>(cHInitial, ctx, analyticalConcentrations, estC, true);
 	if (tRet != RetCode::OK)
 		return tRet;
 

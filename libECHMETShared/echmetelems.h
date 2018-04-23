@@ -70,6 +70,7 @@ ECHMET_ST_ENUM(RetCode) {
 	E_DUPLICIT_CONSTITUENTS = 0x102,	/*!< There are two or more constituents of the same name. */
 	/* CAES error codes */
 	E_INVALID_COMPOSITION = 0x200,		/*!< System composition is ill-defined. */
+	E_FAST_ESTIMATE_FAILURE = 0x201,	/*!< Fast concentration estimate failed */
 	E_NRS_FAILURE = 0x202,			/*!< Numerical error occured in the Newton-Raphson solver. */
 	E_IS_NO_CONVERGENCE = 0x203,		/*!< Solver failed to find a solution corrected for the ionic strength. */
 	E_MISSING_PB = 0x204,			/*!< Complexation constant for a mixed complex form has not been entered. */

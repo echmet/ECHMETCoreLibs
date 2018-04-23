@@ -70,10 +70,15 @@ template <typename CAESReal>
 void estimateComplexesDistribution(const CNVec<CAESReal> *complexNuclei, const LigandVec<CAESReal> *allLigands,
 				   const SolverVector<CAESReal> &estConcentrations, const size_t LGBlockOffset, SysComp::IonicConcentrationVec *ionicConcentrations);
 template <typename CAESReal>
-RetCode estimateDistributionInternal(SolverContext *ctx, RealVec *analyticalConcentrations, SolverVector<CAESReal> &estimatedConcentrations) noexcept;
+RetCode estimateDistributionInternal(const CAESReal &cHInitial, SolverContext *ctx, RealVec *analyticalConcentrations, SolverVector<CAESReal> &estimatedConcentrations,
+				     const bool useFastEstimate) noexcept;
 
 template <typename CAESReal, bool ThreadSafe>
-SolverVector<CAESReal> estimatepH(std::vector<TotalEquilibriumBase *> &totalEquilibria, const RealVec *analyticalConcentrations, SolverVector<CAESReal> &icConcs);
+SolverVector<CAESReal> estimatepHFast(const CAESReal &cHInitial, std::vector<TotalEquilibriumBase *> &totalEquilibria, const RealVec *analyticalConcentrations,
+				      SolverVector<CAESReal> &icConcs, SolverVector<CAESReal> &dIcConcsdH);
+
+template <typename CAESReal, bool ThreadSafe>
+SolverVector<CAESReal> estimatepHSafe(std::vector<TotalEquilibriumBase *> &totalEquilibria, const RealVec *analyticalConcentrations, SolverVector<CAESReal> &icConcs);
 
 template <typename CAESReal>
 void generateComplexForms(Form<CAESReal> *f, FormVec<CAESReal> &forms, std::vector<FormVec<CAESReal>> &blocks, const LigandIonicFormVec<CAESReal> &ligandIFs, size_t gidx, const size_t stop);

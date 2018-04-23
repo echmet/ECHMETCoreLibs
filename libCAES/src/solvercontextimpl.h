@@ -35,6 +35,7 @@ public:
 
 	std::vector<TotalEquilibriumBase *> totalEquilibria;
 	SolverVector<CAESReal> estimatedIonicConcentrations;
+	SolverVector<CAESReal> dEstimatedIonicConcentrationsdH;
 
 private:
 	Options m_options;					/*!< Solver options */

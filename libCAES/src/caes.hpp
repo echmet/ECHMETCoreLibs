@@ -12,8 +12,54 @@
 namespace ECHMET {
 namespace CAES {
 
+class FastEstimateFailureException : public std::exception {
+public:
+	using std::exception::exception;
+};
+
 /*!
- * Calculates distribution of concentrations of given species.
+ * Calculates distribution of concentrations and its derivative of the entire system
+ *
+ * @param[in] v Variable in the equilibrium equations.
+ * @param[in,out] distribution Resulting vector of concentrations. The vector has to be resized by the caller to accomodate all individual concentrations.
+ * @param[in,out] dDistdV Resulting vector of concentration derivatives. The vector has to be resized by the caller to accomodate all individual concentrations.
+ * @param[in] totalEquilibria Vector of objects that descibe the given equilibria.
+ */
+template <typename CAESReal, bool ThreadSafe>
+void calculateDistributionWithDerivative(const CAESReal &v, SolverVector<CAESReal> &distribution, SolverVector<CAESReal> &dDistdV, std::vector<TotalEquilibriumBase *> &totalEquilibria, const RealVec *analyticalConcentrations)
+{
+	size_t rowCounter = 2;
+
+	for (TotalEquilibriumBase *teb : totalEquilibria) {
+		auto *te = static_cast<TotalEquilibrium<CAESReal, ThreadSafe> *>(teb);
+		CAESReal X = 0.0;
+		CAESReal dX = 0.0;
+		const std::vector<CAESReal> & Ts = te->Ts(v, X);
+		const std::vector<CAESReal> & dTsdV = te->dTsdV(v, dX);
+
+		assert(Ts.size() == dTsdV.size());
+
+		const CAESReal &c = analyticalConcentrations->elem(te->concentrationIndex);
+
+		for (size_t idx = 0; idx < Ts.size(); idx++) {
+			const CAESReal &T = Ts[idx];
+			const CAESReal &dT = dTsdV[idx];
+
+			/* Distribution */
+			const CAESReal fC = T / X;
+			distribution(rowCounter) = c * fC;
+
+			/* dDistdV */
+			const CAESReal fD = (dT * X - T * dX) / (X * X);
+			dDistdV(rowCounter) = c * fD;
+
+			rowCounter++;
+		}
+	}
+}
+
+/*!
+ * Calculates distribution of concentrations of the entire system
  *
  * @param[in] v Variable in the equilibrium equations.
  * @param[in,out] distribution Resulting vector of concentrations. The vector has to be resized by the caller to accomodate all individual concentrations.
@@ -29,14 +75,12 @@ void calculateDistribution(const CAESReal &v, SolverVector<CAESReal> &distributi
 		CAESReal X = 0.0;
 		const std::vector<CAESReal> & Ts = te->Ts(v, X);
 
-		int num = te->numLow;
 		const CAESReal &c = analyticalConcentrations->elem(te->concentrationIndex);
 		for (const CAESReal &T : Ts) {
 			const CAESReal fC = c * T / X;
 
 			distribution(rowCounter) = fC;
 
-			num++;
 			rowCounter++;
 		}
 	}
@@ -104,9 +148,11 @@ void estimateComplexesDistribution(const CNVec<CAESReal> *complexNuclei, const L
  * @retval RetCode::E_INVALID_ARGUMENT Unexpected size of the concentration vectors or the \p ctx
  *         pointer is not castable to \p SolverContextImpl .
  * @retval RetCode::E_NO_MEMORY Not enough memory to estimate distribution.
+ * @retval RetCode::E_FAST_ESTIMATE_FAILURE Fast estimation failed to find a solution.
  */
 template <typename CAESReal>
-RetCode estimateDistributionInternal(SolverContext *ctx, const RealVec *analyticalConcentrations, SolverVector<CAESReal> &estimatedConcentrations) noexcept
+RetCode estimateDistributionInternal(const CAESReal &cHInitial, SolverContext *ctx, const RealVec *analyticalConcentrations, SolverVector<CAESReal> &estimatedConcentrations,
+				     const bool useFastEstimate) noexcept
 {
 	SolverContextImpl<CAESReal> *ctxImpl = dynamic_cast<SolverContextImpl<CAESReal> *>(ctx);
 	if (ctxImpl == nullptr)
@@ -116,11 +162,22 @@ RetCode estimateDistributionInternal(SolverContext *ctx, const RealVec *analytic
 
 	try {
 		const SolverVector<CAESReal> estConcentrations = [&]() {
-			if (ctxImpl->options() & SolverContext::Options::DISABLE_THREAD_SAFETY)
-				return estimatepH<CAESReal, false>(ctxImpl->totalEquilibria, analyticalConcentrations, ctxImpl->estimatedIonicConcentrations);
-			else {
-				SolverVector<CAESReal> icConcs(ctxImpl->TECount);
-				return estimatepH<CAESReal, true>(ctxImpl->totalEquilibria, analyticalConcentrations, icConcs);
+			if (useFastEstimate) {
+				if (ctxImpl->options() & SolverContext::Options::DISABLE_THREAD_SAFETY) {
+					return estimatepHFast<CAESReal, false>(cHInitial, ctxImpl->totalEquilibria, analyticalConcentrations,
+									       ctxImpl->estimatedIonicConcentrations,ctxImpl->dEstimatedIonicConcentrationsdH);
+				} else {
+					SolverVector<CAESReal> icConcs(ctxImpl->TECount);
+					SolverVector<CAESReal> dIcConcsdH(ctxImpl->TECount);
+					return estimatepHFast<CAESReal, true>(cHInitial, ctxImpl->totalEquilibria, analyticalConcentrations, icConcs, dIcConcsdH);
+				}
+			} else {
+				if (ctxImpl->options() & SolverContext::Options::DISABLE_THREAD_SAFETY)
+					return estimatepHSafe<CAESReal, false>(ctxImpl->totalEquilibria, analyticalConcentrations, ctxImpl->estimatedIonicConcentrations);
+				else {
+					SolverVector<CAESReal> icConcs(ctxImpl->TECount);
+					return estimatepHSafe<CAESReal, true>(ctxImpl->totalEquilibria, analyticalConcentrations, icConcs);
+				}
 			}
 		}();
 
@@ -135,22 +192,96 @@ RetCode estimateDistributionInternal(SolverContext *ctx, const RealVec *analytic
 		estimatedConcentrations(1) = estConcentrations(1);
 
 		estimateComplexesDistribution<CAESReal>(ctxImpl->complexNuclei, ctxImpl->allLigands, estConcentrations, ctxImpl->allForms->size() + 2, estimatedConcentrations);
-	} catch (std::bad_alloc &) {
+	} catch (const std::bad_alloc &) {
 		return RetCode::E_NO_MEMORY;
+	} catch (const FastEstimateFailureException &) {
+		return RetCode::E_FAST_ESTIMATE_FAILURE;
 	}
 
 	return RetCode::OK;
 }
 
 /*
- * Estimates pH of a system by taking only acidobazic equilibria into account
+ * Estimates pH of a system by taking only acidobazic equilibria into account.
+ * This is a fast variant that uses Newton-Raphson method to achieve fast convergence
+ * at the expense of needing a "good enough" initial estimate and the risk of
+ * silent failure if the initial estimate is not "good enough".
  *
  * @param[in] Vector of acidobazic equilibria for all considered species
  *
  * @return Vector of concentrations of all ionic forms including \p H+ and \p OH-
  */
 template <typename CAESReal, bool ThreadSafe>
-SolverVector<CAESReal> estimatepH(std::vector<TotalEquilibriumBase *> &totalEquilibria, const RealVec *analyticalConcentrations, SolverVector<CAESReal> &icConcs)
+SolverVector<CAESReal> estimatepHFast(const CAESReal &cHInitial, std::vector<TotalEquilibriumBase *> &totalEquilibria, const RealVec *analyticalConcentrations,
+				      SolverVector<CAESReal> &icConcs, SolverVector<CAESReal> &dIcConcsdH)
+{
+	const CAESReal KW_298 = CAESReal(PhChConsts::KW_298) * 1e6;
+	const CAESReal threshold = electroneturalityPrecision<CAESReal>();
+	size_t ctr = 0;
+	CAESReal cH = cHInitial;
+
+	auto calcTotalCharge = [](const SolverVector<CAESReal> &icConcs, const std::vector<TotalEquilibriumBase *> &totalEquilibria) {
+		CAESReal z = 0;
+		size_t rowCounter = 2;
+
+		for (const TotalEquilibriumBase *teb : totalEquilibria) {
+			const auto *te = static_cast<const TotalEquilibrium<CAESReal, ThreadSafe> *>(teb);
+			for (int charge = te->numLow; charge <= te->numHigh; charge++)
+				z += icConcs(rowCounter++) * charge;
+
+		}
+
+		return z;
+	};
+
+	for (;;) {
+		calculateDistributionWithDerivative<CAESReal, ThreadSafe>(cH, icConcs, dIcConcsdH, totalEquilibria, analyticalConcentrations);
+
+		CAESReal z = calcTotalCharge(icConcs, totalEquilibria);
+		CAESReal dZ = calcTotalCharge(dIcConcsdH, totalEquilibria);
+
+		z += cH - KW_298 / cH;
+		dZ += 1.0 + (KW_298 / cH / cH);
+
+		CAESReal cHNew = cH - z / dZ;
+
+		//fprintf(stderr, "cH %g, z %g, dZ %g, cHNew, %g\n", CAESRealToDouble(cH), CAESRealToDouble(z), CAESRealToDouble(dZ), CAESRealToDouble(cHNew));
+
+		if (VMath::abs(cHNew - cH) < threshold)
+			break;
+
+		/* Maximum number of iterations exceeded.
+		 * It is likely that the solver has run into trouble,
+		 * throw an error and let the user deal with it.
+		 */
+		if (ctr++ > 50)
+			throw FastEstimateFailureException{};
+
+		cH = cHNew;
+	}
+
+	ECHMET_DEBUG_CODE(fprintf(stderr, "cH = %g\n", CAESRealToDouble(cH)));
+
+	if (cH <= 0.0)
+		throw FastEstimateFailureException{};
+
+	icConcs(0) = cH;
+	icConcs(1) = KW_298 / cH;
+
+	return icConcs;
+}
+
+/*
+ * Estimates pH of a system by taking only acidobazic equilibria into account.
+ * This is a safe version that is guaranteed to converge for any \p H<sub>3<sub>O<sup>+</sup>
+ * concentration bounded by \p leftWall and \p rightWall parameters.
+ *
+ * @param[in] Vector of acidobazic equilibria for all considered species
+ *
+ * @return Vector of concentrations of all ionic forms including \p H+ and \p OH-
+ */
+template <typename CAESReal, bool ThreadSafe>
+SolverVector<CAESReal> estimatepHSafe(std::vector<TotalEquilibriumBase *> &totalEquilibria, const RealVec *analyticalConcentrations, SolverVector<CAESReal> &icConcs)
 {
 	const CAESReal KW_298 = CAESReal(PhChConsts::KW_298) * 1e6;
 	const CAESReal threshold = electroneturalityPrecision<CAESReal>();
@@ -179,6 +310,7 @@ SolverVector<CAESReal> estimatepH(std::vector<TotalEquilibriumBase *> &totalEqui
 		CAESReal z = calcTotalCharge(icConcs, totalEquilibria);
 
 		z += cH - KW_298 / cH;
+		//fprintf(stderr, "cH %g, z %g, dZ %g, cHNew, %g\n", CAESRealToDouble(cH), CAESRealToDouble(z), CAESRealToDouble(dZ), CAESRealToDouble(cHNew));
 
 		if (VMath::abs(z) < threshold)
 			break;
@@ -200,6 +332,8 @@ SolverVector<CAESReal> estimatepH(std::vector<TotalEquilibriumBase *> &totalEqui
 	}
 
 	ECHMET_DEBUG_CODE(fprintf(stderr, "cH = %g\n", CAESRealToDouble(cH)));
+
+	//fprintf(stderr, "DONE, iters %zu, cH = %g\n", ctr, CAESRealToDouble(cH));
 
 	icConcs(0) = cH;
 	icConcs(1) = KW_298 / cH;
