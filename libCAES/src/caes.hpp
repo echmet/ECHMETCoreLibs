@@ -219,6 +219,7 @@ SolverVector<CAESReal> estimatepHFast(const CAESReal &cHInitial, std::vector<Tot
 	const CAESReal threshold = electroneturalityPrecision<CAESReal>();
 	size_t ctr = 0;
 	CAESReal cH = cHInitial;
+	CAESReal cHNew;
 
 	auto calcTotalCharge = [](const SolverVector<CAESReal> &icConcs, const std::vector<TotalEquilibriumBase *> &totalEquilibria) {
 		CAESReal z = 0;
@@ -243,15 +244,18 @@ SolverVector<CAESReal> estimatepHFast(const CAESReal &cHInitial, std::vector<Tot
 		z += cH - KW_298 / cH;
 		dZ += 1.0 + (KW_298 / cH / cH);
 
-		CAESReal cHNew = cH - z / dZ;
+		cHNew = cH - z / dZ;
 
 		//fprintf(stderr, "cH %g, z %g, dZ %g, cHNew, %g\n", CAESRealToDouble(cH), CAESRealToDouble(z), CAESRealToDouble(dZ), CAESRealToDouble(cHNew));
 
 		if (cHNew <= 0.0)
 			throw FastEstimateFailureException{};
 
+
 		if (VMath::abs(cHNew - cH) < threshold)
 			break;
+
+		cH = cHNew;
 
 		/* Maximum number of iterations exceeded.
 		 * It is likely that the solver has run into trouble,
@@ -259,14 +263,12 @@ SolverVector<CAESReal> estimatepHFast(const CAESReal &cHInitial, std::vector<Tot
 		 */
 		if (ctr++ > 50)
 			throw FastEstimateFailureException{};
-
-		cH = cHNew;
 	}
 
 	ECHMET_DEBUG_CODE(fprintf(stderr, "cH = %g\n", CAESRealToDouble(cH)));
 
-	icConcs(0) = cH;
-	icConcs(1) = KW_298 / cH;
+	icConcs(0) = cHNew;
+	icConcs(1) = KW_298 / cHNew;
 
 	return icConcs;
 }
