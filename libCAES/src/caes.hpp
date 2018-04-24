@@ -86,6 +86,22 @@ void calculateDistribution(const CAESReal &v, SolverVector<CAESReal> &distributi
 	}
 }
 
+template <typename CAESReal, bool ThreadSafe>
+CAESReal calcTotalCharge(const SolverVector<CAESReal> &icConcs, const std::vector<TotalEquilibriumBase *> &totalEquilibria)
+{
+	CAESReal z = 0;
+	size_t rowCounter = 2;
+
+	for (const TotalEquilibriumBase *teb : totalEquilibria) {
+		const auto *te = static_cast<const TotalEquilibrium<CAESReal, ThreadSafe> *>(teb);
+		for (int charge = te->numLow; charge <= te->numHigh; charge++)
+			z += icConcs(rowCounter++) * charge;
+
+	}
+
+	return z;
+}
+
 /*!
  * Calculates initial estimate of concentration of all complex forms.
  *
@@ -221,25 +237,11 @@ SolverVector<CAESReal> estimatepHFast(const CAESReal &cHInitial, std::vector<Tot
 	CAESReal cH = cHInitial;
 	CAESReal cHNew;
 
-	auto calcTotalCharge = [](const SolverVector<CAESReal> &icConcs, const std::vector<TotalEquilibriumBase *> &totalEquilibria) {
-		CAESReal z = 0;
-		size_t rowCounter = 2;
-
-		for (const TotalEquilibriumBase *teb : totalEquilibria) {
-			const auto *te = static_cast<const TotalEquilibrium<CAESReal, ThreadSafe> *>(teb);
-			for (int charge = te->numLow; charge <= te->numHigh; charge++)
-				z += icConcs(rowCounter++) * charge;
-
-		}
-
-		return z;
-	};
-
 	for (;;) {
 		calculateDistributionWithDerivative<CAESReal, ThreadSafe>(cH, icConcs, dIcConcsdH, totalEquilibria, analyticalConcentrations);
 
-		CAESReal z = calcTotalCharge(icConcs, totalEquilibria);
-		CAESReal dZ = calcTotalCharge(dIcConcsdH, totalEquilibria);
+		CAESReal z = calcTotalCharge<CAESReal, ThreadSafe>(icConcs, totalEquilibria);
+		CAESReal dZ = calcTotalCharge<CAESReal, ThreadSafe>(dIcConcsdH, totalEquilibria);
 
 		z += cH - KW_298 / cH;
 		dZ += 1.0 + (KW_298 / cH / cH);
@@ -292,24 +294,10 @@ SolverVector<CAESReal> estimatepHSafe(std::vector<TotalEquilibriumBase *> &total
 	CAESReal leftWall = 0.0;
 	CAESReal rightWall = 100000.0;
 
-	auto calcTotalCharge = [](const SolverVector<CAESReal> &icConcs, const std::vector<TotalEquilibriumBase *> &totalEquilibria) {
-		CAESReal z = 0;
-		size_t rowCounter = 2;
-
-		for (const TotalEquilibriumBase *teb : totalEquilibria) {
-			const auto *te = static_cast<const TotalEquilibrium<CAESReal, ThreadSafe> *>(teb);
-			for (int charge = te->numLow; charge <= te->numHigh; charge++)
-				z += icConcs(rowCounter++) * charge;
-
-		}
-
-		return z;
-	};
-
 	for (;;) {
 		calculateDistribution<CAESReal, ThreadSafe>(cH, icConcs, totalEquilibria, analyticalConcentrations);
 
-		CAESReal z = calcTotalCharge(icConcs, totalEquilibria);
+		CAESReal z = calcTotalCharge<CAESReal, ThreadSafe>(icConcs, totalEquilibria);
 
 		z += cH - KW_298 / cH;
 		//fprintf(stderr, "cH %g, z %g, dZ %g, cHNew, %g\n", CAESRealToDouble(cH), CAESRealToDouble(z), CAESRealToDouble(dZ), CAESRealToDouble(cHNew));
