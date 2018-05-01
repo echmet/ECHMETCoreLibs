@@ -9,7 +9,8 @@ set(ECHMETShared_SRCS
     internal/echmetelems.cpp
     internal/echmetmath.cpp
     internal/initializers.cpp
-    internal/phchconsts.cpp)
+    internal/phchconsts.cpp
+    internal/cpufeatures.cpp)
 	
 if (!WIN32)
     set(ECHMET_SHARED_LINK_LIBS

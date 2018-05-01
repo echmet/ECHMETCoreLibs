@@ -82,6 +82,24 @@ ECHMET_ST_ENUM(RetCode) {
 };
 
 /*!
+ * Supported SIMD instruction set extenstions
+ */
+class CPUSIMD {
+public:
+	bool SSE2;	/*!< x86 SSE2 */
+	bool SSE3;	/*!< x86 SSE3 */
+	bool SSSE3;	/*!< x86 SSSE3 */
+	bool SSE41;	/*!< x86 SSE41 */
+	bool SSE42;	/*!< x86 SSE42 */
+	bool AVX;	/*!< x86 AVX */
+	bool AVX2;	/*!< x86 AVX2 */
+	bool AVX512;	/*!< x86 AVX512 */
+	bool FMA3;	/*!< x86 FMA3 */
+
+};
+IS_POD(CPUSIMD)
+
+/*!
  * Immutable string
  */
 class FixedString {
@@ -510,6 +528,20 @@ extern "C" {
 
 ECHMET_API bool ECHMET_CC nonidealityCorrectionIsSet(const NonidealityCorrections corrections, const NonidealityCorrectionsItems item) ECHMET_NOEXCEPT;
 ECHMET_API void ECHMET_CC nonidealityCorrectionSet(NonidealityCorrections &corrections, const NonidealityCorrectionsItems item) ECHMET_NOEXCEPT;
+
+/*!
+ * Returns CPU identifier string
+ *
+ * @return CPU identifier string, \p NULL if the identifier is not available
+ */
+ECHMET_API FixedString * ECHMET_CC cpuIdentifier() ECHMET_NOEXCEPT;
+
+/*!
+ * Returns set of SIMD instructions supported by available CPU
+ *
+ * @return \p CPUSIMD object
+ */
+ECHMET_API CPUSIMD ECHMET_CC cpuSupportedSIMD() ECHMET_NOEXCEPT;
 
 /*!
  * Creates an <tt>ECHMET::Vec</tt> of doubles.

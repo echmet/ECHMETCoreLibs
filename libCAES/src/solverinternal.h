@@ -57,7 +57,7 @@ private:
 		explicit VectorizedDelogifier(const VecMath<MISet> &vecMath, const size_t N) :
 			m_vecMath(vecMath),
 			N(N),
-			blockSize(VDType<MISet>::ALIGNMENT_BYTES / sizeof(CAESReal)),
+			blockSize(calcBlockSize()),
 			NBlock(N - (N % blockSize))
 		{
 		}
@@ -71,6 +71,13 @@ private:
 		}
 
 	private:
+		size_t calcBlockSize()
+		{
+			const size_t sz = VDType<MISet>::ALIGNMENT_BYTES / sizeof(CAESReal);
+
+			return sz > 0 ? sz : 1;
+		}
+
 		const VecMath<MISet> &m_vecMath;
 		const size_t N;
 		const size_t blockSize;

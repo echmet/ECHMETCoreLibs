@@ -22,7 +22,6 @@ set(libCAES_SRCS
     src/caes_extended.cpp
     src/solverimpl.cpp
     src/solverinternal.cpp
-    src/cpufeatures.cpp
     src/vecmath/vecmath.cpp
     src/vecmath/vecmath_avx.cpp
     src/vecmath/vecmath_sse2.cpp

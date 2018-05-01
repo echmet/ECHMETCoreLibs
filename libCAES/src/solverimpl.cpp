@@ -1,14 +1,18 @@
 #include "vecmath/vecmath.h"
-#include "cpufeatures.h"
 
+#define ECHMET_IMPORT_INTERNAL
 #include <echmetelems.h>
+
+#ifndef NDEBUG
+#include <cstdio>
+#endif // NDEBUG
 
 namespace ECHMET {
 namespace CAES {
 
 InstructionSet detectInstructionSet()
 {
-	const auto simd = CPUFeatures::SIMD();
+	const CPUSIMD simd = cpuSupportedSIMD();
 
 	if (simd.FMA3) {
 		ECHMET_DEBUG_CODE(fprintf(stderr, "Using FMA3-optimized solver\n"));
@@ -22,6 +26,8 @@ InstructionSet detectInstructionSet()
 		ECHMET_DEBUG_CODE(fprintf(stderr, "Using SSE2-optimized solver\n"));
 		return InstructionSet::SSE2;
 	}
+
+	ECHMET_DEBUG_CODE(fprintf(stderr, "Using generic solver\n"));
 
 	return InstructionSet::GENERIC;
 }

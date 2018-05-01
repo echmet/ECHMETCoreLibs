@@ -1,10 +1,14 @@
 #include "../containers/echmetfixedstring_p.h"
 #include "../containers/echmetvec_p.h"
+#include "cpufeatures.h"
 
+#include <cstring>
 #include <typeinfo>
 
 #define _STRINGIFY(input) #input
 #define ERROR_CODE_CASE(erCase) case RetCode::erCase: return _STRINGIFY(erCase)
+
+#define SET_SIMD_FLAG(pub, intr, flag) pub.flag = intr.flag
 
 namespace ECHMET {
 
@@ -104,6 +108,33 @@ bool ECHMET_CC FixedStringImpl::operator!=(const FixedString &other) const noexc
 FixedString::~FixedString() noexcept {}
 
 template <> Vec<ECHMETReal>::~Vec() noexcept {}
+
+FixedString * ECHMET_CC cpuIdentifier() ECHMET_NOEXCEPT
+{
+	const auto name = CPUFeatures::name();
+
+	return createFixedString(name.c_str());
+}
+
+CPUSIMD ECHMET_CC cpuSupportedSIMD() ECHMET_NOEXCEPT
+{
+	const CPUFeatures::SupportedSIMD &simdInternal = CPUFeatures::SIMD();
+
+	CPUSIMD simd;
+	std::memset(&simd, 0, sizeof(CPUSIMD));
+
+	SET_SIMD_FLAG(simd, simdInternal, SSE2);
+	SET_SIMD_FLAG(simd, simdInternal, SSE3);
+	SET_SIMD_FLAG(simd, simdInternal, SSSE3);
+	SET_SIMD_FLAG(simd, simdInternal, SSE41);
+	SET_SIMD_FLAG(simd, simdInternal, SSE42);
+	SET_SIMD_FLAG(simd, simdInternal, AVX);
+	SET_SIMD_FLAG(simd, simdInternal, AVX2);
+	SET_SIMD_FLAG(simd, simdInternal, AVX512);
+	SET_SIMD_FLAG(simd, simdInternal, FMA3);
+
+	return simd;
+}
 
 bool ECHMET_CC nonidealityCorrectionIsSet(const NonidealityCorrections corrections, const NonidealityCorrectionsItems item) noexcept
 {
