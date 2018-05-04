@@ -29,29 +29,49 @@ class SolverInternalBase;
 template <typename CAESReal>
 class SolverImpl : public Solver {
 public:
-	explicit SolverImpl(SolverContextImpl<CAESReal> *ctx, const NonidealityCorrections corrections);
+	explicit SolverImpl(SolverContextImpl<CAESReal> *ctx, const Options options, const NonidealityCorrections corrections);
 	virtual ~SolverImpl() noexcept override;
 	virtual SolverContext * ECHMET_CC context() noexcept override;
 	virtual void ECHMET_CC destroy() const noexcept override;
+	virtual RetCode ECHMET_CC estimateDistributionFast(const ECHMETReal &cHInitial, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept override;
+	virtual RetCode ECHMET_CC estimateDistributionSafe(const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept override;
+	RetCode estimateDistributionInternal(const CAESReal &cHInitial, const RealVec *analyticalConcentrations, SolverVector<CAESReal> &estimatedConcentrations,
+					     const bool useFastEstimate) noexcept;
+	virtual Options ECHMET_CC options() const noexcept override;
 	virtual RetCode ECHMET_CC setContext(SolverContext *ctx) noexcept override;
+	virtual RetCode ECHMET_CC setOptions(const Options options) noexcept override;
 	virtual RetCode ECHMET_CC solve(const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps, const size_t iterations, SolverIterations *iterationsNeeded = nullptr) noexcept override;
 	RetCode solveRaw(SolverVector<CAESReal> &concentrations, CAESReal &ionicStrength, const SolverVector<CAESReal> *anCVec, const SolverVector<CAESReal> &estimatedConcentrations, const size_t iterations, SolverIterations *iterationsNeeded = nullptr) noexcept;
 
 private:
+	template <bool ThreadSafe>
+	SolverVector<CAESReal> estimatepHFast(const CAESReal &cHInitial, const RealVec *analyticalConcentrations,
+					      SolverVector<CAESReal> &icConcs, SolverVector<CAESReal> &dIcConcsdH);
+	template <bool ThreadSafe>
+	SolverVector<CAESReal> estimatepHSafe(const RealVec *analyticalConcentrations, SolverVector<CAESReal> &icConcs);
+	void initializeEstimators();
 	SolverInternalBase<CAESReal> * makeSolverInternal(const SolverContextImpl<CAESReal> *ctx) const;
+	void initializeTotalEquilibria(const SolverContextImpl<CAESReal> *ctx);
+	void releaseTotalEquilibria();
 	void releaseSolverInternal(SolverInternalBase<CAESReal> *internal, FreeMPFRCacheSwitch<true>) noexcept;
 	void releaseSolverInternal(SolverInternalBase<CAESReal> *internal, FreeMPFRCacheSwitch<false>) noexcept;
+	RetCode setContextInternal(SolverContextImpl<CAESReal> *ctx) noexcept;
 
 	SolverContextImpl<CAESReal> *m_ctx;			/*!< Associated solver context */
+
+	Solver::Options m_options;
 
 	SolverInternalBase<CAESReal> *m_internalUnsafe;		/*!< Internal solver used by thread-unsafe variant of the solver */
 	SolverVector<CAESReal> *m_anCVecUnsafe;			/*!< Vector of analytical concentrations used by thread-unsafe variant of the solver */
 	CAESReal *m_estimatedConcentrationsUnsafe;		/*!< Aligned array of estimated concentrations used by thread-unsafe variant of the solver */
-
-	const InstructionSet m_instructionSet;			/*!< Highest available CPU SIMD instruction set */
 	bool m_correctDebyeHuckel;				/*!< Correct with Debye-Hückel */
 
-	RetCode setContextInternal(SolverContextImpl<CAESReal> *ctx) noexcept;
+	const InstructionSet m_instructionSet;			/*!< Highest available CPU SIMD instruction set */
+
+	size_t m_TECount;					/*!< Number of ionic concentrations that can be estimated from G-polynomial */
+	std::vector<TotalEquilibriumBase *> m_totalEquilibria;
+	SolverVector<CAESReal> m_estimatedIonicConcentrations;
+	SolverVector<CAESReal> m_dEstimatedIonicConcentrationsdH;
 };
 
 template <typename CAESReal, bool ThreadSafe>
@@ -61,24 +81,10 @@ template <typename CAESReal>
 void calculateMaximumVariants(const size_t i, const LigandIonicFormVec<CAESReal> &ligandIFs, uint32_t &total, uint32_t accum, const bool exclusive) noexcept;
 
 template <typename CAESReal>
-Solver * createSolverInternal(SolverContext *ctx) noexcept;
+Solver * createSolverInternal(SolverContext *ctx, const Solver::Options options, const NonidealityCorrections corrections) noexcept;
 
 template <typename CAESReal>
-RetCode createSolverContextInternal(SolverContext *&ctx, const SolverContext::Options options, const SysComp::ChemicalSystem &chemSystem) noexcept;
-
-template <typename CAESReal>
-void estimateComplexesDistribution(const CNVec<CAESReal> *complexNuclei, const LigandVec<CAESReal> *allLigands,
-				   const SolverVector<CAESReal> &estConcentrations, const size_t LGBlockOffset, SysComp::IonicConcentrationVec *ionicConcentrations);
-template <typename CAESReal>
-RetCode estimateDistributionInternal(const CAESReal &cHInitial, SolverContext *ctx, RealVec *analyticalConcentrations, SolverVector<CAESReal> &estimatedConcentrations,
-				     const bool useFastEstimate) noexcept;
-
-template <typename CAESReal, bool ThreadSafe>
-SolverVector<CAESReal> estimatepHFast(const CAESReal &cHInitial, std::vector<TotalEquilibriumBase *> &totalEquilibria, const RealVec *analyticalConcentrations,
-				      SolverVector<CAESReal> &icConcs, SolverVector<CAESReal> &dIcConcsdH);
-
-template <typename CAESReal, bool ThreadSafe>
-SolverVector<CAESReal> estimatepHSafe(std::vector<TotalEquilibriumBase *> &totalEquilibria, const RealVec *analyticalConcentrations, SolverVector<CAESReal> &icConcs);
+RetCode createSolverContextInternal(SolverContext *&ctx, const SysComp::ChemicalSystem &chemSystem) noexcept;
 
 template <typename CAESReal>
 void generateComplexForms(Form<CAESReal> *f, FormVec<CAESReal> &forms, std::vector<FormVec<CAESReal>> &blocks, const LigandIonicFormVec<CAESReal> &ligandIFs, size_t gidx, const size_t stop);

@@ -20,23 +20,15 @@ SolverContextImpl<CAESReal>::SolverContextImpl(const LigandVec<CAESReal> *allLig
 					       const CNVec<CAESReal> *complexNuclei, const FormVec<CAESReal> *allForms,
 					       const SolverMatrix<CAESReal> *preJacobian,
 					       const size_t concentrationCount,
-					       const size_t analyticalConcentrationCount,
-					       std::vector<TotalEquilibriumBase *> &&totalEquilibria,
-					       const SolverContext::Options options,
-					       const int TECount) noexcept :
+					       const size_t analyticalConcentrationCount) noexcept :
 	allLigands(allLigands),
 	allLigandIFs(allLigandIFs),
 	complexNuclei(complexNuclei),
 	allForms(allForms),
 	preJacobian(preJacobian),
 	concentrationCount(concentrationCount),
-	analyticalConcentrationCount(analyticalConcentrationCount),
-	TECount(TECount),
-	totalEquilibria(totalEquilibria),
-	m_options(options)
+	analyticalConcentrationCount(analyticalConcentrationCount)
 {
-	estimatedIonicConcentrations.resize(TECount);
-	dEstimatedIonicConcentrationsdH.resize(TECount);
 }
 
 /*!
@@ -57,37 +49,6 @@ template <typename CAESReal>
 void ECHMET_CC SolverContextImpl<CAESReal>::destroy() const noexcept
 {
 	delete this;
-}
-
-/*!
- * Returns the current options of the solver.
- *
- * @return Solver options.
- */
-template <typename CAESReal>
-typename SolverContextImpl<CAESReal>::Options ECHMET_CC SolverContextImpl<CAESReal>::options() const noexcept
-{
-	return m_options;
-}
-
-/*!
- * Sets new solver options.
- *
- * @param[in] options New options.
- *
- * @retval RetCode::OK Success.
- * @retval RetCode::E_INVALID_ARGUMENT Nonsensical option value was passed as the argument.
- */
-template <typename CAESReal>
-RetCode ECHMET_CC SolverContextImpl<CAESReal>::setOptions(const Options options) noexcept
-{
-	/* Changing thread-safetiness is not allowed */
-	if ((m_options & Options::DISABLE_THREAD_SAFETY) != (options & Options::DISABLE_THREAD_SAFETY))
-		return RetCode::E_INVALID_ARGUMENT;
-
-	m_options = options;
-
-	return RetCode::OK;
 }
 
 } // namespace CAES

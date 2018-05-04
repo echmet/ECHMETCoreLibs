@@ -47,7 +47,7 @@ RetCode derivatorSkin(RealVec *derivatives, const ECHMETReal &H, Solver *solver,
 	mpfr::mpreal::set_default_prec(mpfr::digits2bits(200));
 
 	SolverVector<mpfr::mpreal> estimatedConcentrations{};
-	tRet = estimateDistributionInternal(mpfr::mpreal(0.0), solver->context(), analyticalConcentrations, estimatedConcentrations, false);
+	tRet = solverImpl->estimateDistributionInternal(mpfr::mpreal(0.0), analyticalConcentrations, estimatedConcentrations, false);
 	if (tRet != RetCode::OK) {
 		mpfr::mpreal::set_default_prec(currentMpfrPrec);
 		return tRet;

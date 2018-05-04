@@ -3,11 +3,17 @@
 
 #include "caes_p.h"
 #include "solverinternal.h"
+#include "estimator_helpers.hpp"
 
 #include <x86intrin.h>
 
 namespace ECHMET {
 namespace CAES {
+
+class FastEstimateFailureException : public std::exception {
+public:
+	using std::exception::exception;
+};
 
 InstructionSet detectInstructionSet();
 
@@ -20,7 +26,7 @@ FreeMPFRCacheSwitch<V> freeMPFRCache()
 template <typename CAESReal>
 void SolverImpl<CAESReal>::releaseSolverInternal(SolverInternalBase<CAESReal> *internal, FreeMPFRCacheSwitch<true>) noexcept
 {
-	if (!(m_ctx->options() & SolverContext::Options::DISABLE_THREAD_SAFETY)) {
+	if (!(m_options & Solver::Options::DISABLE_THREAD_SAFETY)) {
 		delete internal;
 		mpfr_free_cache();
 	}
@@ -29,7 +35,7 @@ void SolverImpl<CAESReal>::releaseSolverInternal(SolverInternalBase<CAESReal> *i
 template <typename CAESReal>
 void SolverImpl<CAESReal>::releaseSolverInternal(SolverInternalBase<CAESReal> *internal, FreeMPFRCacheSwitch<false>) noexcept
 {
-	if (!(m_ctx->options() & SolverContext::Options::DISABLE_THREAD_SAFETY))
+	if (!(m_options & Solver::Options::DISABLE_THREAD_SAFETY))
 		delete internal;
 }
 
@@ -41,8 +47,9 @@ void SolverImpl<CAESReal>::releaseSolverInternal(SolverInternalBase<CAESReal> *i
  * @param[in] options Solver options.
  */
 template <typename CAESReal>
-SolverImpl<CAESReal>::SolverImpl(SolverContextImpl<CAESReal> *ctx, const NonidealityCorrections corrections) :
+SolverImpl<CAESReal>::SolverImpl(SolverContextImpl<CAESReal> *ctx, const Options options, const NonidealityCorrections corrections) :
 	m_ctx(ctx),
+	m_options(options),
 	m_internalUnsafe(nullptr),
 	m_anCVecUnsafe(nullptr),
 	m_estimatedConcentrationsUnsafe(nullptr),
@@ -50,16 +57,21 @@ SolverImpl<CAESReal>::SolverImpl(SolverContextImpl<CAESReal> *ctx, const Nonidea
 {
 	m_correctDebyeHuckel = nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_DEBYE_HUCKEL);
 
-	if (m_ctx->options() & SolverContext::Options::DISABLE_THREAD_SAFETY) {
+	initializeTotalEquilibria(ctx);
+
+	if (m_options & Solver::Options::DISABLE_THREAD_SAFETY) {
 		try {
+			initializeEstimators();
+
+			m_internalUnsafe = makeSolverInternal(ctx);
 			m_anCVecUnsafe = new SolverVector<CAESReal>(ctx->analyticalConcentrationCount);
 			m_estimatedConcentrationsUnsafe = alignedAlloc<CAESReal>(ctx->concentrationCount);
-			m_internalUnsafe = makeSolverInternal(ctx);
-		} catch (const std::bad_alloc &up) {
+		} catch (const std::bad_alloc &) {
+			delete m_internalUnsafe;
 			delete m_anCVecUnsafe;
-			alignedFree(m_estimatedConcentrationsUnsafe);
+			releaseTotalEquilibria();
 
-			throw up;
+			throw;
 		}
 	}
 }
@@ -72,6 +84,8 @@ SolverImpl<CAESReal>::~SolverImpl() ECHMET_NOEXCEPT
 {
 	delete m_internalUnsafe;
 	delete m_anCVecUnsafe;
+
+	releaseTotalEquilibria();
 	alignedFree(m_estimatedConcentrationsUnsafe);
 }
 
@@ -90,6 +104,255 @@ template <typename CAESReal>
 void ECHMET_CC SolverImpl<CAESReal>::destroy() const ECHMET_NOEXCEPT
 {
 	delete this;
+}
+
+template <typename CAESReal>
+RetCode ECHMET_CC SolverImpl<CAESReal>::estimateDistributionFast(const ECHMETReal &cHInitial, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept
+{
+	SolverVector<CAESReal> estC{};
+
+	RetCode tRet = estimateDistributionInternal(cHInitial, analyticalConcentrations, estC, true);
+	if (tRet != RetCode::OK)
+		return tRet;
+
+	for (int idx = 0; idx < estC.size(); idx++)
+		(*calcProps.ionicConcentrations)[idx] = CAESRealToECHMETReal(estC(idx));
+
+	return RetCode::OK;
+}
+
+template <typename CAESReal>
+RetCode ECHMET_CC SolverImpl<CAESReal>::estimateDistributionSafe(const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept
+{
+	const ECHMETReal dummy = 0.0;	/* Unused */
+	SolverVector<CAESReal> estC{};
+
+	RetCode tRet = estimateDistributionInternal(dummy, analyticalConcentrations, estC, false);
+	if (tRet != RetCode::OK)
+		return tRet;
+
+	for (int idx = 0; idx < estC.size(); idx++)
+		(*calcProps.ionicConcentrations)[idx] = CAESRealToECHMETReal(estC(idx));
+
+	return RetCode::OK;
+}
+
+/*!
+ * Calculates the initial estimation of concentration of all species in the system.
+ *
+ * @param[in] ctx Solver context.
+ * @param[in,out] ionicConcentrations Vector of concentrations of all ionic forms.
+ *                The vector shall have the expected size.
+ *
+ * @retval RetCode::OK Success.
+ * @retval RetCode::E_INVALID_ARGUMENT Unexpected size of the concentration vectors.
+ * @retval RetCode::E_NO_MEMORY Not enough memory to estimate distribution.
+ * @retval RetCode::E_FAST_ESTIMATE_FAILURE Fast estimation failed to find a solution.
+ */
+template <typename CAESReal>
+RetCode SolverImpl<CAESReal>::estimateDistributionInternal(const CAESReal &cHInitial, const RealVec *analyticalConcentrations, SolverVector<CAESReal> &estimatedConcentrations,
+							   const bool useFastEstimate) noexcept
+{
+	estimatedConcentrations.resize(m_ctx->concentrationCount);
+
+	try {
+		const SolverVector<CAESReal> estConcentrations = [&]() {
+			if (useFastEstimate) {
+				if (m_options & Solver::Options::DISABLE_THREAD_SAFETY) {
+					return estimatepHFast<false>(cHInitial, analyticalConcentrations,
+								     m_estimatedIonicConcentrations, m_dEstimatedIonicConcentrationsdH);
+				} else {
+					SolverVector<CAESReal> icConcs(m_TECount);
+					SolverVector<CAESReal> dIcConcsdH(m_TECount);
+					return estimatepHFast<true>(cHInitial, analyticalConcentrations, icConcs, dIcConcsdH);
+				}
+			} else {
+				if (m_options & Solver::Options::DISABLE_THREAD_SAFETY)
+					return estimatepHSafe<false>(analyticalConcentrations, m_estimatedIonicConcentrations);
+				else {
+					SolverVector<CAESReal> icConcs(m_TECount);
+					return estimatepHSafe<true>(analyticalConcentrations, icConcs);
+				}
+			}
+		}();
+
+		ECHMET_DEBUG_CODE(for (int idx = 0; idx < estConcentrations.size(); idx++) {
+				  const CAESReal &v = estConcentrations(idx);
+				  fprintf(stderr, "estC: %.4g, pX: %.4g\n", CAESRealToDouble(v), CAESRealToDouble(pX(v)));
+				  });
+
+		ECHMET_DEBUG_CODE(fprintf(stderr, "Estimated pH = %g\n", CAESRealToDouble(pX(estConcentrations(0)))));
+		/* H+ and OH- are expected to be the first and second item in the vector */
+		estimatedConcentrations(0) = estConcentrations(0);
+		estimatedConcentrations(1) = estConcentrations(1);
+
+		estimateComplexesDistribution<CAESReal>(m_ctx->complexNuclei, m_ctx->allLigands, estConcentrations, m_ctx->allForms->size() + 2, estimatedConcentrations);
+	} catch (const std::bad_alloc &) {
+		return RetCode::E_NO_MEMORY;
+	} catch (const FastEstimateFailureException &) {
+		return RetCode::E_FAST_ESTIMATE_FAILURE;
+	}
+
+	return RetCode::OK;
+}
+
+/*
+ * Estimates pH of a system by taking only acidobazic equilibria into account.
+ * This is a fast variant that uses Newton-Raphson method to achieve fast convergence
+ * at the expense of needing a "good enough" initial estimate and the risk of
+ * silent failure if the initial estimate is not "good enough".
+ *
+ * @param[in] Vector of acidobazic equilibria for all considered species
+ *
+ * @return Vector of concentrations of all ionic forms including \p H+ and \p OH-
+ */
+template <typename CAESReal> template <bool ThreadSafe>
+SolverVector<CAESReal> SolverImpl<CAESReal>::estimatepHFast(const CAESReal &cHInitial, const RealVec *analyticalConcentrations,
+							    SolverVector<CAESReal> &icConcs, SolverVector<CAESReal> &dIcConcsdH)
+{
+	const CAESReal KW_298 = CAESReal(PhChConsts::KW_298) * 1e6;
+	const CAESReal threshold = electroneturalityPrecision<CAESReal>();
+	size_t ctr = 0;
+	CAESReal cH = cHInitial;
+	CAESReal cHNew;
+
+	for (;;) {
+		calculateDistributionWithDerivative<CAESReal, ThreadSafe>(cH, icConcs, dIcConcsdH, m_totalEquilibria, analyticalConcentrations);
+
+		CAESReal z = calcTotalCharge<CAESReal, ThreadSafe>(icConcs, m_totalEquilibria);
+		CAESReal dZ = calcTotalCharge<CAESReal, ThreadSafe>(dIcConcsdH, m_totalEquilibria);
+
+		z += cH - KW_298 / cH;
+		dZ += 1.0 + (KW_298 / cH / cH);
+
+		cHNew = cH - z / dZ;
+
+		//fprintf(stderr, "cH %g, z %g, dZ %g, cHNew, %g\n", CAESRealToDouble(cH), CAESRealToDouble(z), CAESRealToDouble(dZ), CAESRealToDouble(cHNew));
+
+		if (cHNew <= 0.0)
+			throw FastEstimateFailureException{};
+
+		if (VMath::abs(cHNew - cH) < threshold)
+			break;
+
+		cH = cHNew;
+
+		/* Maximum number of iterations exceeded.
+		 * It is likely that the solver has run into trouble,
+		 * throw an error and let the user deal with it.
+		 */
+		if (ctr++ > 50)
+			throw FastEstimateFailureException{};
+	}
+
+	ECHMET_DEBUG_CODE(fprintf(stderr, "cH = %g\n", CAESRealToDouble(cH)));
+
+	icConcs(0) = cHNew;
+	icConcs(1) = KW_298 / cHNew;
+
+	return icConcs;
+}
+
+/*
+ * Estimates pH of a system by taking only acidobazic equilibria into account.
+ * This is a safe version that is guaranteed to converge for any \p H<sub>3<sub>O<sup>+</sup>
+ * concentration bounded by \p leftWall and \p rightWall parameters.
+ *
+ * @param[in] Vector of acidobazic equilibria for all considered species
+ *
+ * @return Vector of concentrations of all ionic forms including \p H+ and \p OH-
+ */
+template <typename CAESReal> template <bool ThreadSafe>
+SolverVector<CAESReal> SolverImpl<CAESReal>::estimatepHSafe(const RealVec *analyticalConcentrations, SolverVector<CAESReal> &icConcs)
+{
+	const CAESReal KW_298 = CAESReal(PhChConsts::KW_298) * 1e6;
+	const CAESReal threshold = electroneturalityPrecision<CAESReal>();
+	size_t ctr = 0;
+	CAESReal cH = 1.0e-4;
+	CAESReal leftWall = 0.0;
+	CAESReal rightWall = 100000.0;
+
+	for (;;) {
+		calculateDistribution<CAESReal, ThreadSafe>(cH, icConcs, m_totalEquilibria, analyticalConcentrations);
+
+		CAESReal z = calcTotalCharge<CAESReal, ThreadSafe>(icConcs, m_totalEquilibria);
+
+		z += cH - KW_298 / cH;
+		//fprintf(stderr, "cH %g, z %g, dZ %g, cHNew, %g\n", CAESRealToDouble(cH), CAESRealToDouble(z), CAESRealToDouble(dZ), CAESRealToDouble(cHNew));
+
+		if (VMath::abs(z) < threshold)
+			break;
+
+		/* Maximum number of iterations exceeded, return what we have so far and
+		 * hope for the best */
+		if (ctr++ > 1000) {
+			icConcs(0) = cH;
+			icConcs(1) = KW_298 / cH;
+			return icConcs;
+		}
+
+		if (z > 0)
+			rightWall = cH;
+		else
+			leftWall = cH;
+
+		cH = (rightWall - leftWall) / 2.0 + leftWall;
+	}
+
+	ECHMET_DEBUG_CODE(fprintf(stderr, "cH = %g\n", CAESRealToDouble(cH)));
+
+	//fprintf(stderr, "DONE, iters %zu, cH = %g\n", ctr, CAESRealToDouble(cH));
+
+	icConcs(0) = cH;
+	icConcs(1) = KW_298 / cH;
+
+	return icConcs;
+}
+
+template <typename CAESReal>
+void SolverImpl<CAESReal>::initializeEstimators()
+{
+	/* The +2 is for H+ and OH- */
+	m_estimatedIonicConcentrations.resize(m_TECount);
+	m_dEstimatedIonicConcentrationsdH.resize(m_TECount);
+}
+
+/*!
+ * Initializes TotalEquilibria objects used to estimate ionic distribution
+ *
+ * @param[in] ctx SovlerContextImpl to use
+ */
+template <typename CAESReal>
+void SolverImpl<CAESReal>::initializeTotalEquilibria(const SolverContextImpl<CAESReal> *ctx)
+{
+	auto countTEForms = [](const auto &TEVec, const auto &caster) {
+		size_t TECount = 0;
+		for (const auto *teb : TEVec) {
+			const auto *te = caster(teb);
+			TECount += te->numHigh - te->numLow + 1;
+		}
+		return TECount;
+	};
+
+	auto makeTotalEquilibrium = [this](const auto *ct) -> TotalEquilibriumBase * {
+		if (m_options & Solver::Options::DISABLE_THREAD_SAFETY)
+			return new TotalEquilibrium<CAESReal, false>(ct->chargeLow, ct->chargeHigh, ct->pKas, ct->analyticalConcentrationIndex);
+		return new TotalEquilibrium<CAESReal, true>(ct->chargeLow, ct->chargeHigh, ct->pKas, ct->analyticalConcentrationIndex);
+	};
+
+	m_totalEquilibria.clear();
+	m_totalEquilibria.reserve(ctx->complexNuclei->size() + ctx->allLigands->size());
+
+	for (const ComplexNucleus<CAESReal> *cn : *ctx->complexNuclei)
+		m_totalEquilibria.emplace_back(makeTotalEquilibrium(cn));
+	for (const Ligand<CAESReal> *l : *ctx->allLigands)
+		m_totalEquilibria.emplace_back(makeTotalEquilibrium(l));
+
+	if (m_options & Solver::Options::DISABLE_THREAD_SAFETY)
+		m_TECount = countTEForms(m_totalEquilibria, [](const TotalEquilibriumBase *teb) { return static_cast<const TotalEquilibrium<CAESReal, false> *>(teb); });
+	else
+		m_TECount = countTEForms(m_totalEquilibria, [](const TotalEquilibriumBase *teb) { return static_cast<const TotalEquilibrium<CAESReal, true> *>(teb); });
+	m_TECount += 2;
 }
 
 /*!
@@ -114,6 +377,24 @@ SolverInternalBase<CAESReal> * SolverImpl<CAESReal>::makeSolverInternal(const So
 }
 
 /*!
+ * Returns the current options of the solver.
+ *
+ * @return Solver options.
+ */
+template <typename CAESReal>
+typename SolverImpl<CAESReal>::Options ECHMET_CC SolverImpl<CAESReal>::options() const noexcept
+{
+	return m_options;
+}
+
+template <typename CAESReal>
+void SolverImpl<CAESReal>::releaseTotalEquilibria()
+{
+	for (auto *teb : m_totalEquilibria)
+		delete teb;
+}
+
+/*!
  * Sets new \p SolverContext.
  *
  * @param[in] ctx Pointer to the new \p SolverContext.
@@ -122,7 +403,9 @@ SolverInternalBase<CAESReal> * SolverImpl<CAESReal>::makeSolverInternal(const So
  * @retval RetCode::OK Success.
  * @retval RetCode::E_INVALID_ARGUMENT SolverContext not castable to SolverContextImpl.
  * @retval RetCode::E_INVALID_ARGUMENT Change of thread safetiness is not allowed.
- * @retval RetCode::E_NO_MEMORY Not enough memory to allocate new \p SolverInternal object.
+ * @retval RetCode::E_NO_MEMORY Not enough memory to allocate internal resources.
+ *				If this error code is returned the sovler must be assumed to be in
+ *				an inconsistent state.
  */
 template <typename CAESReal>
 RetCode ECHMET_CC SolverImpl<CAESReal>::setContext(SolverContext *ctx) ECHMET_NOEXCEPT
@@ -131,25 +414,30 @@ RetCode ECHMET_CC SolverImpl<CAESReal>::setContext(SolverContext *ctx) ECHMET_NO
 	if (ctxImpl == nullptr)
 		return RetCode::E_INVALID_ARGUMENT;
 
-	if ((m_ctx->options() & SolverContext::Options::DISABLE_THREAD_SAFETY) !=
-	    (ctxImpl->options() & SolverContext::Options::DISABLE_THREAD_SAFETY))
-		return RetCode::E_INVALID_ARGUMENT;
-
 	return setContextInternal(ctxImpl);
 }
 
 /*!
- * Sets new \p SolverContext. Internal imlementation.
+ * Sets new \p SolverContext. Internal implementation.
+ * Failure of this function may leave the solver in an inconsistent state.
  *
- * @param[in] ctx Pointer to the new \p SolverContext.
+ * @param[in] ctx Pointer to the new \p SolverContextImpl.
  *
  * @retval RetCode::OK Success.
- * @retval RetCode::E_NO_MEMORY Not enough memory to allocate new \p SolverInternal object.
+ * @retval RetCode::E_NO_MEMORY Not enough memory to allocate internal resources.
  */
 template <typename CAESReal>
 RetCode SolverImpl<CAESReal>::setContextInternal(SolverContextImpl<CAESReal> *ctx) noexcept
 {
-	if (ctx->options() & SolverContext::Options::DISABLE_THREAD_SAFETY) {
+	releaseTotalEquilibria();
+
+	try {
+		initializeTotalEquilibria(ctx);
+	} catch (const std::bad_alloc &) {
+		return RetCode::E_NO_MEMORY;
+	}
+
+	if (m_options & Solver::Options::DISABLE_THREAD_SAFETY) {
 		delete m_internalUnsafe;
 		delete m_anCVecUnsafe;
 		alignedFree(m_estimatedConcentrationsUnsafe);
@@ -159,17 +447,39 @@ RetCode SolverImpl<CAESReal>::setContextInternal(SolverContextImpl<CAESReal> *ct
 		m_estimatedConcentrationsUnsafe = nullptr;
 
 		try {
+			initializeEstimators();
 			m_internalUnsafe = makeSolverInternal(ctx);
 			m_anCVecUnsafe = new SolverVector<CAESReal>(ctx->analyticalConcentrationCount);
 			m_estimatedConcentrationsUnsafe = alignedAlloc<CAESReal>(ctx->concentrationCount);
 		} catch (const std::bad_alloc &) {
 			delete m_anCVecUnsafe;
 			delete m_internalUnsafe;
+			releaseTotalEquilibria();
 
 			return RetCode::E_NO_MEMORY;
 		}
 	}
 	m_ctx = ctx;
+
+	return RetCode::OK;
+}
+
+/*!
+ * Sets new solver options.
+ *
+ * @param[in] options New options.
+ *
+ * @retval RetCode::OK Success.
+ * @retval RetCode::E_INVALID_ARGUMENT Nonsensical option value was passed as the argument.
+ */
+template <typename CAESReal>
+RetCode ECHMET_CC SolverImpl<CAESReal>::setOptions(const Options options) noexcept
+{
+	/* Changing thread-safetiness is not allowed */
+	if ((m_options & Options::DISABLE_THREAD_SAFETY) != (options & Options::DISABLE_THREAD_SAFETY))
+		return RetCode::E_INVALID_ARGUMENT;
+
+	m_options = options;
 
 	return RetCode::OK;
 }
@@ -200,13 +510,13 @@ RetCode ECHMET_CC SolverImpl<CAESReal>::solve(const RealVec *analyticalConcentra
 
 	const auto releaseResources = [&]() {
 		releaseSolverInternal(internal, freeMPFRCache<CAESReal>());
-		if (!(m_ctx->options() & SolverContext::Options::DISABLE_THREAD_SAFETY)) {
+		if (!(m_options & Solver::Options::DISABLE_THREAD_SAFETY)) {
 			delete anCVec;
 			alignedFree(estimatedConcentrations);
 		}
 	};
 
-	if (m_ctx->options() & SolverContext::Options::DISABLE_THREAD_SAFETY) {
+	if (m_options & Solver::Options::DISABLE_THREAD_SAFETY) {
 		internal = m_internalUnsafe;
 		anCVec = m_anCVecUnsafe;
 		estimatedConcentrations = m_estimatedConcentrationsUnsafe;
@@ -285,11 +595,11 @@ RetCode SolverImpl<CAESReal>::solveRaw(SolverVector<CAESReal> &concentrations, C
 
 	const auto releaseResources = [&]() {
 		releaseSolverInternal(internal, freeMPFRCache<CAESReal>());
-		if (!(m_ctx->options() & SolverContext::Options::DISABLE_THREAD_SAFETY))
+		if (!(m_options & Solver::Options::DISABLE_THREAD_SAFETY))
 			alignedFree(estimatedConcentrationsInternal);
 	};
 
-	if (m_ctx->options() & SolverContext::Options::DISABLE_THREAD_SAFETY) {
+	if (m_options & Solver::Options::DISABLE_THREAD_SAFETY) {
 		internal = m_internalUnsafe;
 		estimatedConcentrationsInternal = m_estimatedConcentrationsUnsafe;
 	} else {

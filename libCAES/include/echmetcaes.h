@@ -34,6 +34,20 @@ IS_POD(SolverIterations)
 class SolverContext {
 public:
 	/*!
+	 * Frees resources claimed by the object.
+	 */
+	virtual void ECHMET_CC destroy() const ECHMET_NOEXCEPT = 0;
+
+protected:
+	virtual ~SolverContext() ECHMET_NOEXCEPT = 0;
+};
+
+/*!
+ * Equilibria solver interface.
+ */
+class Solver {
+public:
+	/*!
 	 * Options that modify behavior of the solver.
 	 */
 	ECHMET_WK_ENUM(Options) {
@@ -46,26 +60,11 @@ public:
 	};
 
 	/*!
-	 * Frees resources claimed by the object.
-	 */
-	virtual void ECHMET_CC destroy() const ECHMET_NOEXCEPT = 0;
-
-	/*!
-	 * Returns the options currently set for the solver.
+	 * Returns a pointer to the context assigned to the solver.
 	 *
-	 * @return \p Options enum.
+	 * @return Pointer to \p SolverContext object.
 	 */
-	virtual Options ECHMET_CC options() const ECHMET_NOEXCEPT = 0;
-
-	/*!
-	 * Sets new options for the solver.
-	 *
-	 * @param[in] options The new options to set.
-	 *
-	 * @retval RetCode::OK SUCCESS
-	 * @retval RetCode::E_INVALID_ARGUMENT Nonsensical options passed as the argument
-	 */
-	virtual RetCode ECHMET_CC setOptions(const Options options) ECHMET_NOEXCEPT = 0;
+	virtual SolverContext * ECHMET_CC context() ECHMET_NOEXCEPT = 0;
 
 	/*!
 	 * Returns default solver options.
@@ -77,26 +76,51 @@ public:
 		return static_cast<Options>(0);
 	}
 
-protected:
-	virtual ~SolverContext() ECHMET_NOEXCEPT = 0;
-};
-
-/*!
- * Equilibria solver interface.
- */
-class Solver {
-public:
-	/*!
-	 * Returns a pointer to the context assigned to the solver.
-	 *
-	 * @return Pointer to \p SolverContext object.
-	 */
-	virtual SolverContext * ECHMET_CC context() ECHMET_NOEXCEPT = 0;
-
 	/*!
 	 * Frees resources claimed by the object.
 	 */
 	virtual void ECHMET_CC destroy() const ECHMET_NOEXCEPT = 0;
+
+	/*!
+	 * Calculates the initial estimation of concentration of all species in the system.
+	 * This is a fast estimation function that requires a "reasonably good" initial estimate
+	 * of the \p cH concentration. The function might return \p RetCode::OK even if the calculated
+	 * distribution is incorrect. Use this carefully.
+	 *
+	 * @param[in] solver SolverContext to utilize.
+	 * @param[in] analyticalConcentrations Vector of analytical concentrations of all compounds in the system.
+	 * @param{in,out] calcProps \p CalculatedProperties object associated with the system that is being solved.
+	 *
+	 * @retval RetCode::OK Success
+	 * @retval RetCode::E_INVALID_ARGUMENT Unexpected size of concentration vectors or the \p solver
+	 *         pointer is not castable to internal solver implementation.
+	 * @retval RetCode::E_NO_MEMORY Not enough memory to estimate distribution.
+	 * @retval RetCode::E_FAST_ESTIMATE_FAILURE Fast estimation failed to find a solution.
+	 */
+	virtual RetCode ECHMET_CC estimateDistributionFast(const ECHMETReal &cHInitial, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) ECHMET_NOEXCEPT = 0;
+
+	/*!
+	 * Calculates the initial estimation of concentration of all species in the system.
+	 * This is a safe estimation function that is guaranteed to converge for any range of pH
+	 * between -3 to \p inf
+	 *
+	 * @param[in] solver SolverContext to utilize.
+	 * @param[in] analyticalConcentrations Vector of analytical concentrations of all compounds in the system.
+	 * @param{in,out] calcProps \p CalculatedProperties object associated with the system that is being solved.
+	 *
+	 * @retval RetCode::OK Success
+	 * @retval RetCode::E_INVALID_ARGUMENT Unexpected size of concentration vectors or the \p solver
+	 *         pointer is not castable to internal solver implementation.
+	 * @retval RetCode::E_NO_MEMORY Not enough memory to estimate distribution.
+	 */
+	virtual RetCode ECHMET_CC estimateDistributionSafe(const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) ECHMET_NOEXCEPT = 0;
+
+	/*!
+	 * Returns the options currently set for the solver.
+	 *
+	 * @return \p Options enum.
+	 */
+	virtual Options ECHMET_CC options() const ECHMET_NOEXCEPT = 0;
 
 	/*!
 	 * Sets a new context for the solver.
@@ -108,6 +132,16 @@ public:
 	 * @retval RetCode::E_NO_MEMORY Not enough memory to allocate new \p SolverInternal object.
 	 */
 	virtual RetCode ECHMET_CC setContext(SolverContext *ctx) ECHMET_NOEXCEPT = 0;
+
+	/*!
+	 * Sets new options for the solver.
+	 *
+	 * @param[in] options The new options to set.
+	 *
+	 * @retval RetCode::OK SUCCESS
+	 * @retval RetCode::E_INVALID_ARGUMENT Nonsensical options passed as the argument
+	 */
+	virtual RetCode ECHMET_CC setOptions(const Options options) ECHMET_NOEXCEPT = 0;
 
 	/*!
 	 * Calculates the equilibrium ionic distribution of the system.
@@ -135,7 +169,7 @@ protected:
 
 extern "C" {
 
-ECHMET_API Solver * ECHMET_CC createSolver(SolverContext *ctx, const NonidealityCorrections corrections) ECHMET_NOEXCEPT;
+ECHMET_API Solver * ECHMET_CC createSolver(SolverContext *ctx, const Solver::Options options, const NonidealityCorrections corrections) ECHMET_NOEXCEPT;
 
 /*!
  * Creates a solver context for a given system and intializes
@@ -149,41 +183,7 @@ ECHMET_API Solver * ECHMET_CC createSolver(SolverContext *ctx, const Nonideality
  * @retval RetCode::E_BAD_INPUT Nonsensical input data.
  * @retval RetCode::E_MISSING_PB Complexation constant was not set.
  */
-ECHMET_API RetCode ECHMET_CC createSolverContext(SolverContext *&ctx, const SolverContext::Options options, const SysComp::ChemicalSystem &chemSystem) ECHMET_NOEXCEPT;
-
-/*!
- * Calculates the initial estimation of concentration of all species in the system.
- * This is a safe estimation function that is guaranteed to converge for any range of pH
- * between -3 to \p inf
- *
- * @param[in] solver SolverContext to utilize.
- * @param[in] analyticalConcentrations Vector of analytical concentrations of all compounds in the system.
- * @param{in,out] calcProps \p CalculatedProperties object associated with the system that is being solved.
- *
- * @retval RetCode::OK Success
- * @retval RetCode::E_INVALID_ARGUMENT Unexpected size of concentration vectors or the \p solver
- *         pointer is not castable to internal solver implementation.
- * @retval RetCode::E_NO_MEMORY Not enough memory to estimate distribution.
- */
-ECHMET_API RetCode ECHMET_CC estimateDistributionSafe(SolverContext *ctx, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) ECHMET_NOEXCEPT;
-
-/*!
- * Calculates the initial estimation of concentration of all species in the system.
- * This is a fast estimation function that requires a "reasonably good" initial estimate
- * of the \p cH concentration. The function might return \p RetCode::OK even if the calculated
- * distribution is incorrect. Use this carefully.
- *
- * @param[in] solver SolverContext to utilize.
- * @param[in] analyticalConcentrations Vector of analytical concentrations of all compounds in the system.
- * @param{in,out] calcProps \p CalculatedProperties object associated with the system that is being solved.
- *
- * @retval RetCode::OK Success
- * @retval RetCode::E_INVALID_ARGUMENT Unexpected size of concentration vectors or the \p solver
- *         pointer is not castable to internal solver implementation.
- * @retval RetCode::E_NO_MEMORY Not enough memory to estimate distribution.
- * @retval RetCode::E_FAST_ESTIMATE_FAILURE Fast estimation failed to find a solution.
- */
-ECHMET_API RetCode ECHMET_CC estimateDistributionFast(const ECHMETReal &cHInitial, SolverContext *ctx, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) ECHMET_NOEXCEPT;
+ECHMET_API RetCode ECHMET_CC createSolverContext(SolverContext *&ctx, const SysComp::ChemicalSystem &chemSystem) ECHMET_NOEXCEPT;
 
 } // extern "C"
 
