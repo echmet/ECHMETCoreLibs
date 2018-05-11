@@ -13,6 +13,42 @@ namespace ECHMET {
 namespace CAES {
 
 template <typename CAESReal>
+int findAbsoluteMaximumCharge(const CNVec<CAESReal> *complexNuclei, const LigandVec<CAESReal> *allLigands)
+{
+	int chargeMax = 1;
+
+	/* Nuclei and their complex forms */
+	for (const ComplexNucleus<CAESReal> *cn : *complexNuclei) {
+		for (int charge = cn->chargeLow; charge <= cn->chargeHigh; charge++) {
+			const size_t chIdx = charge - cn->chargeLow;
+			const FormVec<CAESReal> &chForms = cn->forms.at(chIdx);
+
+			if (std::abs(cn->chargeLow) > chargeMax)
+				chargeMax = std::abs(cn->chargeLow);
+
+			if (std::abs(cn->chargeHigh) > chargeMax)
+				chargeMax = std::abs(cn->chargeHigh);
+
+			for (const Form<CAESReal> *f : chForms) {
+				if (std::abs(f->totalCharge) > chargeMax)
+					chargeMax = std::abs(f->totalCharge);
+
+			}
+		}
+	}
+
+	for (const Ligand<CAESReal> *l : *allLigands) {
+		if (std::abs(l->chargeLow) > chargeMax)
+			chargeMax = std::abs(l->chargeLow);
+
+		if (std::abs(l->chargeHigh) > chargeMax)
+			chargeMax = std::abs(l->chargeHigh);
+	}
+
+	return chargeMax;
+}
+
+template <typename CAESReal>
 RetCode globalDataToInternal(LigandVec<CAESReal> *allLigands, LigandIonicFormVec<CAESReal> *allLigandIFs, CNVec<CAESReal> *cnVec, FormVec<CAESReal> *allForms, const SysComp::IonicFormVec *inGIfVec, const SysComp::ConstituentVec *gcVec) noexcept
 {
 	if (inGIfVec->size() < 3)	/* Empty system containing just the solvent */
@@ -463,7 +499,8 @@ RetCode createSolverContextInternal(SolverContext *&ctx, const SysComp::Chemical
 
 	try {
 		ctx = new SolverContextImpl<CAESReal>(allLigands, allLigandIFs, complexNuclei, allForms, preJacobian,
-						      fullDim, chemSystem.constituents->size());
+						      fullDim, chemSystem.constituents->size(),
+						      findAbsoluteMaximumCharge<CAESReal>(complexNuclei, allLigands));
 	} catch (std::bad_alloc &) {
 		tRet = RetCode::E_NO_MEMORY;
 

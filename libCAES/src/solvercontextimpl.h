@@ -15,7 +15,8 @@ public:
 				   const CNVec<CAESReal> *complexNuclei, const FormVec<CAESReal> *allForms,
 				   const SolverMatrix<CAESReal> *preJacobian,
 				   const size_t concentrationCount,
-				   const size_t analyticalConcentrationCount) noexcept;
+				   const size_t analyticalConcentrationCount,
+				   const int absMaximumCharge);
 	virtual ~SolverContextImpl() noexcept override;
 	virtual void ECHMET_CC destroy() const noexcept override;
 
@@ -26,6 +27,8 @@ public:
 	const SolverMatrix<CAESReal> *preJacobian;		/*!< Pregenerated part of the Jacobian */
 	const size_t concentrationCount;			/*!< Total number of concentrations to be calculates */
 	const size_t analyticalConcentrationCount;		/*!< Number of input analytical concentrations */
+	const std::vector<int> chargesSquared;			/*!< Squared values of ionic charges from zero to maximum
+								     charge occurng in system */
 };
 
 } // namespace CAES

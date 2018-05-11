@@ -20,6 +20,7 @@ endif()
 set(libCAES_SRCS
     src/caes.cpp
     src/caes_extended.cpp
+    src/solvercontextimpl.cpp
     src/solverimpl.cpp
     src/solverinternal.cpp
     src/vecmath/vecmath.cpp

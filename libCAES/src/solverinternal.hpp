@@ -489,7 +489,7 @@ CAESReal SolverInternal<CAESReal, ISet>::calculateIonicStrength() const
 			const FormVec<CAESReal> &chForms = cn->forms.at(chIdx);
 
 			for (const Form<CAESReal> *f : chForms) {
-				ionicStrength += CVI(m_rCx, colCounter) * m_chargesSquared.at(std::abs(f->totalCharge));
+				ionicStrength += CVI(m_rCx, colCounter) * m_ctx->chargesSquared[std::abs(f->totalCharge)];
 
 				colCounter++;
 			}
@@ -498,7 +498,7 @@ CAESReal SolverInternal<CAESReal, ISet>::calculateIonicStrength() const
 
 	/* Ligands */
 	for (const LigandIonicForm<CAESReal> *l : *m_allLigandIFs) {
-			ionicStrength += CVI(m_rCx, colCounter) * m_chargesSquared.at(std::abs(l->charge));
+			ionicStrength += CVI(m_rCx, colCounter) * m_ctx->chargesSquared[std::abs(l->charge)];
 
 		colCounter++;
 	}
@@ -526,43 +526,10 @@ const SolverContext * SolverInternal<CAESReal, ISet>::context() const noexcept
 template <typename CAESReal, InstructionSet ISet>
 void SolverInternal<CAESReal, ISet>::initializepACoeffs()
 {
-	m_chargeMax = 1;
-
-	/* Nuclei and their complex forms */
-	for (const ComplexNucleus<CAESReal> *cn : *m_complexNuclei) {
-		for (int charge = cn->chargeLow; charge <= cn->chargeHigh; charge++) {
-			const size_t chIdx = charge - cn->chargeLow;
-			const FormVec<CAESReal> &chForms = cn->forms.at(chIdx);
-
-			if (std::abs(cn->chargeLow) > m_chargeMax)
-				m_chargeMax = std::abs(cn->chargeLow);
-
-			if (std::abs(cn->chargeHigh) > m_chargeMax)
-				m_chargeMax = std::abs(cn->chargeHigh);
-
-			for (const Form<CAESReal> *f : chForms) {
-				if (std::abs(f->totalCharge) > m_chargeMax)
-					m_chargeMax = std::abs(f->totalCharge);
-
-			}
-		}
-	}
-
-	for (const Ligand<CAESReal> *l : *m_allLigands) {
-		if (std::abs(l->chargeLow) > m_chargeMax)
-			m_chargeMax = std::abs(l->chargeLow);
-
-		if (std::abs(l->chargeHigh) > m_chargeMax)
-			m_chargeMax = std::abs(l->chargeHigh);
-	}
-
-	m_pACoeffs.resize(m_chargeMax + 1); /* Include zero charge */
-	m_chargesSquared.resize(m_chargeMax + 1);
+	m_pACoeffs.resize(m_ctx->chargesSquared.size());
 
 	for (CAESReal &d : m_pACoeffs)
 		d = 0.0;
-	for (int idx = 0; idx <= m_chargeMax; idx++)
-		m_chargesSquared[idx] = ECHMET::VMath::pow<int, int>(idx, 2);
 }
 
 /*!
@@ -592,7 +559,7 @@ SolverIterations SolverInternal<CAESReal, ISet>::iterations() const noexcept
 template<typename CAESReal, InstructionSet ISet>
 CAESReal SolverInternal<CAESReal, ISet>::pACoeff(const int charge)
 {
-	return m_pACoeffs.at(std::abs(charge));
+	return m_pACoeffs[std::abs(charge)];
 }
 
 /*!
@@ -607,7 +574,7 @@ void SolverInternal<CAESReal, ISet>::recalculatepACoeffs(const CAESReal &is)
 	const CAESReal sqrtIs = VMath::sqrt(is);
 
 	for (size_t charge = 1; charge < m_pACoeffs.size(); charge++) {
-		const int chSq = m_chargesSquared.at(charge);
+		const int chSq = m_ctx->chargesSquared[charge];
 
 		m_pACoeffs[charge] = pActivityCoefficientInternal(is, sqrtIs, chSq);
 	}

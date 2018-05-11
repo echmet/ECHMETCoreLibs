@@ -142,8 +142,6 @@ private:
 
 	bool m_correctForIS;					/*!< Ionic strength correction On/Off */
 	std::vector<CAESReal> m_pACoeffs;			/*!< Activity coefficients for all charges */
-	std::vector<int> m_chargesSquared;			/*!< Vector of squared charges */
-	int m_chargeMax;					/*!< Absolute value of maximum charge present in the system */
 };
 
 } // namespace CAES

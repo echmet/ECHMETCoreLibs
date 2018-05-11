@@ -1,10 +1,13 @@
 #ifndef ECHMET_CAES_SOLVERCONTEXTIMPL_HPP
 #define ECHMET_CAES_SOLVERCONTEXTIMPL_HPP
 
+#include "solvercontextimpl.h"
 #include "funcs.h"
 
 namespace ECHMET {
 namespace CAES {
+
+std::vector<int> makeChargesSquared(const int chMax);
 
 /*!
  * SolverContext c-tor.
@@ -20,14 +23,16 @@ SolverContextImpl<CAESReal>::SolverContextImpl(const LigandVec<CAESReal> *allLig
 					       const CNVec<CAESReal> *complexNuclei, const FormVec<CAESReal> *allForms,
 					       const SolverMatrix<CAESReal> *preJacobian,
 					       const size_t concentrationCount,
-					       const size_t analyticalConcentrationCount) noexcept :
+					       const size_t analyticalConcentrationCount,
+					       const int absMaximumCharge) :
 	allLigands(allLigands),
 	allLigandIFs(allLigandIFs),
 	complexNuclei(complexNuclei),
 	allForms(allForms),
 	preJacobian(preJacobian),
 	concentrationCount(concentrationCount),
-	analyticalConcentrationCount(analyticalConcentrationCount)
+	analyticalConcentrationCount(analyticalConcentrationCount),
+	chargesSquared(makeChargesSquared(absMaximumCharge))
 {
 }
 
