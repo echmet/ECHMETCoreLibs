@@ -517,7 +517,7 @@ IPReal calculatepHWorker(const std::vector<IPReal> &icConcs, const SysComp::Calc
  *
  * @return \p std::vector of \p Ions.
  */
-std::vector<Ion<ECHMETReal>> makeIonVector(const SysComp::IonicFormVec *ifVec, const RealVec *icVec, const SysComp::CalculatedProperties &calcProps)
+std::vector<Ion<ECHMETReal>> makeIonVector(const SysComp::IonicFormVec *ifVec, const RealVec *icVec)
 {
 	std::vector<Ion<ECHMETReal>> ions;
 
@@ -555,7 +555,7 @@ std::vector<Ion<ECHMETReal>> makeIonVector(const SysComp::IonicFormVec *ifVec, c
  * @return \p std::vector of \p Ions.
  */
 template <typename IPReal>
-std::vector<Ion<IPReal>> makeIonVector(const SysComp::IonicFormVec *ifVec, const std::vector<IPReal> &icVec, const SysComp::CalculatedProperties &calcProps)
+std::vector<Ion<IPReal>> makeIonVector(const SysComp::IonicFormVec *ifVec, const std::vector<IPReal> &icVec)
 {
 	std::vector<Ion<IPReal>> ions;
 
@@ -600,7 +600,7 @@ RetCode correctMobilitiesWorker(const SysComp::ChemicalSystem &chemSystem, SysCo
 		if (nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_VISCOSITY))
 			correctIonicMobilitiesViscosity<ECHMETReal>(chemSystem, calcProps, analyticalConcentrations);
 		if (nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_ONSAGER_FUOSS)) {
-			std::vector<Ion<ECHMETReal>> ions = makeIonVector(chemSystem.ionicForms, calcProps.ionicConcentrations, calcProps);
+			std::vector<Ion<ECHMETReal>> ions = makeIonVector(chemSystem.ionicForms, calcProps.ionicConcentrations);
 			correctIonicMobilities<ECHMETReal>(ions, calcProps.ionicStrength, calcProps);
 		}
 	} catch (std::bad_alloc &) {
@@ -634,7 +634,7 @@ RetCode correctMobilitiesWorker(const std::vector<IPReal> &icConcs, const SysCom
 		if (nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_VISCOSITY))
 			correctIonicMobilitiesViscosity<IPReal>(chemSystem, calcProps, analyticalConcentrations);
 		if (nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_ONSAGER_FUOSS)) {
-			std::vector<Ion<IPReal>> ions = makeIonVector<IPReal>(chemSystem.ionicForms, icConcs, calcProps);
+			std::vector<Ion<IPReal>> ions = makeIonVector<IPReal>(chemSystem.ionicForms, icConcs);
 			correctIonicMobilities<IPReal>(ions, calcProps.ionicStrength, calcProps);
 		}
 	} catch (std::bad_alloc &) {
