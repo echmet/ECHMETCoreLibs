@@ -527,7 +527,7 @@ std::vector<Ion<ECHMETReal>> makeIonVector(const SysComp::IonicFormVec *ifVec, c
 		const SysComp::IonicForm *iF = ifVec->at(idx);
 		const size_t icIdx = iF->ionicConcentrationIndex;
 		const ECHMETReal &ic = icVec->at(icIdx);
-		const ECHMETReal currentMobility = (*calcProps.ionicMobilities)[iF->ionicMobilityIndex];
+		const ECHMETReal limitMobility = iF->limitMobility;
 
 		ECHMET_DEBUG_CODE(fprintf(stderr, "IonVec c: %g\n", IPRealToDouble(ic)));
 
@@ -538,7 +538,7 @@ std::vector<Ion<ECHMETReal>> makeIonVector(const SysComp::IonicFormVec *ifVec, c
 			continue;
 #endif // IONPROPS_DISABLE_COMPLEX_ONSFUO
 
-		ions.emplace_back(iF->ionicMobilityIndex, ic, iF->totalCharge, currentMobility);
+		ions.emplace_back(iF->ionicMobilityIndex, ic, iF->totalCharge, limitMobility);
 	}
 
 	return ions;
@@ -565,7 +565,7 @@ std::vector<Ion<IPReal>> makeIonVector(const SysComp::IonicFormVec *ifVec, const
 		const SysComp::IonicForm *iF = ifVec->at(idx);
 		const size_t icIdx = iF->ionicConcentrationIndex;
 		const IPReal &ic = icVec.at(icIdx);
-		const ECHMETReal currentMobility = (*calcProps.ionicMobilities)[iF->ionicMobilityIndex];
+		const ECHMETReal limitMobility = iF->limitMobility;
 
 		ECHMET_DEBUG_CODE(fprintf(stderr, "IonVec c: %g\n", IPRealToDouble(ic)));
 
@@ -576,7 +576,7 @@ std::vector<Ion<IPReal>> makeIonVector(const SysComp::IonicFormVec *ifVec, const
 			continue;
 #endif // IONPROPS_DISABLE_COMPLEX_ONSFUO
 
-		ions.emplace_back(iF->ionicMobilityIndex, ic, iF->totalCharge, currentMobility);
+		ions.emplace_back(iF->ionicMobilityIndex, ic, iF->totalCharge, limitMobility);
 	}
 
 	return ions;
