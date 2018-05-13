@@ -36,7 +36,7 @@ public:
 	virtual RetCode ECHMET_CC estimateDistributionFast(const ECHMETReal &cHInitial, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept override;
 	virtual RetCode ECHMET_CC estimateDistributionSafe(const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept override;
 	RetCode estimateDistributionInternal(const CAESReal &cHInitial, const RealVec *analyticalConcentrations, SolverVector<CAESReal> &estimatedConcentrations,
-					     const bool useFastEstimate) noexcept;
+					     CAESReal &ionicStrength, const bool useFastEstimate) noexcept;
 	virtual Options ECHMET_CC options() const noexcept override;
 	virtual RetCode ECHMET_CC setContext(SolverContext *ctx) noexcept override;
 	virtual RetCode ECHMET_CC setOptions(const Options options) noexcept override;
@@ -44,11 +44,13 @@ public:
 	RetCode solveRaw(SolverVector<CAESReal> &concentrations, CAESReal &ionicStrength, const SolverVector<CAESReal> *anCVec, const SolverVector<CAESReal> &estimatedConcentrations, const size_t iterations, SolverIterations *iterationsNeeded = nullptr) noexcept;
 
 private:
+	void defaultActivityCoefficients(std::vector<CAESReal> &activityCoefficients) const;
 	template <bool ThreadSafe>
-	SolverVector<CAESReal> estimatepHFast(const CAESReal &cHInitial, const RealVec *analyticalConcentrations,
-					      SolverVector<CAESReal> &icConcs, SolverVector<CAESReal> &dIcConcsdH);
+	std::pair<SolverVector<CAESReal>, CAESReal> estimatepHFast(const CAESReal &cHInitial, const RealVec *analyticalConcentrations,
+								   SolverVector<CAESReal> &icConcs, SolverVector<CAESReal> &dIcConcsdH,
+								   std::vector<CAESReal> &activityCoefficients);
 	template <bool ThreadSafe>
-	SolverVector<CAESReal> estimatepHSafe(const RealVec *analyticalConcentrations, SolverVector<CAESReal> &icConcs);
+	std::pair<SolverVector<CAESReal>, CAESReal> estimatepHSafe(const RealVec *analyticalConcentrations, SolverVector<CAESReal> &icConcs, std::vector<CAESReal> &activityCoefficients);
 	void initializeEstimators();
 	SolverInternalBase<CAESReal> * makeSolverInternal(const SolverContextImpl<CAESReal> *ctx) const;
 	void initializeTotalEquilibria(const SolverContextImpl<CAESReal> *ctx);
@@ -72,6 +74,7 @@ private:
 	std::vector<TotalEquilibriumBase *> m_totalEquilibria;
 	SolverVector<CAESReal> m_estimatedIonicConcentrations;
 	SolverVector<CAESReal> m_dEstimatedIonicConcentrationsdH;
+	std::vector<CAESReal> m_activityCoefficients;
 };
 
 template <typename CAESReal, bool ThreadSafe>

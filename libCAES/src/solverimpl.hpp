@@ -107,16 +107,24 @@ void ECHMET_CC SolverImpl<CAESReal>::destroy() const ECHMET_NOEXCEPT
 }
 
 template <typename CAESReal>
+void SolverImpl<CAESReal>::defaultActivityCoefficients(std::vector<CAESReal> &activityCoefficients) const
+{
+	std::fill(activityCoefficients.begin(), activityCoefficients.end(), 1.0);
+}
+
+template <typename CAESReal>
 RetCode ECHMET_CC SolverImpl<CAESReal>::estimateDistributionFast(const ECHMETReal &cHInitial, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept
 {
+	CAESReal ionicStrength;
 	SolverVector<CAESReal> estC{};
 
-	RetCode tRet = estimateDistributionInternal(cHInitial, analyticalConcentrations, estC, true);
+	RetCode tRet = estimateDistributionInternal(cHInitial, analyticalConcentrations, estC, ionicStrength, true);
 	if (tRet != RetCode::OK)
 		return tRet;
 
 	for (int idx = 0; idx < estC.size(); idx++)
 		(*calcProps.ionicConcentrations)[idx] = CAESRealToECHMETReal(estC(idx));
+	calcProps.ionicStrength = CAESRealToECHMETReal(ionicStrength);
 
 	return RetCode::OK;
 }
@@ -125,14 +133,16 @@ template <typename CAESReal>
 RetCode ECHMET_CC SolverImpl<CAESReal>::estimateDistributionSafe(const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept
 {
 	const ECHMETReal dummy = 0.0;	/* Unused */
+	CAESReal ionicStrength;
 	SolverVector<CAESReal> estC{};
 
-	RetCode tRet = estimateDistributionInternal(dummy, analyticalConcentrations, estC, false);
+	RetCode tRet = estimateDistributionInternal(dummy, analyticalConcentrations, estC, ionicStrength, false);
 	if (tRet != RetCode::OK)
 		return tRet;
 
 	for (int idx = 0; idx < estC.size(); idx++)
 		(*calcProps.ionicConcentrations)[idx] = CAESRealToECHMETReal(estC(idx));
+	calcProps.ionicStrength = CAESRealToECHMETReal(ionicStrength);
 
 	return RetCode::OK;
 }
@@ -151,42 +161,51 @@ RetCode ECHMET_CC SolverImpl<CAESReal>::estimateDistributionSafe(const RealVec *
  */
 template <typename CAESReal>
 RetCode SolverImpl<CAESReal>::estimateDistributionInternal(const CAESReal &cHInitial, const RealVec *analyticalConcentrations, SolverVector<CAESReal> &estimatedConcentrations,
-							   const bool useFastEstimate) noexcept
+							   CAESReal &ionicStrength, const bool useFastEstimate) noexcept
 {
 	estimatedConcentrations.resize(m_ctx->concentrationCount);
 
 	try {
-		const SolverVector<CAESReal> estConcentrations = [&]() {
+		const auto results = [&]() {
 			if (useFastEstimate) {
 				if (m_options & Solver::Options::DISABLE_THREAD_SAFETY) {
 					return estimatepHFast<false>(cHInitial, analyticalConcentrations,
-								     m_estimatedIonicConcentrations, m_dEstimatedIonicConcentrationsdH);
+								     m_estimatedIonicConcentrations, m_dEstimatedIonicConcentrationsdH,
+								     m_activityCoefficients);
 				} else {
+					std::vector<CAESReal> activityCoefficients;
 					SolverVector<CAESReal> icConcs(m_TECount);
 					SolverVector<CAESReal> dIcConcsdH(m_TECount);
-					return estimatepHFast<true>(cHInitial, analyticalConcentrations, icConcs, dIcConcsdH);
+
+					activityCoefficients.resize(m_ctx->chargesSquared.size());
+					return estimatepHFast<true>(cHInitial, analyticalConcentrations, icConcs, dIcConcsdH, m_activityCoefficients);
 				}
 			} else {
 				if (m_options & Solver::Options::DISABLE_THREAD_SAFETY)
-					return estimatepHSafe<false>(analyticalConcentrations, m_estimatedIonicConcentrations);
+					return estimatepHSafe<false>(analyticalConcentrations, m_estimatedIonicConcentrations, m_activityCoefficients);
 				else {
+					std::vector<CAESReal> activityCoefficients;
 					SolverVector<CAESReal> icConcs(m_TECount);
-					return estimatepHSafe<true>(analyticalConcentrations, icConcs);
+
+					activityCoefficients.resize(m_ctx->chargesSquared.size());
+					return estimatepHSafe<true>(analyticalConcentrations, icConcs, activityCoefficients);
 				}
 			}
 		}();
+		ionicStrength = results.second;
 
-		ECHMET_DEBUG_CODE(for (int idx = 0; idx < estConcentrations.size(); idx++) {
-				  const CAESReal &v = estConcentrations(idx);
+		ECHMET_DEBUG_CODE(for (int idx = 0; idx < results.first.size(); idx++) {
+				  const CAESReal &v = results.first(idx);
 				  fprintf(stderr, "estC: %.4g, pX: %.4g\n", CAESRealToDouble(v), CAESRealToDouble(pX(v)));
 				  });
 
-		ECHMET_DEBUG_CODE(fprintf(stderr, "Estimated pH = %g\n", CAESRealToDouble(pX(estConcentrations(0)))));
+		ECHMET_DEBUG_CODE(fprintf(stderr, "Estimated pH = %g\n", CAESRealToDouble(pX(results.first(0)) + 3.0)));
+		ECHMET_DEBUG_CODE(fprintf(stderr, "Estimated ionic strength = %g\n", CAESRealToDouble(ionicStrength)));
 		/* H+ and OH- are expected to be the first and second item in the vector */
-		estimatedConcentrations(0) = estConcentrations(0);
-		estimatedConcentrations(1) = estConcentrations(1);
+		estimatedConcentrations(0) = results.first(0);
+		estimatedConcentrations(1) = results.first(1);
 
-		estimateComplexesDistribution<CAESReal>(m_ctx->complexNuclei, m_ctx->allLigands, estConcentrations, m_ctx->allForms->size() + 2, estimatedConcentrations);
+		estimateComplexesDistribution<CAESReal>(m_ctx->complexNuclei, m_ctx->allLigands, results.first, m_ctx->allForms->size() + 2, estimatedConcentrations);
 	} catch (const std::bad_alloc &) {
 		return RetCode::E_NO_MEMORY;
 	} catch (const FastEstimateFailureException &) {
@@ -207,50 +226,71 @@ RetCode SolverImpl<CAESReal>::estimateDistributionInternal(const CAESReal &cHIni
  * @return Vector of concentrations of all ionic forms including \p H+ and \p OH-
  */
 template <typename CAESReal> template <bool ThreadSafe>
-SolverVector<CAESReal> SolverImpl<CAESReal>::estimatepHFast(const CAESReal &cHInitial, const RealVec *analyticalConcentrations,
-							    SolverVector<CAESReal> &icConcs, SolverVector<CAESReal> &dIcConcsdH)
+std::pair<SolverVector<CAESReal>, CAESReal> SolverImpl<CAESReal>::estimatepHFast(const CAESReal &cHInitial, const RealVec *analyticalConcentrations,
+										 SolverVector<CAESReal> &icConcs, SolverVector<CAESReal> &dIcConcsdH,
+										 std::vector<CAESReal> &activityCoefficients)
 {
 	const CAESReal KW_298 = CAESReal(PhChConsts::KW_298) * 1e6;
 	const CAESReal threshold = electroneturalityPrecision<CAESReal>();
-	size_t ctr = 0;
 	CAESReal cH = cHInitial;
 	CAESReal cHNew;
 
-	for (;;) {
-		calculateDistributionWithDerivative<CAESReal, ThreadSafe>(cH, icConcs, dIcConcsdH, m_totalEquilibria, analyticalConcentrations);
+	CAESReal ionicStrengthPrev = 0.0;
+	CAESReal ionicStrength = 0.0;
+	size_t isLoopCtr = 0;
 
-		CAESReal z = calcTotalCharge<CAESReal, ThreadSafe>(icConcs, m_totalEquilibria);
-		CAESReal dZ = calcTotalCharge<CAESReal, ThreadSafe>(dIcConcsdH, m_totalEquilibria);
+	if (m_correctDebyeHuckel || ThreadSafe)
+		defaultActivityCoefficients(activityCoefficients);
 
-		z += cH - KW_298 / cH;
-		dZ += 1.0 + (KW_298 / cH / cH);
+	do {
+		const CAESReal activityOneSquared = activityCoefficients[1] * activityCoefficients[1];
+		size_t ctr = 0;
+		CAESReal cOH;
 
-		cHNew = cH - z / dZ;
+		ionicStrengthPrev = ionicStrength;
 
-		//fprintf(stderr, "cH %g, z %g, dZ %g, cHNew, %g\n", CAESRealToDouble(cH), CAESRealToDouble(z), CAESRealToDouble(dZ), CAESRealToDouble(cHNew));
+		while (true) {
+			calculateDistributionWithDerivative<CAESReal, ThreadSafe>(cH, icConcs, dIcConcsdH, m_totalEquilibria, analyticalConcentrations, activityCoefficients);
 
-		if (cHNew <= 0.0)
-			throw FastEstimateFailureException{};
+			CAESReal z = calcTotalCharge<CAESReal, ThreadSafe>(icConcs, m_totalEquilibria);
+			CAESReal dZ = calcTotalCharge<CAESReal, ThreadSafe>(dIcConcsdH, m_totalEquilibria);
 
-		if (VMath::abs(cHNew - cH) < threshold)
-			break;
+			cOH = KW_298 / (cH * activityOneSquared);
 
-		cH = cHNew;
+			z += cH - cOH;
+			dZ += 1.0 + cOH * cOH;
 
-		/* Maximum number of iterations exceeded.
-		 * It is likely that the solver has run into trouble,
-		 * throw an error and let the user deal with it.
-		 */
-		if (ctr++ > 50)
-			throw FastEstimateFailureException{};
-	}
+			cHNew = cH - z / dZ;
 
-	ECHMET_DEBUG_CODE(fprintf(stderr, "cH = %g\n", CAESRealToDouble(cH)));
+			//fprintf(stderr, "cH %g, z %g, dZ %g, cHNew, %g\n", CAESRealToDouble(cH), CAESRealToDouble(z), CAESRealToDouble(dZ), CAESRealToDouble(cHNew));
 
-	icConcs(0) = cHNew;
-	icConcs(1) = KW_298 / cHNew;
+			if (cHNew <= 0.0)
+				throw FastEstimateFailureException{};
 
-	return icConcs;
+			if (VMath::abs(cHNew - cH) < threshold)
+				break;
+
+			cH = cHNew;
+
+			/* Maximum number of iterations exceeded.
+			 * It is likely that the solver has run into trouble,
+			 * throw an error and let the user deal with it.
+			 */
+			if (ctr++ > 50)
+				throw FastEstimateFailureException{};
+		}
+
+		ECHMET_DEBUG_CODE(fprintf(stderr, "cH = %g\n", CAESRealToDouble(cH)));
+
+		icConcs(0) = cHNew;
+		icConcs(1) = cOH;
+
+		ionicStrength = calculateIonicStrength<CAESReal, ThreadSafe>(icConcs, m_totalEquilibria, m_ctx->chargesSquared);
+		if (m_correctDebyeHuckel)
+			calculateActivityCoefficients(ionicStrength, activityCoefficients, m_ctx->chargesSquared);
+	} while (m_correctDebyeHuckel && VMath::abs(ionicStrength - ionicStrengthPrev) > 1.0e-5 && isLoopCtr++ < 100);
+
+	return { icConcs, ionicStrength };
 }
 
 /*
@@ -263,50 +303,62 @@ SolverVector<CAESReal> SolverImpl<CAESReal>::estimatepHFast(const CAESReal &cHIn
  * @return Vector of concentrations of all ionic forms including \p H+ and \p OH-
  */
 template <typename CAESReal> template <bool ThreadSafe>
-SolverVector<CAESReal> SolverImpl<CAESReal>::estimatepHSafe(const RealVec *analyticalConcentrations, SolverVector<CAESReal> &icConcs)
+std::pair<SolverVector<CAESReal>, CAESReal> SolverImpl<CAESReal>::estimatepHSafe(const RealVec *analyticalConcentrations, SolverVector<CAESReal> &icConcs, std::vector<CAESReal> &activityCoefficients)
 {
 	const CAESReal KW_298 = CAESReal(PhChConsts::KW_298) * 1e6;
 	const CAESReal threshold = electroneturalityPrecision<CAESReal>();
-	size_t ctr = 0;
-	CAESReal cH = 1.0e-4;
-	CAESReal leftWall = 0.0;
-	CAESReal rightWall = 100000.0;
 
-	for (;;) {
-		calculateDistribution<CAESReal, ThreadSafe>(cH, icConcs, m_totalEquilibria, analyticalConcentrations);
+	CAESReal ionicStrengthPrev = 0.0;
+	CAESReal ionicStrength = 0.0;
+	size_t isLoopCtr = 0;
 
-		CAESReal z = calcTotalCharge<CAESReal, ThreadSafe>(icConcs, m_totalEquilibria);
+	if (m_correctDebyeHuckel || ThreadSafe)
+		defaultActivityCoefficients(activityCoefficients);
 
-		z += cH - KW_298 / cH;
-		//fprintf(stderr, "cH %g, z %g, dZ %g, cHNew, %g\n", CAESRealToDouble(cH), CAESRealToDouble(z), CAESRealToDouble(dZ), CAESRealToDouble(cHNew));
+	do {
+		const CAESReal activityOneSquared = activityCoefficients[1] * activityCoefficients[1];
+		CAESReal cH = 1.0e-4;
+		CAESReal leftWall = 0.0;
+		CAESReal rightWall = 100000.0;
+		size_t ctr = 0;
 
-		if (VMath::abs(z) < threshold)
-			break;
+		ionicStrengthPrev = ionicStrength;
+		CAESReal cOH;
 
-		/* Maximum number of iterations exceeded, return what we have so far and
-		 * hope for the best */
-		if (ctr++ > 1000) {
-			icConcs(0) = cH;
-			icConcs(1) = KW_298 / cH;
-			return icConcs;
+		while (true) {
+			calculateDistribution<CAESReal, ThreadSafe>(cH, icConcs, m_totalEquilibria, analyticalConcentrations, activityCoefficients);
+
+			CAESReal z = calcTotalCharge<CAESReal, ThreadSafe>(icConcs, m_totalEquilibria);
+
+			cOH = KW_298 / (cH * activityOneSquared);
+			z += cH - cOH;
+			//fprintf(stderr, "cH %g, z %g, dZ %g, cHNew, %g\n", CAESRealToDouble(cH), CAESRealToDouble(z), CAESRealToDouble(dZ), CAESRealToDouble(cHNew));
+
+			if (VMath::abs(z) < threshold)
+				break;
+
+			/* Maximum number of iterations exceeded, return what we have so far and
+			 * hope for the best */
+			if (ctr++ > 1000)
+				break;
+
+			if (z > 0)
+				rightWall = cH;
+			else
+				leftWall = cH;
+
+			cH = (rightWall - leftWall) / 2.0 + leftWall;
 		}
 
-		if (z > 0)
-			rightWall = cH;
-		else
-			leftWall = cH;
+		icConcs(0) = cH;
+		icConcs(1) = cOH;
 
-		cH = (rightWall - leftWall) / 2.0 + leftWall;
-	}
+		ionicStrength = calculateIonicStrength<CAESReal, ThreadSafe>(icConcs, m_totalEquilibria, m_ctx->chargesSquared);
+		if (m_correctDebyeHuckel)
+			calculateActivityCoefficients(ionicStrength, activityCoefficients, m_ctx->chargesSquared);
+	} while (m_correctDebyeHuckel && VMath::abs(ionicStrength - ionicStrengthPrev) > 1.0e-5 && isLoopCtr++ < 100);
 
-	ECHMET_DEBUG_CODE(fprintf(stderr, "cH = %g\n", CAESRealToDouble(cH)));
-
-	//fprintf(stderr, "DONE, iters %zu, cH = %g\n", ctr, CAESRealToDouble(cH));
-
-	icConcs(0) = cH;
-	icConcs(1) = KW_298 / cH;
-
-	return icConcs;
+	return { icConcs, ionicStrength };
 }
 
 template <typename CAESReal>
@@ -315,6 +367,8 @@ void SolverImpl<CAESReal>::initializeEstimators()
 	/* The +2 is for H+ and OH- */
 	m_estimatedIonicConcentrations.resize(m_TECount);
 	m_dEstimatedIonicConcentrationsdH.resize(m_TECount);
+	m_activityCoefficients.resize(m_ctx->chargesSquared.size());
+	defaultActivityCoefficients(m_activityCoefficients);
 }
 
 /*!

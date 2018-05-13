@@ -30,7 +30,7 @@ XReal pActivityCoefficientInternal(const XReal &is, const XReal &sqrtIs, const i
 template <typename XReal>
 XReal activityCoefficientInternal(const XReal &is, const XReal &sqrtIs, const int chSq) noexcept
 {
-	return ECHMET::VMath::pow<XReal>(10.0, -pActivityCoefficientInternal(is, sqrtIs, chSq));
+	return VMath::pow<XReal>(10.0, -pActivityCoefficientInternal(is, sqrtIs, chSq));
 }
 
 } // ECHMET

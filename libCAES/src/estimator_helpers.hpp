@@ -4,6 +4,16 @@
 namespace ECHMET {
 namespace CAES {
 
+template <typename CAESReal>
+void calculateActivityCoefficients(const CAESReal &ionicStrength, std::vector<CAESReal> &activityCoefficients, const std::vector<int> &chargesSquared)
+{
+	const CAESReal isSqrt = VMath::sqrt<CAESReal>(ionicStrength);
+
+	activityCoefficients[0] = 1.0;
+	for (size_t charge = 1; charge < activityCoefficients.size(); charge++)
+		activityCoefficients[charge] = activityCoefficientInternal(ionicStrength, isSqrt, chargesSquared[charge]);
+}
+
 /*!
  * Calculates distribution of concentrations and its derivative of the entire system
  *
@@ -13,7 +23,7 @@ namespace CAES {
  * @param[in] totalEquilibria Vector of objects that descibe the given equilibria.
  */
 template <typename CAESReal, bool ThreadSafe>
-void calculateDistributionWithDerivative(const CAESReal &v, SolverVector<CAESReal> &distribution, SolverVector<CAESReal> &dDistdV, std::vector<TotalEquilibriumBase *> &totalEquilibria, const RealVec *analyticalConcentrations)
+void calculateDistributionWithDerivative(const CAESReal &v, SolverVector<CAESReal> &distribution, SolverVector<CAESReal> &dDistdV, std::vector<TotalEquilibriumBase *> &totalEquilibria, const RealVec *analyticalConcentrations, const std::vector<CAESReal> &activityCoefficients)
 {
 	size_t rowCounter = 2;
 
@@ -21,8 +31,8 @@ void calculateDistributionWithDerivative(const CAESReal &v, SolverVector<CAESRea
 		auto *te = static_cast<TotalEquilibrium<CAESReal, ThreadSafe> *>(teb);
 		CAESReal X = 0.0;
 		CAESReal dX = 0.0;
-		const std::vector<CAESReal> & Ts = te->Ts(v, X);
-		const std::vector<CAESReal> & dTsdV = te->dTsdV(v, dX);
+		const std::vector<CAESReal> & Ts = te->Ts(v, activityCoefficients, X);
+		const std::vector<CAESReal> & dTsdV = te->dTsdV(v, activityCoefficients, dX);
 
 		assert(Ts.size() == dTsdV.size());
 
@@ -53,14 +63,15 @@ void calculateDistributionWithDerivative(const CAESReal &v, SolverVector<CAESRea
  * @param[in] totalEquilibria Vector of objects that descibe the given equilibria.
  */
 template <typename CAESReal, bool ThreadSafe>
-void calculateDistribution(const CAESReal &v, SolverVector<CAESReal> &distribution, std::vector<TotalEquilibriumBase *> &totalEquilibria, const RealVec *analyticalConcentrations)
+void calculateDistribution(const CAESReal &v, SolverVector<CAESReal> &distribution, std::vector<TotalEquilibriumBase *> &totalEquilibria, const RealVec *analyticalConcentrations,
+			   const std::vector<CAESReal> &activityCoefficients)
 {
 	size_t rowCounter = 2;
 
 	for (TotalEquilibriumBase *teb : totalEquilibria) {
 		auto *te = static_cast<TotalEquilibrium<CAESReal, ThreadSafe> *>(teb);
 		CAESReal X = 0.0;
-		const std::vector<CAESReal> & Ts = te->Ts(v, X);
+		const std::vector<CAESReal> & Ts = te->Ts(v, activityCoefficients, X);
 
 		const CAESReal &c = analyticalConcentrations->elem(te->concentrationIndex);
 		for (const CAESReal &T : Ts) {
@@ -71,6 +82,24 @@ void calculateDistribution(const CAESReal &v, SolverVector<CAESReal> &distributi
 			rowCounter++;
 		}
 	}
+}
+
+template <typename CAESReal, bool ThreadSafe>
+CAESReal calculateIonicStrength(const SolverVector<CAESReal> &icConcs, std::vector<TotalEquilibriumBase *> &totalEquilibria, const std::vector<int> &chargesSquared)
+{
+	CAESReal ionicStrength = 0.0;
+	size_t rowCounter = 2;
+
+	for (TotalEquilibriumBase *teb : totalEquilibria) {
+		const auto *te = static_cast<const TotalEquilibrium<CAESReal, ThreadSafe> *>(teb);
+		for (int charge = te->numLow; charge <= te->numHigh; charge++)
+			ionicStrength += icConcs(rowCounter++) * chargesSquared[std::abs(charge)];
+
+	}
+
+	ionicStrength += icConcs(0) + icConcs(1);
+
+	return 0.0005 * ionicStrength; /* Scale to mol/dm3 */
 }
 
 template <typename CAESReal, bool ThreadSafe>

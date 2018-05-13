@@ -18,40 +18,14 @@ namespace CAES {
 template <typename CAESReal>
 std::vector<CAESReal> calculateLsBase(const std::vector<CAESReal> &pBs)
 {
-	std::vector<CAESReal> _pBs;
 	std::vector<CAESReal> _Ls;
-
-	_pBs.resize(pBs.size());
-	std::copy(pBs.cbegin(), pBs.cend(), _pBs.begin());
-
-	_pBs.emplace_back(0.0);
-
-	const size_t len = _pBs.size();
+	const size_t len = pBs.size() + 1;
 
 	_Ls.resize(len);
+	_Ls[0] = 1.0;
 
-	for (size_t idx = 0; idx < len; idx++) {
-		auto calcL = [](const std::vector<CAESReal> &pXs, const size_t to) {
-			CAESReal L = 1.0;
-
-			/* TODO: Optimize this!!! */
-			size_t idx = pXs.size() - 1;
-			for (;;) {
-				L *= X10(pXs.at(idx) - 3.0);
-
-				if (idx == to || idx == 0)
-					break;
-				else
-					idx--;
-			}
-
-			ECHMET_DEBUG_CODE(fprintf(stderr, "L = %g\n", CAESRealToDouble(L)));
-
-			return L;
-		};
-
-		_Ls[idx] = calcL(_pBs, idx);
-	}
+	for (size_t idx = 1; idx < len; idx++)
+		_Ls[idx] = _Ls[idx - 1] / X10(pBs[idx - 1] - 3.0); /* Use 1/L values so we can do vPow * L instead of vPow / L later on */
 
 	return _Ls;
 }
@@ -93,11 +67,11 @@ public:
 	TotalEquilibrium(const int numLow, const int numHigh, const std::vector<CAESReal> &pBs, const size_t concentrationIndex = SIZE_MAX);
 	TotalEquilibrium(const TotalEquilibrium &other);
 	TotalEquilibrium(TotalEquilibrium &&other);
-	std::vector<CAESReal> concentrations(const CAESReal &v, const RealVec *analyticalConcentrations) const;
-	DDPack distributionAnddDistdV(const CAESReal &v) const;
-	std::vector<CAESReal> distribution(const CAESReal &v) const;
-	std::vector<CAESReal> dTsdV(const CAESReal &v, CAESReal &X) const;
-	std::vector<CAESReal> Ts(const CAESReal &v, CAESReal &X) const;
+	std::vector<CAESReal> concentrations(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, const RealVec *analyticalConcentrations) const;
+	DDPack distributionAnddDistdV(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients) const;
+	std::vector<CAESReal> distribution(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients) const;
+	std::vector<CAESReal> dTsdV(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, CAESReal &X) const;
+	std::vector<CAESReal> Ts(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, CAESReal &X) const;
 
 	const size_t concentrationIndex;	/*!< Analytical concentration index of the constituent */
 	const std::vector<CAESReal> Ls;		/*!< Vector of total equilibirum constants */
@@ -162,11 +136,11 @@ public:
 	TotalEquilibrium(const int numLow, const int numHigh, const std::vector<CAESReal> &pBs, const size_t concentrationIndex = SIZE_MAX);
 	TotalEquilibrium(const TotalEquilibrium &other);
 	TotalEquilibrium(TotalEquilibrium &&other);
-	const std::vector<CAESReal> & concentrations(const CAESReal &v, const RealVec *analyticalConcentrations);
-	DDPack distributionAnddDistdV(const CAESReal &v);
-	const std::vector<CAESReal> & distribution(const CAESReal &v);
-	std::vector<CAESReal> & dTsdV(const CAESReal &v, CAESReal &X);
-	const std::vector<CAESReal> & Ts(const CAESReal &v, CAESReal &X);
+	const std::vector<CAESReal> & concentrations(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, const RealVec *analyticalConcentrations);
+	DDPack distributionAnddDistdV(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients);
+	const std::vector<CAESReal> & distribution(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients);
+	std::vector<CAESReal> & dTsdV(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, CAESReal &X);
+	const std::vector<CAESReal> & Ts(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, CAESReal &X);
 
 	const size_t concentrationIndex;	/*!< Analytical concentration index of the constituent */
 	const std::vector<CAESReal> Ls;		/*!< Vector of total equilibirum constants */
