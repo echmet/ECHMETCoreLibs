@@ -593,12 +593,16 @@ std::vector<Ion<IPReal>> makeIonVector(const SysComp::IonicFormVec *ifVec, const
  * @retval \p RetCode::OK On success
  * @retval \p RetCode::E_MEMORY Insufficient memory to perform the correcions
  * @retval \p RetCode::E_DATA_TOO_LARGE Size of the data exceeds maximum size of \p std::vector
+ * @retval \p RetCode::E_INVALID_ARGUMENT \p nullptr passed as \p analyticalConcentrations when viscosity correction was requested
  */
 RetCode correctMobilitiesWorker(const SysComp::ChemicalSystem &chemSystem, SysComp::CalculatedProperties &calcProps, const RealVec *analyticalConcentrations, const NonidealityCorrections corrections) noexcept
 {
 	try {
-		if (nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_VISCOSITY))
+		if (nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_VISCOSITY)) {
+			if (analyticalConcentrations == nullptr)
+				return RetCode::E_INVALID_ARGUMENT;
 			correctIonicMobilitiesViscosity<ECHMETReal>(chemSystem, calcProps, analyticalConcentrations);
+		}
 		if (nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_ONSAGER_FUOSS)) {
 			std::vector<Ion<ECHMETReal>> ions = makeIonVector(chemSystem.ionicForms, calcProps.ionicConcentrations);
 			correctIonicMobilities<ECHMETReal>(ions, calcProps.ionicStrength, calcProps);
@@ -624,6 +628,7 @@ RetCode correctMobilitiesWorker(const SysComp::ChemicalSystem &chemSystem, SysCo
  * @retval \p RetCode::OK On success
  * @retval \p RetCode::E_MEMORY Insufficient memory to perform the correcions
  * @retval \p RetCode::E_DATA_TOO_LARGE Size of the data exceeds maximum size of \p std::vector
+ * @retval \p RetCode::E_INVALID_ARGUMENT \p nullptr passed as \p analyticalConcentrations when viscosity correction was requested
  */
 template <typename IPReal>
 RetCode correctMobilitiesWorker(const std::vector<IPReal> &icConcs, const SysComp::ChemicalSystem &chemSystem, SysComp::CalculatedProperties &calcProps, const RealVec *analyticalConcentrations,
@@ -631,8 +636,11 @@ RetCode correctMobilitiesWorker(const std::vector<IPReal> &icConcs, const SysCom
 {
 
 	try {
-		if (nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_VISCOSITY))
+		if (nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_VISCOSITY)) {
+			if (analyticalConcentrations == nullptr)
+				return RetCode::E_INVALID_ARGUMENT;
 			correctIonicMobilitiesViscosity<IPReal>(chemSystem, calcProps, analyticalConcentrations);
+		}
 		if (nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_ONSAGER_FUOSS)) {
 			std::vector<Ion<IPReal>> ions = makeIonVector<IPReal>(chemSystem.ionicForms, icConcs);
 			correctIonicMobilities<IPReal>(ions, calcProps.ionicStrength, calcProps);
