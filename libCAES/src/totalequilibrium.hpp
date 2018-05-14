@@ -4,6 +4,51 @@
 namespace ECHMET {
 namespace CAES {
 
+template <typename CAESReal>
+__attribute__((always_inline))
+void calculateTs(std::vector<CAESReal> &ts, const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, CAESReal &X, const std::vector<CAESReal> &Ls, const int numLow)
+{
+	const size_t len = ts.size();
+	X = 1.0;
+	ts[0] = 1.0;
+
+	const CAESReal activityLow = activityCoefficients[std::abs(numLow)];
+	const CAESReal vMul = v * activityCoefficients[1];
+	int num = numLow + 1;
+	CAESReal vPow = vMul;
+	for (size_t idx = 1; idx < len; idx++) {
+		const CAESReal T = Ls[idx] * vPow * (activityLow / activityCoefficients[std::abs(num++)]);
+
+		vPow *= vMul;
+
+		ts[idx] = T;
+		X += T;
+	}
+}
+
+template <typename CAESReal>
+__attribute__((always_inline))
+void calculatedTsdV(std::vector<CAESReal> &dts, const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, CAESReal &X, const std::vector<CAESReal> &Ls, const int numLow)
+{
+	const size_t len = dts.size();
+
+	X = 0.0;
+	dts[0] = 0.0;
+
+	const CAESReal activityLow = activityCoefficients[std::abs(numLow)];
+	const CAESReal vMul = v * activityCoefficients[1];
+	int num = numLow + 1;
+	CAESReal vPow = 1.0;
+	for (size_t idx = 1; idx < len; idx++) {
+		const CAESReal T = idx * Ls[idx] * vPow * (activityLow / activityCoefficients[std::abs(num++)]);
+
+		vPow *= vMul;
+
+		dts[idx] = T;
+		X += T;
+	}
+}
+
 /*!
  * TotalEquilibrium c-tor.
  *
@@ -246,25 +291,11 @@ std::vector<CAESReal> TotalEquilibrium<CAESReal, true>::dTsdV(const CAESReal &v,
 	std::vector<CAESReal> dts{};
 
 	const size_t len = Ls.size();
-	X = 0.0;
 
 	assert(len == static_cast<size_t>(numHigh - numLow) + 1);
 
 	dts.resize(len);
-	dts[0] = 0.0;
-
-	const CAESReal activityLow = activityCoefficients[std::abs(numLow)];
-	const CAESReal vMul = v * activityCoefficients[1];
-	int num = numLow + 1;
-	CAESReal vPow = 1.0;
-	for (size_t idx = 1; idx < len; idx++) {
-		const CAESReal T = idx * Ls[idx] * vPow * (activityLow / activityCoefficients[std::abs(num++)]);
-
-		vPow *= vMul;
-
-		dts[idx] = T;
-		X += T;
-	}
+	calculatedTsdV(dts, v, activityCoefficients, X, Ls, numLow);
 
 	return dts;
 }
@@ -273,24 +304,9 @@ template <typename CAESReal>
 std::vector<CAESReal> & TotalEquilibrium<CAESReal, false>::dTsdV(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, CAESReal &X)
 {
 	const size_t len = m_dTsdV.size();
-	X = 0.0;
 
-	assert(len == static_cast<size_t>(numHigh - numLow) + 1);
-
-	m_dTsdV[0] = 0.0;
-
-	const CAESReal activityLow = activityCoefficients[std::abs(numLow)];
-	const CAESReal vMul = v * activityCoefficients[1];
-	int num = numLow + 1;
-	CAESReal vPow = 1.0;
-	for (size_t idx = 1; idx < len; idx++) {
-		const CAESReal T = idx * Ls[idx] * vPow * (activityLow / activityCoefficients[std::abs(num++)]);
-
-		vPow *= vMul;
-
-		m_dTsdV[idx] = T;
-		X += T;
-	}
+	assert(m_dTsdV.size() == static_cast<size_t>(numHigh - numLow) + 1);
+	calculatedTsdV(m_dTsdV, v, activityCoefficients, X, Ls, numLow);
 
 	return m_dTsdV;
 }
@@ -301,25 +317,11 @@ std::vector<CAESReal> TotalEquilibrium<CAESReal, true>::Ts(const CAESReal &v, co
 	std::vector<CAESReal> ts{};
 
 	const size_t len = Ls.size();
-	X = 1.0;
 
 	assert(len == static_cast<size_t>(numHigh - numLow + 1));
 
 	ts.resize(len);
-	ts[0] = 1.0;
-
-	const CAESReal activityLow = activityCoefficients[std::abs(numLow)];
-	const CAESReal vMul = v * activityCoefficients[1];
-	int num = numLow + 1;
-	CAESReal vPow = v * activityCoefficients[1];
-	for (size_t idx = 1; idx < len; idx++) {
-		const CAESReal T = Ls[idx] * vPow * (activityLow / activityCoefficients[std::abs(num++)]);
-
-		vPow *= vMul;
-
-		ts[idx] = T;
-		X += T;
-	}
+	calculateTs(ts, v, activityCoefficients, X, Ls, numLow);
 
 	return ts;
 }
@@ -327,25 +329,9 @@ std::vector<CAESReal> TotalEquilibrium<CAESReal, true>::Ts(const CAESReal &v, co
 template <typename CAESReal>
 const std::vector<CAESReal> & TotalEquilibrium<CAESReal, false>::Ts(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, CAESReal &X)
 {
-	const size_t len = m_Ts.size();
-	X = 1.0;
+	assert(m_Ts.size() == static_cast<size_t>(numHigh - numLow + 1));
 
-	assert(len == static_cast<size_t>(numHigh - numLow + 1));
-
-	m_Ts[0] = 1.0;
-
-	const CAESReal activityLow = activityCoefficients[std::abs(numLow)];
-	const CAESReal vMul = v * activityCoefficients[1];
-	int num = numLow + 1;
-	CAESReal vPow = v * activityCoefficients[1];
-	for (size_t idx = 1; idx < len; idx++) {
-		const CAESReal T = Ls[idx] * vPow * (activityLow / activityCoefficients[std::abs(num++)]);
-
-		vPow *= vMul;
-
-		m_Ts[idx] = T;
-		X += T;
-	}
+	calculateTs(m_Ts, v, activityCoefficients, X, Ls, numLow);
 
 	return m_Ts;
 }
