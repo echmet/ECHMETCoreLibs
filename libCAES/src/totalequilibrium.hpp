@@ -303,8 +303,6 @@ std::vector<CAESReal> TotalEquilibrium<CAESReal, true>::dTsdV(const CAESReal &v,
 template <typename CAESReal>
 std::vector<CAESReal> & TotalEquilibrium<CAESReal, false>::dTsdV(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, CAESReal &X)
 {
-	const size_t len = m_dTsdV.size();
-
 	assert(m_dTsdV.size() == static_cast<size_t>(numHigh - numLow) + 1);
 	calculatedTsdV(m_dTsdV, v, activityCoefficients, X, Ls, numLow);
 
