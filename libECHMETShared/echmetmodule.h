@@ -104,11 +104,11 @@
  * Any symbol tagged with ECHMET_API will be marked as global (=exported)
  * in the resulting binary as long as the following conditions are met:
  *
- *  - The binary is being build in DLL mode and ECHMET_DLL_BUILD is defined
+ *  - The binary is being built in DLL mode and ECHMET_DLL_BUILD is defined
  *  - Export is overridden by ECHMET_IMPORT_INTERNAL
  *
- * If these conditions are not met, the symbol is marked for import (on Windows)
- * or not marked at all (on UNIX).
+ * If these conditions are not met, the symbol is marked for import (on Windows + MSVC)
+ * or not marked at all (on UNIX or Windows + GCC).
  *
  * Notice that this file does not have include guards. This allows us to
  * switch the ECHMET_IMPORT_INTERNAL flag on and off as needed by
@@ -116,7 +116,7 @@
  * This - although a bit messy - is useful when we are building a library A
  * that exports symbols through the ECHMET_API tag but it also pulls in
  * other library B that uses the same mechanism to export symbols. If the symbols
- * exported by library B were not wrapped in an ECHMET_IMPORT_INTERNAL block,
+ * exported by library B were not guarded by an ECHMET_IMPORT_INTERNAL block,
  * library A would export symbols from both A and B which is not what we want.
  *
  * Clear? ...yeah, didn't think so.
