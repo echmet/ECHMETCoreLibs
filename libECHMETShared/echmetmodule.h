@@ -19,6 +19,27 @@
 	#endif // ECHMET_PLATFORM_*
 #endif // ECHMET_CC
 
+/* Define force-inlined functions */
+#ifndef ECHMET_FORCE_INLINE
+	#if defined ECHMET_PLATFORM_WIN32
+		#if defined ECHMET_COMPILER_MINGW || defined ECHMET_COMPILER_MSYS
+			#define ECHMET_FORCE_INLINE inline __attribute__((always_inline))
+		#elif defined ECHMET_COMPILER_MSVC
+			#define ECHMET_FORCE_INLINE __forceinline
+		#else
+			#error "Unsupported or misdetected compiler"
+		#endif // ECHMET_COMPILER_*
+	#elif defined ECHMET_PLATFORM_UNIX
+		#ifdef ECHMET_COMPILER_GCC_LIKE
+			#define ECHMET_FORCE_INLINE inline __attribute__((always_inline))
+		#else
+			#error "Unsupported or misdetected compiler"
+		#endif // ECHMET_COMPILER_*
+	#else
+		#error "Unsupported or misdetected target platform"
+	#endif // ECHMET_PLATFORM_*
+#endif // ECHMET_FORCE_INLINE
+
 /* Allow for redefinitions of ECHMET_API as needed */
 #ifdef ECHMET_API
 	#undef ECHMET_API
