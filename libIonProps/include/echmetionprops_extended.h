@@ -8,30 +8,30 @@ namespace IonProps {
 
 template <bool B, typename IPReal>
 struct ContextMaker {
-	static ComputationContext * make(const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps, const std::vector<IPReal> &ionicConcentrations);
+	//static ComputationContext * make(const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const std::vector<IPReal> &ionicConcentrations);
 };
 
 template <typename IPReal>
 struct ContextMaker<true, IPReal> {
-	static ComputationContext * make(const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps, const std::vector<IPReal> &ionicConcentrations)
+	static ComputationContext * make(const SysComp::ChemicalSystem &chemSystem, const std::vector<IPReal> &ionicConcentrations)
 	{
 		(void)ionicConcentrations;
-		return new (std::nothrow) ComputationContextImpl<IPReal>{chemSystem, analyticalConcentrations, calcProps};
+		return new (std::nothrow) ComputationContextImpl<IPReal>{chemSystem};
 	}
 };
 
 template <typename IPReal>
 struct ContextMaker<false, IPReal> {
-	static ComputationContext * make(const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps, const std::vector<IPReal> &ionicConcentrations)
+	static ComputationContext * make(const SysComp::ChemicalSystem &chemSystem, const std::vector<IPReal> &ionicConcentrations)
 	{
-		return new (std::nothrow) ComputationContextImpl<IPReal>{ionicConcentrations, chemSystem, analyticalConcentrations, calcProps};
+		return new (std::nothrow) ComputationContextImpl<IPReal>{ionicConcentrations, chemSystem};
 	}
 };
 
 template <typename IPReal>
-ComputationContext * makeComputationContextExtended(const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps, const std::vector<IPReal> &ionicConcentrations)
+ComputationContext * makeComputationContextExtended(const SysComp::ChemicalSystem &chemSystem, const std::vector<IPReal> &ionicConcentrations)
 {
-	return ContextMaker<std::is_same<IPReal, ECHMETReal>::value, IPReal>::make(chemSystem, analyticalConcentrations, calcProps, ionicConcentrations);
+	return ContextMaker<std::is_same<IPReal, ECHMETReal>::value, IPReal>::make(chemSystem, ionicConcentrations);
 }
 
 } // namespace IonProps

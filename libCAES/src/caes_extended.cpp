@@ -117,7 +117,7 @@ RetCode calculatepHResponse(ECHMETReal &bufferCapacity, const ECHMETReal &H, con
 		const mpfr::mpreal HH{H};
 		RetCode tRet;
 
-		auto solvePerturbed = [corrections](SolverVector<mpfr::mpreal> &perturbedConcentrations, mpfr::mpreal &pH, SolverImpl<mpfr::mpreal> *solver, const SolverVector<mpfr::mpreal> *inConcentrations, const SysComp::ChemicalSystem &chemSystem, const RealVec *icVec, const SolverVector<mpfr::mpreal> &estimatedConcentrations) {
+		auto solvePerturbed = [corrections](SolverVector<mpfr::mpreal> &perturbedConcentrations, mpfr::mpreal &pH, SolverImpl<mpfr::mpreal> *solver, const SolverVector<mpfr::mpreal> *inConcentrations, const SysComp::ChemicalSystem &chemSystem, const SolverVector<mpfr::mpreal> &estimatedConcentrations) {
 			mpfr::mpreal ionicStrength;
 			SysComp::CalculatedProperties calcProps;
 
@@ -143,14 +143,14 @@ RetCode calculatepHResponse(ECHMETReal &bufferCapacity, const ECHMETReal &H, con
 				ics[row] = perturbedConcentrations(row);
 			calcProps.ionicStrength = CAESRealToECHMETReal(ionicStrength);
 
-			IonProps::ComputationContext *ionCtx = IonProps::makeComputationContextExtended<mpfr::mpreal>(chemSystem, icVec, calcProps, ics);
+			IonProps::ComputationContext *ionCtx = IonProps::makeComputationContextExtended<mpfr::mpreal>(chemSystem, ics);
 			if (ionCtx == nullptr) {
 				releaseCalculatedProperties(calcProps);
 
 				return RetCode::E_NO_MEMORY;
 			}
 
-			pH = IonProps::calculatepHInternal<mpfr::mpreal>(ionCtx, corrections);
+			pH = IonProps::calculatepHInternal<mpfr::mpreal>(ionCtx, corrections, calcProps);
 
 			releaseCalculatedProperties(calcProps);
 			ionCtx->destroy();
@@ -167,12 +167,12 @@ RetCode calculatepHResponse(ECHMETReal &bufferCapacity, const ECHMETReal &H, con
 
 
 		inConcentrations(anCIdx) -= H;
-		tRet = solvePerturbed(icConcs, pHLow, solver, &inConcentrations, chemSystem, analyticalConcentrations, estimatedConcentrations);
+		tRet = solvePerturbed(icConcs, pHLow, solver, &inConcentrations, chemSystem, estimatedConcentrations);
 		if (tRet != RetCode::OK)
 			return tRet;
 
 		inConcentrations(anCIdx) += 2.0 * H;
-		return solvePerturbed(icConcs, pHHigh, solver, &inConcentrations, chemSystem, analyticalConcentrations, estimatedConcentrations);
+		return solvePerturbed(icConcs, pHHigh, solver, &inConcentrations, chemSystem, estimatedConcentrations);
 	};
 
 	tRet = derivatorSkin<const SysComp::Constituent *>(nullptr, H, solver, chemSystem, analyticalConcentrations, executor, perturbedConstituent);
@@ -252,7 +252,7 @@ RetCode ECHMET_CC calculateFirstConcentrationDerivatives_prepared(RealVec *deriv
 		SolverVector<mpfr::mpreal> perturbedLow{N};
 		SolverVector<mpfr::mpreal> perturbedHigh{N};
 
-		auto solvePerturbed = [corrections](SolverVector<mpfr::mpreal> &perturbedConcentrations, mpfr::mpreal &perturbedConductivity, SolverImpl<mpfr::mpreal> *solver, const SolverVector<mpfr::mpreal> *inConcentrations, const SysComp::ChemicalSystem &chemSystem, const RealVec *icVec, const SolverVector<mpfr::mpreal> &estimatedConcentrations) {
+		auto solvePerturbed = [corrections](SolverVector<mpfr::mpreal> &perturbedConcentrations, mpfr::mpreal &perturbedConductivity, SolverImpl<mpfr::mpreal> *solver, const SolverVector<mpfr::mpreal> *inConcentrations, const SysComp::ChemicalSystem &chemSystem, const RealVec *acVec, const SolverVector<mpfr::mpreal> &estimatedConcentrations) {
 			mpfr::mpreal ionicStrength;
 			SysComp::CalculatedProperties calcProps;
 
@@ -279,14 +279,14 @@ RetCode ECHMET_CC calculateFirstConcentrationDerivatives_prepared(RealVec *deriv
 				ics[row] = perturbedConcentrations(row);
 			calcProps.ionicStrength = CAESRealToECHMETReal(ionicStrength);
 
-			IonProps::ComputationContext *ionCtx = IonProps::makeComputationContextExtended<mpfr::mpreal>(chemSystem, icVec, calcProps, ics);
+			IonProps::ComputationContext *ionCtx = IonProps::makeComputationContextExtended<mpfr::mpreal>(chemSystem, ics);
 			if (ionCtx == nullptr) {
 				releaseCalculatedProperties(calcProps);
 
 				return RetCode::E_NO_MEMORY;
 			}
 
-			tRet = IonProps::correctMobilitiesInternal<mpfr::mpreal>(ionCtx, corrections);
+			tRet = IonProps::correctMobilitiesInternal<mpfr::mpreal>(ionCtx, corrections, acVec, calcProps);
 			if (tRet != RetCode::OK) {
 				releaseCalculatedProperties(calcProps);
 				ionCtx->destroy();
@@ -294,7 +294,7 @@ RetCode ECHMET_CC calculateFirstConcentrationDerivatives_prepared(RealVec *deriv
 				return tRet;
 			}
 
-			perturbedConductivity = IonProps::calculateConductivityInternal<mpfr::mpreal>(ionCtx);
+			perturbedConductivity = IonProps::calculateConductivityInternal<mpfr::mpreal>(ionCtx, calcProps);
 			releaseCalculatedProperties(calcProps);
 			ionCtx->destroy();
 

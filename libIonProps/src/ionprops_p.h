@@ -137,11 +137,8 @@ public:
 	 * @param[in] analyticalConcentrations Poitner to the vector of analytical concentrations of all compounds in the system.
 	 * @param[in,out] calcProps Corresponding \p SysComp\::CalculatedProperties solved by \p CAES.
 	 */
-	explicit ComputationContextImpl(const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations,
-					SysComp::CalculatedProperties &calcProps) :
+	explicit ComputationContextImpl(const SysComp::ChemicalSystem &chemSystem) :
 		chemSystem{chemSystem},
-		analyticalConcentrations{analyticalConcentrations},
-		calcProps{calcProps},
 		ionicConcentrations{std::vector<IPReal>{}}
 	{}
 
@@ -154,11 +151,8 @@ public:
 	 * @param[in,out] calcProps \p SysComp\::CalculatedProperties solved by \p CAES.
 	 */
 	template <typename E = ECHMETReal, typename = typename std::enable_if<std::is_floating_point<E>::value>::type>
-	explicit ComputationContextImpl(const std::vector<IPReal> &ionicConcentrations, const SysComp::ChemicalSystem &chemSystem,
-					const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) :
+	explicit ComputationContextImpl(const std::vector<IPReal> &ionicConcentrations, const SysComp::ChemicalSystem &chemSystem) :
 		chemSystem{chemSystem},
-		analyticalConcentrations{analyticalConcentrations},
-		calcProps{calcProps},
 		ionicConcentrations{ionicConcentrations}
 	{}
 
@@ -168,8 +162,6 @@ public:
 	}
 
 	const SysComp::ChemicalSystem &chemSystem;		/*!< The corresponding chemical system. */
-	const RealVec *analyticalConcentrations;		/*!< Pointer to vector of analytical concentrations of all compounds in the system. */
-	SysComp::CalculatedProperties &calcProps;		/*!< Corresponding \p SysComp\::CalculatedProperties solved by \p CAES. */
 	const std::vector<IPReal> ionicConcentrations;		/*!< Vector of ionic concentrations represented as \p IPReal. This vector is empty unless
 								     the object was created using the overloaded c-tor. */
 };

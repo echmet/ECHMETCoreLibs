@@ -3,19 +3,19 @@
 namespace ECHMET {
 namespace IonProps {
 
-ECHMETReal ECHMET_CC calculateConductivity(const ComputationContext *ctx) noexcept
+ECHMETReal ECHMET_CC calculateConductivity(const ComputationContext *ctx, SysComp::CalculatedProperties &calcProps) noexcept
 {
-	return calculateConductivityInternal<ECHMETReal>(ctx);
+	return calculateConductivityInternal<ECHMETReal>(ctx, calcProps);
 }
 
-RetCode ECHMET_CC calculateEffectiveMobilities(ComputationContext *ctx) noexcept
+RetCode ECHMET_CC calculateEffectiveMobilities(const ComputationContext *ctx, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept
 {
-	return calculateEffectiveMobilitiesInternal<ECHMETReal>(ctx);
+	return calculateEffectiveMobilitiesInternal<ECHMETReal>(ctx, analyticalConcentrations, calcProps);
 }
 
-ECHMETReal ECHMET_CC calculatepH(const ComputationContext *ctx, const NonidealityCorrections corrections) noexcept
+ECHMETReal ECHMET_CC calculatepH(const ComputationContext *ctx, const NonidealityCorrections corrections, SysComp::CalculatedProperties &calcProps) noexcept
 {
-	return calculatepHInternal<ECHMETReal>(ctx, corrections);
+	return calculatepHInternal<ECHMETReal>(ctx, corrections, calcProps);
 }
 
 ECHMETReal ECHMET_CC calculatepH_direct(const ECHMETReal &cH, const ECHMETReal &ionicStrength) noexcept
@@ -23,14 +23,14 @@ ECHMETReal ECHMET_CC calculatepH_direct(const ECHMETReal &cH, const ECHMETReal &
 	return calculatepH_directInternal<ECHMETReal>(cH, ionicStrength);
 }
 
-RetCode ECHMET_CC correctMobilities(ComputationContext *ctx, const NonidealityCorrections corrections) noexcept
+RetCode ECHMET_CC correctMobilities(const ComputationContext *ctx, const NonidealityCorrections corrections, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept
 {
-	return correctMobilitiesInternal<ECHMETReal>(ctx, corrections);
+	return correctMobilitiesInternal<ECHMETReal>(ctx, corrections, analyticalConcentrations, calcProps);
 }
 
-ComputationContext * ECHMET_CC makeComputationContext(const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept
+ComputationContext * ECHMET_CC makeComputationContext(const SysComp::ChemicalSystem &chemSystem) noexcept
 {
-	return new (std::nothrow) ComputationContextImpl<ECHMETReal>(chemSystem, analyticalConcentrations, calcProps);
+	return new (std::nothrow) ComputationContextImpl<ECHMETReal>(chemSystem);
 }
 
 ComputationContext::~ComputationContext() noexcept {}

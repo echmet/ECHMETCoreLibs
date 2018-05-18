@@ -31,37 +31,46 @@ protected:
 extern "C" {
 
 /*!
- * Calculates electric conductivity of a solution.
+ * Calculates electric conductivity of a solution. Ionic mobilities must be corrected by calling
+ * \p correctMobilities() prior to calling this function of the calculated conductivity shall
+ * include viscosity and Onsager-Fuoss effects.
  *
  * @param[in] ctx Computation context for the given chemical system.
+ * @param[in] calcProps Calculated properties solved by \p CAES.
  *
  * @return Conductivity of the solution in <tt>S/m</tt>. Value of the \p conductivity field in the
  *	   corresponding \p ChemicalSystem struct is set as well.
  */
-ECHMET_API ECHMETReal ECHMET_CC calculateConductivity(const ComputationContext *ctx) ECHMET_NOEXCEPT;
+ECHMET_API ECHMETReal ECHMET_CC calculateConductivity(const ComputationContext *ctx, SysComp::CalculatedProperties &calcProps) ECHMET_NOEXCEPT;
 
 /*!
  * Calculates effective electrophoretic mobilities of all compounds in the system.
  * Calculated effective mobilities are stored in the \p effectiveMobilities vector
  * of the corresponding \p ChemicalSystem struct.
- *
+ * Ionic mobilities must be corrected by calling
+ * \p correctMobilities() prior to calling this function of the calculated effective mobility shall
+ * include viscosity and Onsager-Fuoss effects.
+*
  * @param[in] ctx Computation context for the given chemical system.
+ * @param[in] analyticalConcentrations Analytical concentrations of constituents.
+ * @param[in] calcProps Calculated properties solved by \p CAES.
  *
  * @retval RetCode::OK Success.
  * @retval RetCode::E_NO_MEMORY Insufficient memory to complete the calculation.
  * @retval RetCode::E_BAD_INPUT Invalid chemical system.
  */
-ECHMET_API RetCode ECHMET_CC calculateEffectiveMobilities(ComputationContext *ctx) ECHMET_NOEXCEPT;
+ECHMET_API RetCode ECHMET_CC calculateEffectiveMobilities(const ComputationContext *ctx, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) ECHMET_NOEXCEPT;
 
 /*!
  * Calculates pH of the system.
  *
  * @param[in] ctx Computation context for the given chemical system.
- * @param[in] isCorrection Correct for ionic strength.
+ * @param[in] corrs Corrective effects to account for (Only Debye-Hückel is relevant in this case).
+ * @param[in] calcProps Calculated properties solved by \p CAES.
  *
  * @return pH value.
  */
-ECHMET_API ECHMETReal ECHMET_CC calculatepH(const ComputationContext *ctx, const NonidealityCorrections corrections) ECHMET_NOEXCEPT;
+ECHMET_API ECHMETReal ECHMET_CC calculatepH(const ComputationContext *ctx, const NonidealityCorrections corrections, SysComp::CalculatedProperties &calcProps) ECHMET_NOEXCEPT;
 
 /*!
  * Returns pH value corresponding to the given concentration of H<sub>3</sub>O<sup>+</sup> ions.
@@ -83,12 +92,15 @@ ECHMET_API ECHMETReal ECHMET_CC calculatepH_direct(const ECHMETReal &cH, const E
  * calculated with ionic mobilities that do not include the Onsager-Fuoss correction.
  *
  * @param[in] ctx Computation context for the given chemical system.
+ * @param[in] corrections Corrective effects to account for.
+ * @param[in] analyticalConcentrations Analytical concentrations of constituents.
+ * @param[in] calcProps Calculated properties solved by \p CAES.
  *
  * @retval RetCode::OK Success
  * @retval RetCode::E_NO_MEMORY Insufficient memory to complete operation
  * @retval RetCode::E_DATA_TOO_LARGE System is too large to solve
  */
-ECHMET_API RetCode ECHMET_CC correctMobilities(ComputationContext *ctx, const NonidealityCorrections corrections) ECHMET_NOEXCEPT;
+ECHMET_API RetCode ECHMET_CC correctMobilities(const ComputationContext *ctx, const NonidealityCorrections corrections, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) ECHMET_NOEXCEPT;
 
 /*!
  * Makes computation context for the given chemical system and analytical concentrations.
@@ -97,12 +109,10 @@ ECHMET_API RetCode ECHMET_CC correctMobilities(ComputationContext *ctx, const No
  * has been destroyed will result in undefined behavior.</b>
  *
  * @param[in] chemSystem The chemical system.
- * @param[in] analyticalConcentration The analytical concentrations.
- * @param[in] calcProps Calculated properties solved by \p CAES.
  *
  * @return A pointer to \p ComputationContext object, \p NULL if the context cannot be created.
  */
-ECHMET_API ComputationContext * ECHMET_CC makeComputationContext(const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) ECHMET_NOEXCEPT;
+ECHMET_API ComputationContext * ECHMET_CC makeComputationContext(const SysComp::ChemicalSystem &chemSystem) ECHMET_NOEXCEPT;
 
 }
 
