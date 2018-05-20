@@ -60,45 +60,6 @@ static To IPRealToECHMETReal(const From &f)
 }
 
 /*!
- * Dynamically allocated 2D array flattened into 1D array.
- */
-template <typename T>
-class Array2D {
-public:
-	Array2D(const size_t rows, const size_t columns) :
-		m_length(rows * columns),
-		m_columns(columns)
-	{
-		m_array = new T[m_length];
-	}
-
-	~Array2D()
-	{
-		delete[] m_array;
-	}
-
-	const T & at(const size_t row, const size_t column) const
-	{
-		return m_array[index(row, column)];
-	}
-
-	T & operator()(const size_t row, const size_t column)
-	{
-		return m_array[index(row, column)];
-	}
-
-private:
-	T *m_array;
-	const size_t m_length;
-	const size_t m_columns;
-
-	inline size_t index(const size_t row, const size_t column) const
-	{
-		return m_columns * row + column;
-	}
-};
-
-/*!
  * Internal representation of a charged chemical species.
  */
 template <typename IPReal>

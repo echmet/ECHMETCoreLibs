@@ -5,6 +5,7 @@
 #include <internal/phchconsts_calcs.hpp>
 #include <internal/echmetmath_internal.h>
 #include <functional>
+#include <Eigen/Dense>
 
 namespace ECHMET {
 namespace IonProps {
@@ -20,6 +21,8 @@ namespace IonProps {
 template <typename IPReal>
 void correctIonicMobilities(const std::vector<Ion<IPReal>> &ions, const IPReal &ionicStrength, SysComp::CalculatedProperties &calcProps)
 {
+	typedef Eigen::Matrix<IPReal, Eigen::Dynamic, Eigen::Dynamic, static_cast<int>(Eigen::ColMajor) | static_cast<int>(Eigen::AutoAlign)> Matrix;
+
 	const IPReal dk = PhChConsts::dkWat * PhChConsts::eAbsVac;
 	const IPReal b1 = cxpow<IPReal>(PhChConsts::e, 3) / (12.0 * M_PI) * VMath::sqrt(PhChConsts::NA / cxpow<IPReal>(dk * PhChConsts::bk * PhChConsts::Tlab, 3));
 	const IPReal b2 = cxpow<IPReal>(PhChConsts::e, 2) / (6.0 * M_PI * PhChConsts::th) * VMath::sqrt(PhChConsts::NA / (dk * PhChConsts::bk * PhChConsts::Tlab));
@@ -29,18 +32,18 @@ void correctIonicMobilities(const std::vector<Ion<IPReal>> &ions, const IPReal &
 
 	const size_t N = ions.size();
 	IPReal gammaTotal = 2000.0 * ionicStrength;
-	Array2D<IPReal> R(N, 6);			/* R vectors for all constituents calculated up to sixth level */
-	Array2D<IPReal> H(N, N);			/* H matrix */
-	IPReal *mu_I = new IPReal[N];			/* mu_I = gamma_I / gammaTotal */
+	Matrix R = Matrix::Zero(N, 6);		/* R vectors for all constituents calculated up to sixth level */
+	Matrix H(N, N);				/* H matrix */
+	IPReal *mu_I = new IPReal[N];		/* mu_I = gamma_I / gammaTotal */
 
 	/* Calculate all mu_Is */
 	for (size_t idx = 0; idx < N; idx++) {
-		const IPReal g = ions.at(idx).concentration * ions.at(idx).charge * ions.at(idx).charge;
+		const IPReal g = ions[idx].concentration * ions[idx].charge * ions[idx].charge;
 		mu_I[idx] = g / gammaTotal;
 	}
 	/* Calculate H matrix */
 	for (size_t j = 0; j < N; j++) {
-		const IPReal w_J = omega(ions.at(j));
+		const IPReal w_J = omega(ions[j]);
 
 		for (size_t i = 0; i < N; i++) {
 			IPReal k = 0.0; /* KrDelta * (Sum(mu_I) * (w_I / (w_I + w_J))) */
@@ -49,7 +52,7 @@ void correctIonicMobilities(const std::vector<Ion<IPReal>> &ions, const IPReal &
 			/* KrDelta = 1 if (j == i), 0 otherwise */
 			if (j == i) {
 				for (size_t idx = 0; idx < N; idx++) {
-					const IPReal w_I = omega(ions.at(idx));
+					const IPReal w_I = omega(ions[idx]);
 					k += mu_I[idx] * w_I / (w_I + w_J);
 				}
 			}
@@ -116,12 +119,12 @@ void correctIonicMobilities(const std::vector<Ion<IPReal>> &ions, const IPReal &
 			for (size_t n = 0; n < PhChConsts::RCsCount; n++)
 				Rtot += IPReal(PhChConsts::RCs[n]) * R(idx, n);
 
-			IPReal v = (b1 * ions.at(idx).limitMobility * ions.at(idx).charge * Rtot) + (b2 * VMath::abs(ions.at(idx).charge));
+			IPReal v = (b1 * ions[idx].limitMobility * ions[idx].charge * Rtot) + (b2 * VMath::abs(ions[idx].charge));
 			v *= sqrtGammaT / denominator;
 
-			const IPReal mobility = (ions.at(idx).limitMobility - v) * 1.0e9;
-			if (sgn(mobility) == sgn(ions.at(idx).limitMobility))
-				(*calcProps.ionicMobilities)[ions.at(idx).ionicMobilityIndex] = IPRealToECHMETReal(mobility);
+			const IPReal mobility = (ions[idx].limitMobility - v) * 1.0e9;
+			if (sgn(mobility) == sgn(ions[idx].limitMobility))
+				(*calcProps.ionicMobilities)[ions[idx].ionicMobilityIndex] = IPRealToECHMETReal(mobility);
 		}
 	}
 

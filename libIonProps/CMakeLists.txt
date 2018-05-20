@@ -28,7 +28,8 @@ set(libIonProps_SRCS
 
 include_directories(${INCLUDE_DIRECTORIES}
                     "${CMAKE_CURRENT_SOURCE_DIR}/include"
-		    "${CMAKE_CURRENT_SOURCE_DIR}/../libSysComp/include")
+		    "${CMAKE_CURRENT_SOURCE_DIR}/../libSysComp/include"
+		    "${EIGEN_INCLUDE_DIR}")
 
 set(IONPROPS_LINK_LIBS
     ECHMETShared
