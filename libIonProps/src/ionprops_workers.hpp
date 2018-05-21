@@ -10,6 +10,26 @@
 namespace ECHMET {
 namespace IonProps {
 
+template <typename IPReal>
+class StdVectorRetriever {
+public:
+	static const IPReal & get(const std::vector<IPReal> &icConcs, const size_t idx)
+	{
+		return icConcs.at(idx);
+	}
+};
+
+template <typename IPReal>
+class RealVecRetriever {
+public:
+	static_assert(std::is_same<IPReal, ECHMETReal>::value, "IPReal and ECHMETReal types must be the same when using RealVecRetriever");
+
+	static const ECHMETReal & get(const RealVec *icConcs, const size_t idx)
+	{
+		return icConcs->at(idx);
+	}
+};
+
 /*!
  * Corrects ionic mobilities using Onsager-Fuoss law.
  * Internal implementation.
@@ -18,8 +38,8 @@ namespace IonProps {
  * @param[in] ionicStrength Ionic strength of the system in <tt>mol/dm<sup>3</sup></tt>.
  * @param[in,out] calcProps. Corresponding \p SysComp\::CalculatedProperties struct where the corrected ionic mobilities will be stored.
  */
-template <typename IPReal>
-void correctIonicMobilities(const std::vector<Ion<IPReal>> &ions, const IPReal &ionicStrength, SysComp::CalculatedProperties &calcProps)
+template <typename IPReal, typename ConcentrationsVec, template <typename> class Retriever>
+void correctIonicMobilities(const std::vector<Ion<IPReal>> &ions, const ConcentrationsVec &icConcs, const IPReal &ionicStrength, SysComp::CalculatedProperties &calcProps)
 {
 	typedef Eigen::Matrix<IPReal, Eigen::Dynamic, Eigen::Dynamic, static_cast<int>(Eigen::ColMajor) | static_cast<int>(Eigen::AutoAlign)> Matrix;
 
@@ -38,7 +58,8 @@ void correctIonicMobilities(const std::vector<Ion<IPReal>> &ions, const IPReal &
 
 	/* Calculate all mu_Is */
 	for (size_t idx = 0; idx < N; idx++) {
-		const IPReal g = ions[idx].concentration * ions[idx].charge * ions[idx].charge;
+		const IPReal &conc = Retriever<IPReal>::get(icConcs, ions[idx].ionicConcentrationIndex);
+		const IPReal g = conc * ions[idx].charge * ions[idx].charge;
 		mu_I[idx] = g / gammaTotal;
 	}
 	/* Calculate H matrix */
@@ -57,7 +78,7 @@ void correctIonicMobilities(const std::vector<Ion<IPReal>> &ions, const IPReal &
 				}
 			}
 
-			const IPReal w_I = omega(ions.at(i));
+			const IPReal w_I = omega(ions[i]);
 
 			l = mu_I[i] * w_I / (w_I + w_J);
 
@@ -74,7 +95,7 @@ void correctIonicMobilities(const std::vector<Ion<IPReal>> &ions, const IPReal &
 		IPReal sum_zIuILim = 0.0;
 
 		for (size_t idx = 0; idx < N; idx++) {
-			const Ion<IPReal> &ion = ions.at(idx);
+			const Ion<IPReal> &ion = ions[idx];
 
 			sum_zIuI += ion.charge * mu_I[idx];
 			sum_zIuILim += ECHMET::VMath::abs(ion.charge / ion.limitMobility) * mu_I[idx];
@@ -83,7 +104,7 @@ void correctIonicMobilities(const std::vector<Ion<IPReal>> &ions, const IPReal &
 		const IPReal sums_ratio = sum_zIuI / sum_zIuILim;
 
 		for (size_t idx = 0; idx < N; idx++) {
-		      const Ion<IPReal> &ion = ions.at(idx);
+		      const Ion<IPReal> &ion = ions[idx];
 
 		      R(idx, 0) = ion.charge - sums_ratio * VMath::abs(ion.charge / ion.limitMobility);
 		}
@@ -511,81 +532,6 @@ IPReal calculatepHWorker(const std::vector<IPReal> &icConcs, const SysComp::Calc
 }
 
 /*!
- * Builds a vector of Ions. Uncharged ionic forms are not included in the vector.
- * This is a template specialization working with \p ECHMETReal type.
- *
- * @param[in] ifVec Vector of \p SysComp::IonicForm objects for the corresponding chemical system.
- * @param[in] icVec Vector of ionic concentrations of all ionic forms in the system.
- * @param[in] calcProps \p SysComp::CalculatedProperties for the corresponding chemical system.
- *
- * @return \p std::vector of \p Ions.
- */
-std::vector<Ion<ECHMETReal>> makeIonVector(const SysComp::IonicFormVec *ifVec, const RealVec *icVec)
-{
-	std::vector<Ion<ECHMETReal>> ions;
-
-	ions.reserve(ifVec->size());
-
-	for (size_t idx = 0; idx < ifVec->size(); idx++) {
-		const SysComp::IonicForm *iF = ifVec->at(idx);
-		const size_t icIdx = iF->ionicConcentrationIndex;
-		const ECHMETReal &ic = icVec->at(icIdx);
-		const ECHMETReal limitMobility = iF->limitMobility;
-
-		ECHMET_DEBUG_CODE(fprintf(stderr, "IonVec c: %g\n", IPRealToDouble(ic)));
-
-		if (iF->totalCharge == 0)
-			continue;
-#ifdef IONPROPS_DISABLE_COMPLEX_ONSFUO
-		if (iF->ligand != nullptr)
-			continue;
-#endif // IONPROPS_DISABLE_COMPLEX_ONSFUO
-
-		ions.emplace_back(iF->ionicMobilityIndex, ic, iF->totalCharge, limitMobility);
-	}
-
-	return ions;
-}
-
-/*!
- * Builds a vector of Ions. Uncharged ionic forms are not included in the vector.
- * This a templated function working with \p IPReal type.
- *
- * @param[in] ifVec Vector of \p SysComp::IonicForm objects for the corresponding chemical system.
- * @param[in] icVec Vector of ionic concentrations of all ionic forms in the system as \p IPReal.
- * @param[in] calcProps \p SysComp::CalculatedProperties for the corresponding chemical system.
- *
- * @return \p std::vector of \p Ions.
- */
-template <typename IPReal>
-std::vector<Ion<IPReal>> makeIonVector(const SysComp::IonicFormVec *ifVec, const std::vector<IPReal> &icVec)
-{
-	std::vector<Ion<IPReal>> ions;
-
-	ions.reserve(ifVec->size());
-
-	for (size_t idx = 0; idx < ifVec->size(); idx++) {
-		const SysComp::IonicForm *iF = ifVec->at(idx);
-		const size_t icIdx = iF->ionicConcentrationIndex;
-		const IPReal &ic = icVec.at(icIdx);
-		const ECHMETReal limitMobility = iF->limitMobility;
-
-		ECHMET_DEBUG_CODE(fprintf(stderr, "IonVec c: %g\n", IPRealToDouble(ic)));
-
-		if (iF->totalCharge == 0)
-			continue;
-#ifdef IONPROPS_DISABLE_COMPLEX_ONSFUO
-		if (iF->ligand != nullptr)
-			continue;
-#endif // IONPROPS_DISABLE_COMPLEX_ONSFUO
-
-		ions.emplace_back(iF->ionicMobilityIndex, ic, iF->totalCharge, limitMobility);
-	}
-
-	return ions;
-}
-
-/*!
  * Internal implentation of cumulative mobility corrections.
  *
  * @param[in] chemSystem Chemical system to operate on
@@ -598,7 +544,8 @@ std::vector<Ion<IPReal>> makeIonVector(const SysComp::IonicFormVec *ifVec, const
  * @retval \p RetCode::E_DATA_TOO_LARGE Size of the data exceeds maximum size of \p std::vector
  * @retval \p RetCode::E_INVALID_ARGUMENT \p nullptr passed as \p analyticalConcentrations when viscosity correction was requested
  */
-RetCode correctMobilitiesWorker(const SysComp::ChemicalSystem &chemSystem, SysComp::CalculatedProperties &calcProps, const RealVec *analyticalConcentrations, const NonidealityCorrections corrections) noexcept
+RetCode correctMobilitiesWorker(const std::vector<Ion<ECHMETReal>> &ions, const SysComp::ChemicalSystem &chemSystem, SysComp::CalculatedProperties &calcProps, const RealVec *analyticalConcentrations,
+				const NonidealityCorrections corrections) noexcept
 {
 	try {
 		if (nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_VISCOSITY)) {
@@ -606,10 +553,8 @@ RetCode correctMobilitiesWorker(const SysComp::ChemicalSystem &chemSystem, SysCo
 				return RetCode::E_INVALID_ARGUMENT;
 			correctIonicMobilitiesViscosity<ECHMETReal>(chemSystem, calcProps, analyticalConcentrations);
 		}
-		if (nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_ONSAGER_FUOSS)) {
-			std::vector<Ion<ECHMETReal>> ions = makeIonVector(chemSystem.ionicForms, calcProps.ionicConcentrations);
-			correctIonicMobilities<ECHMETReal>(ions, calcProps.ionicStrength, calcProps);
-		}
+		if (nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_ONSAGER_FUOSS))
+			correctIonicMobilities<ECHMETReal, RealVec *, RealVecRetriever>(ions, calcProps.ionicConcentrations, calcProps.ionicStrength, calcProps);
 	} catch (std::bad_alloc &) {
 		return RetCode::E_NO_MEMORY;
 	} catch (std::length_error &) {
@@ -622,7 +567,8 @@ RetCode correctMobilitiesWorker(const SysComp::ChemicalSystem &chemSystem, SysCo
 /*!
  * Templated nternal implentation of cumulative mobility corrections.
  *
- * @param[in] icConcs Vector of ionic concentrations
+ * @param[in] icConcs Vector of ionic concentrations. Values must be ordered in the order used by
+ *		      \p ionicConcentrations vector in \p SysComp::CalculatedProperties
  * @param[in] chemSystem Chemical system to operate on
  * @param[in] calcProps Calculated properties of chemical system
  * @param[in] analyticalConcentrations Vector of analytical concentrations
@@ -634,7 +580,8 @@ RetCode correctMobilitiesWorker(const SysComp::ChemicalSystem &chemSystem, SysCo
  * @retval \p RetCode::E_INVALID_ARGUMENT \p nullptr passed as \p analyticalConcentrations when viscosity correction was requested
  */
 template <typename IPReal>
-RetCode correctMobilitiesWorker(const std::vector<IPReal> &icConcs, const SysComp::ChemicalSystem &chemSystem, SysComp::CalculatedProperties &calcProps, const RealVec *analyticalConcentrations,
+RetCode correctMobilitiesWorker(const std::vector<IPReal> &icConcs, const std::vector<Ion<IPReal>> &ions,
+				const SysComp::ChemicalSystem &chemSystem, SysComp::CalculatedProperties &calcProps, const RealVec *analyticalConcentrations,
 			        const NonidealityCorrections corrections) noexcept
 {
 
@@ -644,10 +591,8 @@ RetCode correctMobilitiesWorker(const std::vector<IPReal> &icConcs, const SysCom
 				return RetCode::E_INVALID_ARGUMENT;
 			correctIonicMobilitiesViscosity<IPReal>(chemSystem, calcProps, analyticalConcentrations);
 		}
-		if (nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_ONSAGER_FUOSS)) {
-			std::vector<Ion<IPReal>> ions = makeIonVector<IPReal>(chemSystem.ionicForms, icConcs);
-			correctIonicMobilities<IPReal>(ions, calcProps.ionicStrength, calcProps);
-		}
+		if (nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_ONSAGER_FUOSS))
+			correctIonicMobilities<IPReal, std::vector<IPReal>, StdVectorRetriever>(ions, icConcs, calcProps.ionicStrength, calcProps);
 	} catch (std::bad_alloc &) {
 		return RetCode::E_NO_MEMORY;
 	} catch (std::length_error &) {

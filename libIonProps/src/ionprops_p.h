@@ -73,18 +73,54 @@ public:
 	 * @param[in] charge Electric charge of the ion.
 	 * @param[in] limitMobility Limit electrophoretic mobility of the ion in <tt>V.s/m<sup>2</sup> \. 10e9</tt>.
 	 */
-	Ion(const size_t ionicMobilityIndex, const IPReal &concentration, const int charge, const IPReal &limitMobility) :
+	Ion(const size_t ionicMobilityIndex, const size_t ionicConcentrationIndex, const int charge, const IPReal &limitMobility) :
 		ionicMobilityIndex{ionicMobilityIndex},
-		concentration{concentration},
+		ionicConcentrationIndex{ionicConcentrationIndex},
 		charge{charge},
 		limitMobility{limitMobility * 1.0e-9}
 	{}
 
-	const size_t ionicMobilityIndex;	/*<! Index in the \p ChemicalSystem\::ionicMobilities vector where the ionic mobility of the ion is stored. */
-	const IPReal concentration;		/*<! Ionic concentration of the ion in the system in <tt>mmol/dm<sup>3</sup></tt>. */
+	const size_t ionicMobilityIndex;	/*<! Index into the \p ChemicalSystem\::ionicMobilities vector where the ionic mobility of the ion is stored. */
+	const size_t ionicConcentrationIndex;	/*<! Index into the vector of ionic concentrations vector that will be passed to the calculator function. */
 	const int charge;			/*<! Electric charge of the ion. */
 	const IPReal limitMobility;		/*<! Limit electrophoretic mobulity of the ion in <tt>V.s/m<sup>2</sup></tt>. */
 };
+
+/*!
+ * Builds a vector of Ions. Uncharged ionic forms are not included in the vector.
+ * This a templated function working with \p IPReal type.
+ *
+ * @param[in] ifVec Vector of \p SysComp::IonicForm objects for the corresponding chemical system.
+ * @param[in] icVec Vector of ionic concentrations of all ionic forms in the system as \p IPReal.
+ * @param[in] calcProps \p SysComp::CalculatedProperties for the corresponding chemical system.
+ *
+ * @return \p std::vector of \p Ions.
+ */
+template <typename IPReal>
+std::vector<Ion<IPReal>> makeIonVector(const SysComp::IonicFormVec *ifVec)
+{
+	std::vector<Ion<IPReal>> ions;
+
+	ions.reserve(ifVec->size());
+
+	for (size_t idx = 0; idx < ifVec->size(); idx++) {
+		const SysComp::IonicForm *iF = ifVec->at(idx);
+		const ECHMETReal limitMobility = iF->limitMobility;
+
+		ECHMET_DEBUG_CODE(fprintf(stderr, "IonVec c: %g\n", IPRealToDouble(ic)));
+
+		if (iF->totalCharge == 0)
+			continue;
+#ifdef IONPROPS_DISABLE_COMPLEX_ONSFUO
+		if (iF->ligand != nullptr)
+			continue;
+#endif // IONPROPS_DISABLE_COMPLEX_ONSFUO
+
+		ions.emplace_back(iF->ionicMobilityIndex, iF->ionicConcentrationIndex, iF->totalCharge, limitMobility);
+	}
+
+	return ions;
+}
 
 /*!
  * Internal implementation of the comutation context
@@ -100,6 +136,7 @@ public:
 	 */
 	explicit ComputationContextImpl(const SysComp::ChemicalSystem &chemSystem) :
 		chemSystem{chemSystem},
+		ions{makeIonVector<IPReal>(chemSystem.ionicForms)},
 		ionicConcentrations{std::vector<IPReal>{}}
 	{}
 
@@ -114,6 +151,7 @@ public:
 	template <typename E = ECHMETReal, typename = typename std::enable_if<std::is_floating_point<E>::value>::type>
 	explicit ComputationContextImpl(const std::vector<IPReal> &ionicConcentrations, const SysComp::ChemicalSystem &chemSystem) :
 		chemSystem{chemSystem},
+		ions{makeIonVector<IPReal>(chemSystem.ionicForms)},
 		ionicConcentrations{ionicConcentrations}
 	{}
 
@@ -123,6 +161,7 @@ public:
 	}
 
 	const SysComp::ChemicalSystem &chemSystem;		/*!< The corresponding chemical system. */
+	const std::vector<Ion<IPReal>> ions;			/*!< Vector of all charged ions used by Onsager-Fuoss correction workers */
 	const std::vector<IPReal> ionicConcentrations;		/*!< Vector of ionic concentrations represented as \p IPReal. This vector is empty unless
 								     the object was created using the overloaded c-tor. */
 };
