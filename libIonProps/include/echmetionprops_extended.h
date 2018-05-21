@@ -13,25 +13,25 @@ struct ContextMaker {
 
 template <typename IPReal>
 struct ContextMaker<true, IPReal> {
-	static ComputationContext * make(const SysComp::ChemicalSystem &chemSystem, const std::vector<IPReal> &ionicConcentrations)
+	static ComputationContext * make(const SysComp::ChemicalSystem &chemSystem, const std::vector<IPReal> &ionicConcentrations, const ComputationContext::Options options)
 	{
 		(void)ionicConcentrations;
-		return new (std::nothrow) ComputationContextImpl<IPReal>{chemSystem};
+		return new (std::nothrow) ComputationContextImpl<IPReal>{chemSystem, options};
 	}
 };
 
 template <typename IPReal>
 struct ContextMaker<false, IPReal> {
-	static ComputationContext * make(const SysComp::ChemicalSystem &chemSystem, const std::vector<IPReal> &ionicConcentrations)
+	static ComputationContext * make(const SysComp::ChemicalSystem &chemSystem, const std::vector<IPReal> &ionicConcentrations, const ComputationContext::Options options)
 	{
-		return new (std::nothrow) ComputationContextImpl<IPReal>{ionicConcentrations, chemSystem};
+		return new (std::nothrow) ComputationContextImpl<IPReal>{ionicConcentrations, chemSystem, options};
 	}
 };
 
 template <typename IPReal>
-ComputationContext * makeComputationContextExtended(const SysComp::ChemicalSystem &chemSystem, const std::vector<IPReal> &ionicConcentrations)
+ComputationContext * makeComputationContextExtended(const SysComp::ChemicalSystem &chemSystem, const std::vector<IPReal> &ionicConcentrations, const ComputationContext::Options options)
 {
-	return ContextMaker<std::is_same<IPReal, ECHMETReal>::value, IPReal>::make(chemSystem, ionicConcentrations);
+	return ContextMaker<std::is_same<IPReal, ECHMETReal>::value, IPReal>::make(chemSystem, ionicConcentrations, options);
 }
 
 } // namespace IonProps

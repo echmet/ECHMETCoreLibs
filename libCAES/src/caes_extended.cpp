@@ -143,7 +143,7 @@ RetCode calculatepHResponse(ECHMETReal &bufferCapacity, const ECHMETReal &H, con
 				ics[row] = perturbedConcentrations(row);
 			calcProps.ionicStrength = CAESRealToECHMETReal(ionicStrength);
 
-			IonProps::ComputationContext *ionCtx = IonProps::makeComputationContextExtended<mpfr::mpreal>(chemSystem, ics);
+			IonProps::ComputationContext *ionCtx = IonProps::makeComputationContextExtended<mpfr::mpreal>(chemSystem, ics, IonProps::ComputationContext::NONE);
 			if (ionCtx == nullptr) {
 				releaseCalculatedProperties(calcProps);
 
@@ -279,7 +279,7 @@ RetCode ECHMET_CC calculateFirstConcentrationDerivatives_prepared(RealVec *deriv
 				ics[row] = perturbedConcentrations(row);
 			calcProps.ionicStrength = CAESRealToECHMETReal(ionicStrength);
 
-			IonProps::ComputationContext *ionCtx = IonProps::makeComputationContextExtended<mpfr::mpreal>(chemSystem, ics);
+			IonProps::ComputationContext *ionCtx = IonProps::makeComputationContextExtended<mpfr::mpreal>(chemSystem, ics, IonProps::ComputationContext::NONE);
 			if (ionCtx == nullptr) {
 				releaseCalculatedProperties(calcProps);
 

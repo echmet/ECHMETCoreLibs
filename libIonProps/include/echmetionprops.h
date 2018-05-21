@@ -17,8 +17,17 @@ namespace ECHMET {
  */
 namespace IonProps {
 
+
+
 class ComputationContext {
 public:
+	ECHMET_WK_ENUM(Options) {
+		NONE = 0,
+		DISABLE_THREAD_SAFETY = (1 << 0)	/*!< Use thread-unsafe variant of the context. This may improve performance
+							     but prevents the context from being used from multiple threads simultaneously. */
+		ENUM_FORCE_INT32_SIZE(ComputationContextOptions)
+	};
+
 	/*!
 	 * Frees resources claimed by the object.
 	 */
@@ -100,7 +109,7 @@ ECHMET_API ECHMETReal ECHMET_CC calculatepH_direct(const ECHMETReal &cH, const E
  * @retval RetCode::E_NO_MEMORY Insufficient memory to complete operation
  * @retval RetCode::E_DATA_TOO_LARGE System is too large to solve
  */
-ECHMET_API RetCode ECHMET_CC correctMobilities(const ComputationContext *ctx, const NonidealityCorrections corrections, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) ECHMET_NOEXCEPT;
+ECHMET_API RetCode ECHMET_CC correctMobilities(ComputationContext *ctx, const NonidealityCorrections corrections, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) ECHMET_NOEXCEPT;
 
 /*!
  * Makes computation context for the given chemical system and analytical concentrations.
@@ -109,10 +118,11 @@ ECHMET_API RetCode ECHMET_CC correctMobilities(const ComputationContext *ctx, co
  * has been destroyed will result in undefined behavior.</b>
  *
  * @param[in] chemSystem The chemical system.
+ * @param[in] options Context operation options.
  *
  * @return A pointer to \p ComputationContext object, \p NULL if the context cannot be created.
  */
-ECHMET_API ComputationContext * ECHMET_CC makeComputationContext(const SysComp::ChemicalSystem &chemSystem) ECHMET_NOEXCEPT;
+ECHMET_API ComputationContext * ECHMET_CC makeComputationContext(const SysComp::ChemicalSystem &chemSystem, const ComputationContext::Options options) ECHMET_NOEXCEPT;
 
 }
 

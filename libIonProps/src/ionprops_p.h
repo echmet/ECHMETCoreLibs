@@ -4,6 +4,7 @@
 #include <echmetionprops.h>
 #include <cstddef>
 #include <vector>
+#include <Eigen/Dense>
 
 #include <echmetmodule.h>
 #include <internal/mpreal.h>
@@ -128,17 +129,67 @@ std::vector<Ion<IPReal>> makeIonVector(const SysComp::IonicFormVec *ifVec)
 template <typename IPReal>
 class ComputationContextImpl : public ComputationContext {
 public:
+	typedef Eigen::Matrix<IPReal, Eigen::Dynamic, Eigen::Dynamic, static_cast<int>(Eigen::ColMajor) | static_cast<int>(Eigen::AutoAlign)> Matrix;
+
+	class OnsagerFuossPack {
+	public:
+		OnsagerFuossPack() :
+			R{nullptr},
+			H{nullptr},
+			mu_I{nullptr},
+			m_releaseOnFinalize{false}
+		{}
+
+		OnsagerFuossPack(Matrix * const R, Matrix * const H, std::vector<IPReal> * const mu_I, const bool releaseOnFinalize) :
+			R{R},
+			H{H},
+			mu_I{mu_I},
+			m_releaseOnFinalize{releaseOnFinalize}
+		{}
+
+		void finalize()
+		{
+			if (m_releaseOnFinalize) {
+				delete R;
+				delete H;
+				delete mu_I;
+
+				delete this;
+			}
+		}
+
+		Matrix * const R;
+		Matrix * const H;
+		std::vector<IPReal> * const mu_I;
+
+		OnsagerFuossPack & operator=(const OnsagerFuossPack &other)
+		{
+			const_cast<Matrix *&>(R) = other.R;
+			const_cast<Matrix *&>(H) = other.H;
+			const_cast<std::vector<IPReal> *&>(mu_I) = other.mu_I;
+			const_cast<bool&>(m_releaseOnFinalize) = other.m_releaseOnFinalize;
+
+			return *this;
+		}
+
+	private:
+		const bool m_releaseOnFinalize;
+	};
+
 	/* \p ComputationContextImpl c-tor.
 	 *
 	 * @param[in] chemSystem The corresponding chemical system.
 	 * @param[in] analyticalConcentrations Poitner to the vector of analytical concentrations of all compounds in the system.
 	 * @param[in,out] calcProps Corresponding \p SysComp\::CalculatedProperties solved by \p CAES.
 	 */
-	explicit ComputationContextImpl(const SysComp::ChemicalSystem &chemSystem) :
+	explicit ComputationContextImpl(const SysComp::ChemicalSystem &chemSystem, const Options options) :
 		chemSystem{chemSystem},
 		ions{makeIonVector<IPReal>(chemSystem.ionicForms)},
-		ionicConcentrations{std::vector<IPReal>{}}
-	{}
+		ionicConcentrations{std::vector<IPReal>{}},
+		m_isThreadUnsafe{(options & Options::DISABLE_THREAD_SAFETY) != 0}
+	{
+		prepareOnsagerFuossPack();
+	}
 
 	/* \p ComputationContextImpl c-tor.
 	 * This overload is available only when the \p ECHMETReal is typedefed to an IEEE754 floating point type.
@@ -149,21 +200,66 @@ public:
 	 * @param[in,out] calcProps \p SysComp\::CalculatedProperties solved by \p CAES.
 	 */
 	template <typename E = ECHMETReal, typename = typename std::enable_if<std::is_floating_point<E>::value>::type>
-	explicit ComputationContextImpl(const std::vector<IPReal> &ionicConcentrations, const SysComp::ChemicalSystem &chemSystem) :
+	explicit ComputationContextImpl(const std::vector<IPReal> &ionicConcentrations, const SysComp::ChemicalSystem &chemSystem, const Options options) :
 		chemSystem{chemSystem},
 		ions{makeIonVector<IPReal>(chemSystem.ionicForms)},
-		ionicConcentrations{ionicConcentrations}
-	{}
+		ionicConcentrations{ionicConcentrations},
+		m_isThreadUnsafe{(options & Options::DISABLE_THREAD_SAFETY) != 0}
+	{
+		prepareOnsagerFuossPack();
+	}
+
+	~ComputationContextImpl()
+	{
+		delete m_onsFuoPack.R;
+		delete m_onsFuoPack.H;
+		delete m_onsFuoPack.mu_I;
+	}
 
 	virtual void ECHMET_CC destroy() const noexcept override
 	{
 		delete this;
 	}
 
+	OnsagerFuossPack * onsagerFuossPack()
+	{
+		if (m_isThreadUnsafe)
+			return &m_onsFuoPack;
+		else {
+			const size_t N = ions.size();
+
+			Matrix *R = new Matrix(N, 6);
+			R->setZero();
+			Matrix *H = new Matrix(N, N);
+			std::vector<IPReal> *mu_I = new std::vector<IPReal>(N);
+
+			return new OnsagerFuossPack{ R, H, mu_I, true };
+		}
+	}
+
 	const SysComp::ChemicalSystem &chemSystem;		/*!< The corresponding chemical system. */
 	const std::vector<Ion<IPReal>> ions;			/*!< Vector of all charged ions used by Onsager-Fuoss correction workers */
 	const std::vector<IPReal> ionicConcentrations;		/*!< Vector of ionic concentrations represented as \p IPReal. This vector is empty unless
 								     the object was created using the overloaded c-tor. */
+
+private:
+	void prepareOnsagerFuossPack()
+	{
+		if (!m_isThreadUnsafe)
+			return;
+
+		const size_t N = ions.size();
+
+		Matrix *R = new Matrix(N, 6);
+		Matrix *H = new Matrix(N, N);
+		std::vector<IPReal> *mu_I = new std::vector<IPReal>(N);
+
+		m_onsFuoPack = OnsagerFuossPack(R, H, mu_I, false);
+	}
+
+	const bool m_isThreadUnsafe;
+
+	OnsagerFuossPack m_onsFuoPack;
 };
 
 template <typename T>

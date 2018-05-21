@@ -84,17 +84,17 @@ IPReal calculatepH_directInternal(const IPReal &cH, const IPReal &ionicStrength)
 }
 
 DEF_DISPATCHER(correctMobilities, RetCode,
-	       return correctMobilitiesWorker(ctxImpl->ions, ctxImpl->chemSystem, calcProps, analyticalConcentrations, corrections),
-	       return correctMobilitiesWorker(ctxImpl->ionicConcentrations, ctxImpl->ions, ctxImpl->chemSystem, calcProps, analyticalConcentrations, corrections),
-	       const ComputationContextImpl<IPReal> *ctxImpl, const NonidealityCorrections corrections, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps);
+	       return correctMobilitiesWorker(ctxImpl->onsagerFuossPack(), ctxImpl->ions, ctxImpl->chemSystem, calcProps, analyticalConcentrations, corrections),
+	       return correctMobilitiesWorker(ctxImpl->ionicConcentrations, ctxImpl->onsagerFuossPack(), ctxImpl->ions, ctxImpl->chemSystem, calcProps, analyticalConcentrations, corrections),
+	       ComputationContextImpl<IPReal> *ctxImpl, const NonidealityCorrections corrections, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps);
 
 /*!
  * Internal \p correctMobilities dispatching function.
  */
 template <typename IPReal>
-RetCode correctMobilitiesInternal(const ComputationContext *ctx, const NonidealityCorrections corrections, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept
+RetCode correctMobilitiesInternal(ComputationContext *ctx, const NonidealityCorrections corrections, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept
 {
-	const ComputationContextImpl<IPReal> *ctxImpl = dynamic_cast<const ComputationContextImpl<IPReal> *>(ctx);
+	ComputationContextImpl<IPReal> *ctxImpl = dynamic_cast<ComputationContextImpl<IPReal> *>(ctx);
 	if (ctxImpl == nullptr)
 		return RetCode::E_INVALID_ARGUMENT;
 

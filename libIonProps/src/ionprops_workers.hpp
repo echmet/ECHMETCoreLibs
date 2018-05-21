@@ -5,7 +5,6 @@
 #include <internal/phchconsts_calcs.hpp>
 #include <internal/echmetmath_internal.h>
 #include <functional>
-#include <Eigen/Dense>
 
 namespace ECHMET {
 namespace IonProps {
@@ -35,14 +34,14 @@ public:
  * Internal implementation.
  *
  * @param[in] ions Vector of all ions in the system.
+ * @param[in] onsFuoPack Preallocated arrays needed for Onsager-Fuoss calculations.
+ * @param[in] icConcs Vector if ionic concentrations.
  * @param[in] ionicStrength Ionic strength of the system in <tt>mol/dm<sup>3</sup></tt>.
  * @param[in,out] calcProps. Corresponding \p SysComp\::CalculatedProperties struct where the corrected ionic mobilities will be stored.
  */
 template <typename IPReal, typename ConcentrationsVec, template <typename> class Retriever>
-void correctIonicMobilities(const std::vector<Ion<IPReal>> &ions, const ConcentrationsVec &icConcs, const IPReal &ionicStrength, SysComp::CalculatedProperties &calcProps)
+void correctIonicMobilities(typename ComputationContextImpl<IPReal>::OnsagerFuossPack *onsFuoPack, const std::vector<Ion<IPReal>> &ions, const ConcentrationsVec &icConcs, const IPReal &ionicStrength, SysComp::CalculatedProperties &calcProps)
 {
-	typedef Eigen::Matrix<IPReal, Eigen::Dynamic, Eigen::Dynamic, static_cast<int>(Eigen::ColMajor) | static_cast<int>(Eigen::AutoAlign)> Matrix;
-
 	const IPReal dk = PhChConsts::dkWat * PhChConsts::eAbsVac;
 	const IPReal b1 = cxpow<IPReal>(PhChConsts::e, 3) / (12.0 * M_PI) * VMath::sqrt(PhChConsts::NA / cxpow<IPReal>(dk * PhChConsts::bk * PhChConsts::Tlab, 3));
 	const IPReal b2 = cxpow<IPReal>(PhChConsts::e, 2) / (6.0 * M_PI * PhChConsts::th) * VMath::sqrt(PhChConsts::NA / (dk * PhChConsts::bk * PhChConsts::Tlab));
@@ -52,9 +51,9 @@ void correctIonicMobilities(const std::vector<Ion<IPReal>> &ions, const Concentr
 
 	const size_t N = ions.size();
 	IPReal gammaTotal = 2000.0 * ionicStrength;
-	Matrix R = Matrix::Zero(N, 6);		/* R vectors for all constituents calculated up to sixth level */
-	Matrix H(N, N);				/* H matrix */
-	IPReal *mu_I = new IPReal[N];		/* mu_I = gamma_I / gammaTotal */
+	typename ComputationContextImpl<IPReal>::Matrix &R = *onsFuoPack->R;		/* R vectors for all constituents calculated up to sixth level */
+	typename ComputationContextImpl<IPReal>::Matrix &H = *onsFuoPack->H;		/* H matrix */
+	std::vector<IPReal> &mu_I = *onsFuoPack->mu_I;					/* mu_I = gamma_I / gammaTotal */
 
 	/* Calculate all mu_Is */
 	for (size_t idx = 0; idx < N; idx++) {
@@ -148,8 +147,6 @@ void correctIonicMobilities(const std::vector<Ion<IPReal>> &ions, const Concentr
 				(*calcProps.ionicMobilities)[ions[idx].ionicMobilityIndex] = IPRealToECHMETReal(mobility);
 		}
 	}
-
-	delete[] mu_I;
 }
 
 template <typename IPReal>
@@ -534,6 +531,7 @@ IPReal calculatepHWorker(const std::vector<IPReal> &icConcs, const SysComp::Calc
 /*!
  * Internal implentation of cumulative mobility corrections.
  *
+ * @param[in] onsFuoPack Preallocated arrays needed for Onsager-Fuoss calculations
  * @param[in] chemSystem Chemical system to operate on
  * @param[in] calcProps Calculated properties of chemical system
  * @param[in] analyticalConcentrations Vector of analytical concentrations
@@ -544,7 +542,8 @@ IPReal calculatepHWorker(const std::vector<IPReal> &icConcs, const SysComp::Calc
  * @retval \p RetCode::E_DATA_TOO_LARGE Size of the data exceeds maximum size of \p std::vector
  * @retval \p RetCode::E_INVALID_ARGUMENT \p nullptr passed as \p analyticalConcentrations when viscosity correction was requested
  */
-RetCode correctMobilitiesWorker(const std::vector<Ion<ECHMETReal>> &ions, const SysComp::ChemicalSystem &chemSystem, SysComp::CalculatedProperties &calcProps, const RealVec *analyticalConcentrations,
+RetCode correctMobilitiesWorker(typename ComputationContextImpl<ECHMETReal>::OnsagerFuossPack *onsFuoPack, const std::vector<Ion<ECHMETReal>> &ions, const SysComp::ChemicalSystem &chemSystem,
+				SysComp::CalculatedProperties &calcProps, const RealVec *analyticalConcentrations,
 				const NonidealityCorrections corrections) noexcept
 {
 	try {
@@ -553,8 +552,10 @@ RetCode correctMobilitiesWorker(const std::vector<Ion<ECHMETReal>> &ions, const 
 				return RetCode::E_INVALID_ARGUMENT;
 			correctIonicMobilitiesViscosity<ECHMETReal>(chemSystem, calcProps, analyticalConcentrations);
 		}
-		if (nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_ONSAGER_FUOSS))
-			correctIonicMobilities<ECHMETReal, RealVec *, RealVecRetriever>(ions, calcProps.ionicConcentrations, calcProps.ionicStrength, calcProps);
+		if (nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_ONSAGER_FUOSS)) {
+			correctIonicMobilities<ECHMETReal, RealVec *, RealVecRetriever>(onsFuoPack, ions, calcProps.ionicConcentrations, calcProps.ionicStrength, calcProps);
+			onsFuoPack->finalize();
+		}
 	} catch (std::bad_alloc &) {
 		return RetCode::E_NO_MEMORY;
 	} catch (std::length_error &) {
@@ -569,6 +570,7 @@ RetCode correctMobilitiesWorker(const std::vector<Ion<ECHMETReal>> &ions, const 
  *
  * @param[in] icConcs Vector of ionic concentrations. Values must be ordered in the order used by
  *		      \p ionicConcentrations vector in \p SysComp::CalculatedProperties
+ * @param[in] onsFuoPack Preallocated arrays needed for Onsager-Fuoss calculations
  * @param[in] chemSystem Chemical system to operate on
  * @param[in] calcProps Calculated properties of chemical system
  * @param[in] analyticalConcentrations Vector of analytical concentrations
@@ -580,7 +582,7 @@ RetCode correctMobilitiesWorker(const std::vector<Ion<ECHMETReal>> &ions, const 
  * @retval \p RetCode::E_INVALID_ARGUMENT \p nullptr passed as \p analyticalConcentrations when viscosity correction was requested
  */
 template <typename IPReal>
-RetCode correctMobilitiesWorker(const std::vector<IPReal> &icConcs, const std::vector<Ion<IPReal>> &ions,
+RetCode correctMobilitiesWorker(const std::vector<IPReal> &icConcs, typename ComputationContextImpl<IPReal>::OnsagerFuossPack *onsFuoPack, const std::vector<Ion<IPReal>> &ions,
 				const SysComp::ChemicalSystem &chemSystem, SysComp::CalculatedProperties &calcProps, const RealVec *analyticalConcentrations,
 			        const NonidealityCorrections corrections) noexcept
 {
@@ -591,8 +593,10 @@ RetCode correctMobilitiesWorker(const std::vector<IPReal> &icConcs, const std::v
 				return RetCode::E_INVALID_ARGUMENT;
 			correctIonicMobilitiesViscosity<IPReal>(chemSystem, calcProps, analyticalConcentrations);
 		}
-		if (nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_ONSAGER_FUOSS))
-			correctIonicMobilities<IPReal, std::vector<IPReal>, StdVectorRetriever>(ions, icConcs, calcProps.ionicStrength, calcProps);
+		if (nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_ONSAGER_FUOSS)) {
+			correctIonicMobilities<IPReal, std::vector<IPReal>, StdVectorRetriever>(onsFuoPack, ions, icConcs, calcProps.ionicStrength, calcProps);
+			onsFuoPack->finalize();
+		}
 	} catch (std::bad_alloc &) {
 		return RetCode::E_NO_MEMORY;
 	} catch (std::length_error &) {

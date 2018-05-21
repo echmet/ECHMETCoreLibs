@@ -23,14 +23,14 @@ ECHMETReal ECHMET_CC calculatepH_direct(const ECHMETReal &cH, const ECHMETReal &
 	return calculatepH_directInternal<ECHMETReal>(cH, ionicStrength);
 }
 
-RetCode ECHMET_CC correctMobilities(const ComputationContext *ctx, const NonidealityCorrections corrections, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept
+RetCode ECHMET_CC correctMobilities(ComputationContext *ctx, const NonidealityCorrections corrections, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept
 {
 	return correctMobilitiesInternal<ECHMETReal>(ctx, corrections, analyticalConcentrations, calcProps);
 }
 
-ComputationContext * ECHMET_CC makeComputationContext(const SysComp::ChemicalSystem &chemSystem) noexcept
+ComputationContext * ECHMET_CC makeComputationContext(const SysComp::ChemicalSystem &chemSystem, const ComputationContext::Options options) noexcept
 {
-	return new (std::nothrow) ComputationContextImpl<ECHMETReal>(chemSystem);
+	return new (std::nothrow) ComputationContextImpl<ECHMETReal>(chemSystem, options);
 }
 
 ComputationContext::~ComputationContext() noexcept {}
