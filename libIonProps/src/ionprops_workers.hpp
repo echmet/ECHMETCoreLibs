@@ -14,7 +14,7 @@ class StdVectorRetriever {
 public:
 	static const IPReal & get(const std::vector<IPReal> &icConcs, const size_t idx)
 	{
-		return icConcs.at(idx);
+		return icConcs[idx];
 	}
 };
 
@@ -25,7 +25,7 @@ public:
 
 	static const ECHMETReal & get(const RealVec *icConcs, const size_t idx)
 	{
-		return icConcs->at(idx);
+		return icConcs->elem(idx);
 	}
 };
 
