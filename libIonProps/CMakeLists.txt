@@ -48,8 +48,8 @@ set(IONPROPS_LINK_LIBS
 add_library(IonProps SHARED ${libIonProps_SRCS})
 target_include_directories(IonProps PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 set_target_properties(IonProps
-                      PROPERTIES VERSION 0.1
-                                 SOVERSION 0.1
+                      PROPERTIES VERSION 0.2
+                                 SOVERSION 0.2
                       PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/include/echmetionprops.h")
 target_link_libraries(IonProps
                       PRIVATE ${IONPROPS_LINK_LIBS})
