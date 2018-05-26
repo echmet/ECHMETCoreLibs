@@ -334,14 +334,13 @@ RetCode calculateEffectiveMobilitiesWorker(const SysComp::ChemicalSystem &chemSy
 	RealVec *emVec = calcProps.effectiveMobilities;
 
 	for (size_t idx = 0; idx < chemSystem.constituents->size(); idx++) {
-		const SysComp::Constituent *c = chemSystem.constituents->at(idx);
+		const SysComp::Constituent *c = chemSystem.constituents->elem(idx);
 		const size_t acIdx = c->analyticalConcentrationIndex;
 		const size_t emIdx = c->effectiveMobilityIndex;
-		ECHMETReal efm;
-		efm = 0.0;
+		ECHMETReal efm = 0.0;
 
 		for (size_t jdx = 0; jdx < c->ionicForms->size(); jdx++) {
-			const SysComp::IonicForm *iF = c->ionicForms->at(jdx);
+			const SysComp::IonicForm *iF = c->ionicForms->elem(jdx);
 			const size_t icIdx = iF->ionicConcentrationIndex;
 			const size_t imIdx = iF->ionicMobilityIndex;
 			int count;
@@ -381,11 +380,11 @@ RetCode calculateEffectiveMobilitiesWorker(const SysComp::ChemicalSystem &chemSy
 															    IPRealToDouble(imVec->at(imIdx)),
 															    IPRealToDouble(icVec->at(icIdx)),
 															    IPRealToDouble(analyticalConcentrations->at(acIdx))));
-			efm += count * sgn(iF->totalCharge) * imVec->at(imIdx) * icVec->at(icIdx) / analyticalConcentrations->at(acIdx);
+			efm += count * sgn(iF->totalCharge) * imVec->elem(imIdx) * icVec->elem(icIdx);
 
 		}
 
-		(*emVec)[emIdx] = efm;
+		(*emVec)[emIdx] = efm / analyticalConcentrations->elem(acIdx);
 	}
 
 	return RetCode::OK;
@@ -419,14 +418,14 @@ RetCode calculateEffectiveMobilitiesWorker(const std::vector<IPReal> &icConcs, c
 	}
 
 	for (size_t idx = 0; idx < chemSystem.constituents->size(); idx++) {
-		SysComp::Constituent *c = chemSystem.constituents->at(idx);
+		SysComp::Constituent *c = chemSystem.constituents->elem(idx);
 		const size_t acIdx = c->analyticalConcentrationIndex;
 		const size_t emIdx = c->effectiveMobilityIndex;
-		IPReal &efm = effectiveMobilities->at(emIdx);
+		IPReal &efm = effectiveMobilities->elem(emIdx);
 		efm = 0.0;
 
 		for (size_t jdx = 0; jdx < c->ionicForms->size(); jdx++) {
-			const SysComp::IonicForm *iF = c->ionicForms->at(jdx);
+			const SysComp::IonicForm *iF = c->ionicForms->elem(jdx);
 			const size_t icIdx = iF->ionicConcentrationIndex;
 			const size_t imIdx = iF->ionicMobilityIndex;
 			int count;
@@ -466,7 +465,7 @@ RetCode calculateEffectiveMobilitiesWorker(const std::vector<IPReal> &icConcs, c
 															    IPRealToDouble(icVec->at(icIdx)),
 															    IPRealToDouble(analyticalConcentrations->at(acIdx))));
 
-			efm += count * sgn(iF->totalCharge) * imVec->at(imIdx) * icVec->at(icIdx) / analyticalConcentrations->at(acIdx);
+			efm += count * sgn(iF->totalCharge) * imVec->elem(imIdx) * icVec->elem(icIdx) / analyticalConcentrations->elem(acIdx);
 		}
 	}
 
