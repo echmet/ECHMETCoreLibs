@@ -339,6 +339,13 @@ RetCode calculateEffectiveMobilitiesWorker(const SysComp::ChemicalSystem &chemSy
 		const size_t emIdx = c->effectiveMobilityIndex;
 		ECHMETReal efm = 0.0;
 
+		if (analyticalConcentrations->at(acIdx) == 0.0) {
+			(*emVec)[emIdx] = 0.0;
+			continue;
+
+			/* Doing this is safer than returing inf */
+		}
+
 		for (size_t jdx = 0; jdx < c->ionicForms->size(); jdx++) {
 			const SysComp::IonicForm *iF = c->ionicForms->elem(jdx);
 			const size_t icIdx = iF->ionicConcentrationIndex;
@@ -423,6 +430,13 @@ RetCode calculateEffectiveMobilitiesWorker(const std::vector<IPReal> &icConcs, c
 		const size_t emIdx = c->effectiveMobilityIndex;
 		IPReal &efm = effectiveMobilities->elem(emIdx);
 		efm = 0.0;
+
+		if (analyticalConcentrations->at(acIdx) == 0.0) {
+			(*emVec)[emIdx] = 0.0;
+			continue;
+
+			/* Doing this is safer than returing inf */
+		}
 
 		for (size_t jdx = 0; jdx < c->ionicForms->size(); jdx++) {
 			const SysComp::IonicForm *iF = c->ionicForms->elem(jdx);
