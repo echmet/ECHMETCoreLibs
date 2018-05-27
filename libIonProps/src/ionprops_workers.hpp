@@ -329,6 +329,16 @@ IPReal calculateConductivityWorker(const std::vector<IPReal> &icConcs, const Sys
  */
 RetCode calculateEffectiveMobilitiesWorker(const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept
 {
+	/* NOTE:
+	 * There used to be a different calculation of effective mobilities.
+	 * It was removed because its implementation seemed incorrect and it might
+	 * have been a relic from an older implementation of ECHMETCoreLibs
+	 * which used different data organization.
+	 * Should the effective mobility calculation ever seem broken, see
+	 * commit "fd1cd1fcdce514e2c38d17b98d62e926335f98f4" for the
+	 * original implementation.
+	 */
+
 	const RealVec *icVec = calcProps.ionicConcentrations;
 	const RealVec *imVec = calcProps.ionicMobilities;
 	RealVec *emVec = calcProps.effectiveMobilities;
