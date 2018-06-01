@@ -2,13 +2,11 @@
 
 #include <new>
 
-#ifdef ECHMET_COMPILER_GCC_LIKE
+#if defined(ECHMET_COMPILER_GCC_LIKE) || defined(ECHMET_COMPILER_MINGW) || defined(ECHMET_COMPILER_MSYS)
 	#pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #endif // ECHMET_COMPILER_
 
 #define MK_VD4(v) { v, v, v, v }
-#define M256D(v) *(__m256d *)v
-#define M128I(v) *(__m128i *)v
 
 namespace ECHMET {
 namespace CAES {
@@ -60,21 +58,40 @@ VecMath<InstructionSet::FMA3>::VecMath() :
 {}
 
 __attribute__((target("fma")))
+#if defined(ECHMET_PLATFORM_WIN32) && defined(__x86_64__)
+void VecMath<InstructionSet::FMA3>::exp10m(const double *__restrict__ inx, double *__restrict__ outx) const
+#else
 typename VecMath<InstructionSet::FMA3>::TD VecMath<InstructionSet::FMA3>::exp10m(TD x) const
+#endif
 {
+#if defined(ECHMET_PLATFORM_WIN32) && defined(__x86_64__)
+	__m256d x = _mm256_loadu_pd(inx);
+#endif
 	x = _mm256_mul_pd(x, M256D(MINUS_ONE));
 
 	/* Over and underflow checks */
 	uint64_t CHECKS[4] ECHMET_ALIGNED_32;
 	__m256d tmp = _mm256_cmp_pd(x, M256D(MAXL10), _CMP_GT_OS);
 	_mm256_store_pd((double *)CHECKS, tmp);
-	if (std::memcmp(CHECKS, ZERO_BLOCK, 4 * sizeof(uint64_t)))
+	if (std::memcmp(CHECKS, ZERO_BLOCK, 4 * sizeof(uint64_t))) {
+	#if defined(ECHMET_PLATFORM_WIN32) && defined(__x86_64__)
+		_mm256_store_pd(outx, M256D(INFS));
+		return;
+	#else
 		return M256D(INFS);
+	#endif
+	}
 
 	tmp = _mm256_cmp_pd(x, M256D(MINUS_MAXL10), _CMP_LT_OS);
 	_mm256_store_pd((double *)CHECKS, tmp);
-	if (std::memcmp(CHECKS, ZERO_BLOCK, 4 * sizeof(uint64_t)))
+	if (std::memcmp(CHECKS, ZERO_BLOCK, 4 * sizeof(uint64_t))) {
+	#if defined(ECHMET_PLATFORM_WIN32) && defined(__x86_64__)
+		_mm256_store_pd(outx, M256D(MINUS_INFS));
+		return;
+	#else
 		return M256D(MINUS_INFS);
+	#endif
+	}
 
 	/* px = floor(LOG210 * x + 0.5) */
 	__m256d px = M256D(LOG210);
@@ -123,7 +140,11 @@ typename VecMath<InstructionSet::FMA3>::TD VecMath<InstructionSet::FMA3>::exp10m
 			  VecMathCommon::cephes_ldexp(x[1], n[1]),
 			  VecMathCommon::cephes_ldexp(x[0], n[0])); /* Array-like access to SIMD types is a GCC 4.6+ extenstion! */
 
+#if defined(ECHMET_PLATFORM_WIN32) && defined(__x86_64__)
+	_mm256_storeu_pd(outx, x);
+#else
 	return x;
+#endif
 }
 
 __attribute__((target("fma")))

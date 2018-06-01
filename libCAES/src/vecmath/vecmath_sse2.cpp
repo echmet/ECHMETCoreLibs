@@ -2,13 +2,11 @@
 
 #include <new>
 
-#ifdef ECHMET_COMPILER_GCC_LIKE
+#if defined(ECHMET_COMPILER_GCC_LIKE) || defined(ECHMET_COMPILER_MINGW) || defined(ECHMET_COMPILER_MSYS)
 	#pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #endif // ECHMET_COMPILER_
 
 #define MK_VD2(v) { v, v }
-#define M128D(v) *(__m128d *)v
-#define M64(v) *(__m64 *)v
 
 namespace ECHMET {
 namespace CAES {

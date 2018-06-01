@@ -7,9 +7,18 @@
 #include <new>
 #include <x86intrin.h>
 
+#define ECHMET_IMPORT_INTERNAL
+#include <echmetmodule.h>
+#undef ECHMET_IMPORT_INTERNAL
+
 /* GCC or ICC */
 #define ECHMET_ALIGNED_16 __attribute__((aligned(16)))
 #define ECHMET_ALIGNED_32 __attribute__((aligned(32)))
+
+#define M64(v) *(__m64 *)(v)
+#define M128D(v) *(__m128d *)(v)
+#define M128I(v) *(__m128i *)(v)
+#define M256D(v) *(__m256d *)(v)
 
 namespace ECHMET {
 namespace CAES {
@@ -164,7 +173,11 @@ public:
 	typedef typename VDType<InstructionSet::AVX>::VD VD;
 
 	VecMath();
+#if defined(ECHMET_PLATFORM_WIN32) && defined(__x86_64__)
+	void exp10m(const double *__restrict__ inx, double *__restrict__ outx) const;
+#else
 	TD exp10m(TD x) const;
+#endif
 	static double exp10m_single(double x) noexcept;
 	TD mlog10(const double *__restrict__ inx) const;
 	static double mlog10_single(double x) noexcept;
@@ -224,7 +237,11 @@ public:
 	typedef typename VDType<InstructionSet::FMA3>::VD VD;
 
 	VecMath();
+#if defined(ECHMET_PLATFORM_WIN32) && defined(__x86_64__)
+	void exp10m(const double *__restrict__ inx, double *__restrict__ outx) const;
+#else
 	TD exp10m(TD x) const;
+#endif
 	static double exp10m_single(double x) noexcept;
 	TD mlog10(const double *__restrict__ inx) const;
 	static double mlog10_single(double x) noexcept;
