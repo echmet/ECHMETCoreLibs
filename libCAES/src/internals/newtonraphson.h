@@ -115,9 +115,11 @@ private:
 	TM m_j;
 	TX m_dx;
 
-	Eigen::PartialPivLU<SolverMatrix<NRReal>> m_luCalc;
+	Eigen::PartialPivLU<SolverMatrix<NRReal>> *m_luCalc;
 
 	int m_stuckCounter;
+
+	void initializeLu(const int elements);
 
 	void ZConstructor();
 	void ZCalculateMeasures(TX const &v, NRReal &min, NRReal &max);

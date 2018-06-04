@@ -4,6 +4,12 @@ namespace ECHMET {
 namespace CAES {
 
 template <>
+void NewtonRaphson<double, InstructionSet::FMA3>::initializeLu(const int elements)
+{
+	m_luCalc = new Eigen::PartialPivLU<SolverMatrix<double>>(elements);
+}
+
+template <>
 typename NewtonRaphson<double, InstructionSet::FMA3>::TX const & NewtonRaphson<double, InstructionSet::FMA3>::ASolve()
 {
 	m_iteration = 0;
@@ -29,8 +35,8 @@ typename NewtonRaphson<double, InstructionSet::FMA3>::TX const & NewtonRaphson<d
 
 		this->m_iteration++;
 
-		m_luCalc.compute(m_j);
-		m_dx = m_luCalc.solve(m_f);
+		m_luCalc->compute(m_j);
+		m_dx = m_luCalc->solve(m_f);
 
 		*m_px -= m_dx;
 	};

@@ -4,6 +4,18 @@
 namespace ECHMET {
 namespace CAES {
 
+template <>
+void NewtonRaphson<double, InstructionSet::AVX>::initializeLu(const int elements);
+
+template <>
+void NewtonRaphson<double, InstructionSet::FMA3>::initializeLu(const int elements);
+
+template <typename NRReal, InstructionSet ISet>
+void NewtonRaphson<NRReal, ISet>::initializeLu(const int elements)
+{
+	m_luCalc = new Eigen::PartialPivLU<SolverMatrix<NRReal>>(elements);
+}
+
 template <typename NRReal, InstructionSet ISet>
 NewtonRaphson<NRReal, ISet>::NewtonRaphson(const int elements) :
 	maxIterations(defaultMaxIterations()),
@@ -26,6 +38,16 @@ NewtonRaphson<NRReal, ISet>::NewtonRaphson(const int elements) :
 
 	ZConstructor();
 
+	try {
+		initializeLu(elements);
+	} catch (std::bad_alloc &) {
+		alignedFree(m_f_raw);
+		alignedFree(m_j_raw);
+		alignedFree(m_dx_raw);
+
+		throw;
+	}
+
 	ECHMET_DEBUG_CODE(fprintf(stderr, "Fx rows %ld, Jx dims %ld,%ld, Dx rows %ld\n", m_f.rows(), m_j.rows(), m_j.cols(), m_dx.rows()));
 }
 
@@ -35,6 +57,8 @@ NewtonRaphson<NRReal, ISet>::~NewtonRaphson()
 	alignedFree(m_f_raw);
 	alignedFree(m_j_raw);
 	alignedFree(m_dx_raw);
+
+	delete m_luCalc;
 }
 
 template <typename NRReal, InstructionSet ISet>
@@ -73,8 +97,8 @@ typename NewtonRaphson<NRReal, ISet>::TX const & NewtonRaphson<NRReal, ISet>::AS
 
 		this->m_iteration++;
 
-		m_luCalc.compute(m_j);
-		m_dx = m_luCalc.solve(m_f);
+		m_luCalc->compute(m_j);
+		m_dx = m_luCalc->solve(m_f);
 
 		*m_px -= m_dx;
 	};
