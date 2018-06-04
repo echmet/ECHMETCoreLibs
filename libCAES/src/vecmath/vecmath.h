@@ -30,10 +30,10 @@ enum InstructionSet {
 	FMA3
 };
 
-template <typename T>
+template <typename T, size_t Alignment>
 T * alignedAlloc(const size_t N)
 {
-	T *p = static_cast<T *>(_mm_malloc(sizeof(T) * N, 64));
+	T *p = static_cast<T *>(_mm_malloc(sizeof(T) * N, Alignment));
 	if (p == nullptr)
 		throw std::bad_alloc{};
 
@@ -73,7 +73,7 @@ public:
 template <InstructionSet ISet>
 class VDType {
 public:
-	constexpr static const size_t ALIGNMENT_BYTES = 1;
+	constexpr static const size_t ALIGNMENT_BYTES = 16;
 };
 
 template <>

@@ -86,7 +86,7 @@ const char * SolverInternal<CAESReal, ISet>::NumericErrorException::what() const
  */
 template <typename CAESReal, InstructionSet ISet>
 SolverInternal<CAESReal, ISet>::SolverInternal(const SolverContextImpl<CAESReal> *ctx) :
-	NewtonRaphson<CAESReal>(ctx->preJacobian->rows()),
+	NewtonRaphson<CAESReal, ISet>(ctx->preJacobian->rows()),
 	m_ctx(ctx),
 	m_allForms(ctx->allForms),
 	m_allLigandIFs(ctx->allLigandIFs),
@@ -94,8 +94,8 @@ SolverInternal<CAESReal, ISet>::SolverInternal(const SolverContextImpl<CAESReal>
 	m_complexNuclei(ctx->complexNuclei),
 	m_preJacobian(ctx->preJacobian),
 	/* This is horrible but Eigen::Map won't let us do this in a sane way */
-	m_pCx_raw(alignedAlloc<CAESReal>(ctx->concentrationCount)),
-	m_rCx_raw(alignedAlloc<CAESReal>(ctx->concentrationCount)),
+	m_pCx_raw(alignedAlloc<CAESReal, VDType<ISet>::ALIGNMENT_BYTES>(ctx->concentrationCount)),
+	m_rCx_raw(alignedAlloc<CAESReal, VDType<ISet>::ALIGNMENT_BYTES>(ctx->concentrationCount)),
 	m_pCx(m_pCx_raw, ctx->concentrationCount),
 	m_rCx(m_rCx_raw, ctx->concentrationCount),
 	m_vecMath(new VecMath<ISet>()),
@@ -130,7 +130,7 @@ SolverInternal<CAESReal, ISet>::~SolverInternal()
  * @param[in] pCx Column vector of concentrations calculated by the previous iteration of the computation
  */
 template <typename CAESReal, InstructionSet ISet>
-void SolverInternal<CAESReal, ISet>::ACalculateF(SolverVector<CAESReal> &Fx, const typename NewtonRaphson<CAESReal>::TX &pCx)
+void SolverInternal<CAESReal, ISet>::ACalculateF(typename NewtonRaphson<CAESReal, ISet>::TX &Fx, const typename NewtonRaphson<CAESReal, ISet>::TX &pCx)
 {
 	const size_t LGBlockOffset = m_allForms->size() + 2;
 	const CAESReal pH = CVI(pCx, 0);
@@ -341,7 +341,7 @@ void SolverInternal<CAESReal, ISet>::ACalculateF(SolverVector<CAESReal> &Fx, con
  * @param[in] pCx Column vector of concentrations calculated by the previous iteration of the computation
  */
 template <typename CAESReal, InstructionSet ISet>
-void SolverInternal<CAESReal, ISet>::ACalculateJ(SolverMatrix<CAESReal> &Jx, const typename NewtonRaphson<CAESReal>::TX &pCx)
+void SolverInternal<CAESReal, ISet>::ACalculateJ(typename NewtonRaphson<CAESReal, ISet>::TM &Jx, const typename NewtonRaphson<CAESReal, ISet>::TX &pCx)
 {
 	static_cast<void>(pCx);
 
@@ -629,14 +629,14 @@ RetCode SolverInternal<CAESReal, ISet>::solve(const SolverVector<CAESReal> *anal
 		totalIterationsCtr += this->m_iteration;
 
 		switch (this->GetStatus()) {
-		case NewtonRaphson<CAESReal>::Status::SUCCEEDED:
+		case NewtonRaphson<CAESReal, ISet>::Status::SUCCEEDED:
 			break;
-		case NewtonRaphson<CAESReal>::Status::NO_CONVERGENCE:
+		case NewtonRaphson<CAESReal, ISet>::Status::NO_CONVERGENCE:
 			ECHMET_DEBUG_CODE(fprintf(stderr, "fMax=%g, dxMax=%g\n", CAESRealToDouble(this->GetMaxF()), CAESRealToDouble(this->GetMaxdx())));
 			return RetCode::E_NRS_NO_CONVERGENCE;
-		case NewtonRaphson<CAESReal>::Status::STUCK:
+		case NewtonRaphson<CAESReal, ISet>::Status::STUCK:
 			return RetCode::E_NRS_STUCK;
-		case NewtonRaphson<CAESReal>::Status::NO_SOLUTION:
+		case NewtonRaphson<CAESReal, ISet>::Status::NO_SOLUTION:
 			return RetCode::E_NRS_NO_SOLUTION;
 		default:
 			return RetCode::E_NRS_FAILURE;
@@ -736,7 +736,7 @@ void SolverInternal<CAESReal, ISet>::validateMatrix(const SolverMatrix<CAESReal>
  * is considered valid. An exception is thrown if an invalid value is found.
  */
 template <typename CAESReal, InstructionSet ISet>
-void SolverInternal<CAESReal, ISet>::validateVector(const typename NewtonRaphson<CAESReal>::TX &v)
+void SolverInternal<CAESReal, ISet>::validateVector(const typename NewtonRaphson<CAESReal, ISet>::TX &v)
 {
 	for (int row = 0; row < v.rows(); row++) {
 		if (VMath::isinf(v(row)))

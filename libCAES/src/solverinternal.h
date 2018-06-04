@@ -22,7 +22,7 @@ public:
 };
 
 template <typename CAESReal, InstructionSet ISet>
-class SolverInternal : public SolverInternalBase<CAESReal>, public NewtonRaphson<CAESReal> {
+class SolverInternal : public SolverInternalBase<CAESReal>, public NewtonRaphson<CAESReal, ISet> {
 public:
 	explicit SolverInternal(const SolverContextImpl<CAESReal> *ctx);
 	~SolverInternal();
@@ -109,14 +109,14 @@ private:
 		const size_t NBlock;
 	};
 
-	void ACalculateF(SolverVector<CAESReal> &Fx, const typename NewtonRaphson<CAESReal>::TX &pCx) override;
-	void ACalculateJ(SolverMatrix<CAESReal> &Jx, const typename NewtonRaphson<CAESReal>::TX &pCx) override;
+	void ACalculateF(typename NewtonRaphson<CAESReal, ISet>::TX &Fx, const typename NewtonRaphson<CAESReal, ISet>::TX &pCx) override;
+	void ACalculateJ(typename NewtonRaphson<CAESReal, ISet>::TM &Jx, const typename NewtonRaphson<CAESReal, ISet>::TX &pCx) override;
 	CAESReal calculateIonicStrength() const;
 	void initializepACoeffs();
 	CAESReal pACoeff(const int charge);
 	void recalculatepACoeffs(const CAESReal &is);
 	void validateMatrix(const SolverMatrix<CAESReal> &m);
-	void validateVector(const typename NewtonRaphson<CAESReal>::TX &v);
+	void validateVector(const typename NewtonRaphson<CAESReal, ISet>::TX &v);
 	void validateVector(const SolverVector<CAESReal> &v);
 
 	const SolverContextImpl<CAESReal> *m_ctx;			/*!< Back pointer to the context used to initialize the object */
@@ -130,8 +130,8 @@ private:
 
 	CAESReal *m_pCx_raw;						/*!< Raw memory with pCx vector data */
 	CAESReal *m_rCx_raw;						/*!< Raw memory with rCx vector data */
-	typename NewtonRaphson<CAESReal>::TX m_pCx;			/*!< Working vector with pX concentrations */
-	typename NewtonRaphson<CAESReal>::TX m_rCx;			/*!< Working vector with X10 concentrations */
+	typename NewtonRaphson<CAESReal, ISet>::TX m_pCx;		/*!< Working vector with pX concentrations */
+	typename NewtonRaphson<CAESReal, ISet>::TX m_rCx;		/*!< Working vector with X10 concentrations */
 
 	VecMath<ISet> *m_vecMath;
 	VectorizedDelogifier<ISet> m_vecDelog;

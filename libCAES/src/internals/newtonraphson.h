@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <internal/echmetmath_internal.h>
 #include "../types.h"
+#include "../vecmath/vecmath.h"
 
 namespace ECHMET {
 namespace CAES {
@@ -37,7 +38,28 @@ mpfr::mpreal getDefaultFPrecision()
 
 }
 
-template <typename NRReal>
+template <typename NRReal, InstructionSet ISet>
+class NRTypes {
+public:
+	typedef Eigen::Map<SolverMatrix<NRReal>, Eigen::AlignmentType::Aligned16> Matrix;
+	typedef Eigen::Map<SolverVector<NRReal>, Eigen::AlignmentType::Aligned16> Vector;
+};
+
+template <>
+class NRTypes<double, InstructionSet::AVX> {
+public:
+	typedef Eigen::Map<SolverMatrix<double>, Eigen::AlignmentType::Aligned32> Matrix;
+	typedef Eigen::Map<SolverVector<double>, Eigen::AlignmentType::Aligned32> Vector;
+};
+
+template <>
+class NRTypes<double, InstructionSet::FMA3> {
+public:
+	typedef Eigen::Map<SolverMatrix<double>, Eigen::AlignmentType::Aligned32> Matrix;
+	typedef Eigen::Map<SolverVector<double>, Eigen::AlignmentType::Aligned32> Vector;
+};
+
+template <typename NRReal, InstructionSet ISet>
 class NewtonRaphson {
 public:
 	enum class Status {
@@ -50,6 +72,9 @@ public:
 		ABORTED
 	};
 
+	typedef typename NRTypes<NRReal, ISet>::Matrix TM;
+	typedef typename NRTypes<NRReal, ISet>::Vector TX;
+
 	size_t maxIterations;
 	NRReal const xPrecision;
 	NRReal const fPrecision;
@@ -58,12 +83,12 @@ public:
 	NewtonRaphson(NewtonRaphson const &) = delete;
 	virtual ~NewtonRaphson();
 
-	inline void               Report()        const;
+	inline void        Report()        const;
 
 	int                GetIterations() const;
 	Status             GetStatus()     const;
-	SolverMatrix<NRReal> const &  GetJ()          const;
-	SolverMatrix<NRReal> const &  GetdX()         const;
+	TM const &         GetJ()          const;
+	TX const &         GetdX()         const;
 
 	NRReal             GetMaxdx()      const;
 	NRReal             GetMindx()      const;
@@ -72,10 +97,8 @@ public:
 
 	void operator=(NewtonRaphson const &) = delete;
 
-protected:
-	typedef Eigen::Map<SolverVector<NRReal>, Eigen::AlignmentType::Aligned64> TX;
-
 private:
+
 	Status m_status;
 	NRReal m_dxMin;
 	NRReal m_dxMax;
@@ -84,16 +107,20 @@ private:
 
 	TX *m_px;
 
-	SolverVector<NRReal> m_f;
-	SolverMatrix<NRReal> m_j;
-	SolverVector<NRReal> m_dx;
+	NRReal *m_f_raw;
+	NRReal *m_j_raw;
+	NRReal *m_dx_raw;
 
-	Eigen::PartialPivLU<SolverMatrix<NRReal>> m_lu;
+	TX m_f;
+	TM m_j;
+	TX m_dx;
+
+	Eigen::PartialPivLU<SolverMatrix<NRReal>> m_luCalc;
 
 	int m_stuckCounter;
 
 	void ZConstructor();
-	void ZCalculateMeasures(SolverVector<NRReal> const &v, NRReal &min, NRReal &max);
+	void ZCalculateMeasures(TX const &v, NRReal &min, NRReal &max);
 	void ZCheckStatus();
 
 	static size_t defaultMaxIterations() noexcept
@@ -114,15 +141,15 @@ private:
 protected:
 
 	virtual void AInit();
-	virtual void ACalculateF(SolverVector<NRReal> &, TX const &) = 0;
-	virtual void ACalculateJ(SolverMatrix<NRReal> &, TX const &) = 0;
+	virtual void ACalculateF(TX &, TX const &) = 0;
+	virtual void ACalculateJ(TM &, TX const &) = 0;
 	TX const & ASolve();
 	TX const & ASolve(TX *);
 	size_t m_iteration;
 };
 
-template <typename NRReal>
-void NewtonRaphson<NRReal>::ZConstructor()
+template <typename NRReal, InstructionSet ISet>
+void NewtonRaphson<NRReal, ISet>::ZConstructor()
 {
 	m_iteration = 0;
 	m_status    = Status::NONE;
@@ -140,8 +167,8 @@ void NewtonRaphson<NRReal>::ZConstructor()
 //---------------------------------------------------------------------------
 
 //---------------------------------------------------------------------------
-template <typename NRReal>
-void NewtonRaphson<NRReal>::ZCalculateMeasures(SolverVector<NRReal> const &v, NRReal &min, NRReal &max)
+template <typename NRReal, InstructionSet ISet>
+void NewtonRaphson<NRReal, ISet>::ZCalculateMeasures(TX const &v, NRReal &min, NRReal &max)
 {
 	min = VMath::abs(v(0));
 	max = min;
@@ -156,8 +183,8 @@ void NewtonRaphson<NRReal>::ZCalculateMeasures(SolverVector<NRReal> const &v, NR
 	}
 }
 
-template <typename NRReal>
-void NewtonRaphson<NRReal>::ZCheckStatus()
+template <typename NRReal, InstructionSet ISet>
+void NewtonRaphson<NRReal, ISet>::ZCheckStatus()
 {
 	// order of ifs matters
 
@@ -175,14 +202,13 @@ void NewtonRaphson<NRReal>::ZCheckStatus()
 	}
 }
 
-template <typename NRReal>
-typename NewtonRaphson<NRReal>::TX const & NewtonRaphson<NRReal>::ASolve(TX *x_)
+template <typename NRReal, InstructionSet ISet>
+typename NewtonRaphson<NRReal, ISet>::TX const & NewtonRaphson<NRReal, ISet>::ASolve(TX *x_)
 {
 	m_px = x_;
 
 	return ASolve();
 }
-
 
 } // namespace MATH
 } // namespace ECHMET
