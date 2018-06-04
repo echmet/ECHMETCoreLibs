@@ -5,7 +5,13 @@
 #include <cstdint>
 #include <limits>
 #include <new>
+
+#if defined(ECHMET_COMPILER_GCC_LIKE) || defined (ECHMET_COMPILER_MINGW) || defined (ECHMET_COMPILER_MSYS)
 #include <x86intrin.h>
+#else
+#include <xmmintrin.h>
+#include <immintrin.h>
+#endif // ECHMET_COMPILER_
 
 #define ECHMET_IMPORT_INTERNAL
 #include <echmetmodule.h>
