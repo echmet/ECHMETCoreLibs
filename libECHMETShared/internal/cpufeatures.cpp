@@ -91,7 +91,7 @@ CPUFeatures::CPUFeatures()
 	cpuid_mode = 0x1; /* Check support of older instruction sets */
 #if defined(ECHMET_COMPILER_GCC_LIKE) || defined(ECHMET_COMPILER_MINGW) || defined(ECHMET_COMPILER_MSYS)
 	asm("cpuid;"
-	    : "=a"(regs.feature_flags_eax), "=b"(regs.feature_flags_ebx), "=c"(regs.efeature_flags_ecx), "=d"(regs.feature_flags_edx)
+	    : "=a"(regs.feature_flags_eax), "=b"(regs.feature_flags_ebx), "=c"(regs.feature_flags_ecx), "=d"(regs.feature_flags_edx)
 	    : "a"(cpuid_mode)
 	    : );
 #elif defined(ECHMET_COMPILER_MSVC)
@@ -112,7 +112,7 @@ CPUFeatures::CPUFeatures()
 	const uint32_t cpuid_mode_ecx = 0x0;
 #if defined(ECHMET_COMPILER_GCC_LIKE) || defined(ECHMET_COMPILER_MINGW) || defined(ECHMET_COMPILER_MSYS)
 	asm("cpuid;"
-	    : "=a"(feature_flags_eax), "=b"(feature_flags_ebx), "=c"(feature_flags_ecx), "=d"(feature_flags_edx)
+	    : "=a"(regs.feature_flags_eax), "=b"(regs.feature_flags_ebx), "=c"(regs.feature_flags_ecx), "=d"(regs.feature_flags_edx)
 	    : "a"(cpuid_mode), "c"(cpuid_mode_ecx)
 	    : );
 #elif defined(ECHMET_COMPILER_MSVC)
@@ -133,7 +133,7 @@ CPUFeatures::CPUFeatures()
 		/* Check what level of support was enabled by OS through XCR0 register */
 	#if defined(ECHMET_COMPILER_GCC_LIKE) || defined(ECHMET_COMPILER_MINGW) || defined(ECHMET_COMPILER_MSYS)
 		asm("xgetbv;"
-		    : "=a"(feature_flags_eax), "=d"(feature_flags_edx)
+		    : "=a"(regs.feature_flags_eax), "=d"(regs.feature_flags_edx)
 		    : "c"(xgetbv_mode)
 		    : );
 		const bool os_xmm_aware = is_bit_set(regs.feature_flags_eax, XMM_FEATURE_BIT); /* 128-bit long FPU registers available */
