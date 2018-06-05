@@ -36,6 +36,7 @@ target_link_libraries(ECHMETShared
 if (WIN32)
     install(TARGETS ECHMETShared
             RUNTIME DESTINATION lib
+            ARCHIVE DESTINATION lib
             PUBLIC_HEADER DESTINATION include/ECHMET/CoreLibs)
 else ()
     install(TARGETS ECHMETShared
@@ -49,7 +50,9 @@ install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/echmetelems.h"
         DESTINATION include/ECHMET/CoreLibs)
 install(DIRECTORY containers/ DESTINATION include/ECHMET/CoreLibs/containers FILES_MATCHING PATTERN "*.h")
 if (WIN32)
-    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libECHMETShared.lib" DESTINATION lib RENAME ECHMETShared.lib)
-	install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libECHMETShared.dll" DESTINATION lib RENAME ECHMETShared.dll)
+    if (MINGW OR MSYS)
+        install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libECHMETShared.lib" DESTINATION lib RENAME ECHMETShared.lib)
+        install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libECHMETShared.dll" DESTINATION lib RENAME ECHMETShared.dll)
+    endif ()
 endif ()
 

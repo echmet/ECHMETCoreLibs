@@ -36,6 +36,7 @@ target_link_libraries(SysComp
 if (WIN32)
     install(TARGETS SysComp
             RUNTIME DESTINATION lib
+            ARCHIVE DESTINATION lib
             PUBLIC_HEADER DESTINATION include/ECHMET/CoreLibs)
 else ()
     install(TARGETS SysComp
@@ -43,6 +44,8 @@ else ()
             PUBLIC_HEADER DESTINATION include/ECHMET/CoreLibs)
 endif ()
 if (WIN32)
-    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libSysComp.lib" DESTINATION lib RENAME SysComp.lib)
-	install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libSysComp.dll" DESTINATION lib RENAME SysComp.dll)
+    if (MINGW OR MSYS)
+        install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libSysComp.lib" DESTINATION lib RENAME SysComp.lib)
+        install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libSysComp.dll" DESTINATION lib RENAME SysComp.dll)
+    endif ()
 endif ()

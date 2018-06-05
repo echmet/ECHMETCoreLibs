@@ -57,6 +57,7 @@ target_link_libraries(IonProps
 if (WIN32)
     install(TARGETS IonProps
             RUNTIME DESTINATION lib
+            ARCHIVE DESTINATION lib
             PUBLIC_HEADER DESTINATION include/ECHMET/CoreLibs)
 else ()
     install(TARGETS IonProps
@@ -64,6 +65,8 @@ else ()
             PUBLIC_HEADER DESTINATION include/ECHMET/CoreLibs)
 endif ()
 if (WIN32)
-    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libIonProps.lib" DESTINATION lib RENAME IonProps.lib)
-	install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libIonProps.dll" DESTINATION lib RENAME IonProps.dll)
+    if (MINGW OR MSYS)
+        install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libIonProps.lib" DESTINATION lib RENAME IonProps.lib)
+        install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libIonProps.dll" DESTINATION lib RENAME IonProps.dll)
+    endif ()
 endif ()

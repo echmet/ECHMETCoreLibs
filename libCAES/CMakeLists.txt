@@ -88,6 +88,7 @@ target_link_libraries(CAES
 if (WIN32)
     install(TARGETS CAES
             RUNTIME DESTINATION lib
+            ARCHIVE DESTINATION lib
             PUBLIC_HEADER DESTINATION include/ECHMET/CoreLibs)
 else ()
     install(TARGETS CAES
@@ -98,6 +99,8 @@ install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/include/echmetcaes.h"
               "${CMAKE_CURRENT_SOURCE_DIR}/include/echmetcaes_extended.h"
         DESTINATION include/ECHMET/CoreLibs)
 if (WIN32)
-    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libCAES.lib" DESTINATION lib RENAME CAES.lib)
-	install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libCAES.dll" DESTINATION lib RENAME CAES.dll)
+    if (MINGW OR MSYS)
+        install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libCAES.lib" DESTINATION lib RENAME CAES.lib)
+        install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libCAES.dll" DESTINATION lib RENAME CAES.dll)
+    endif ()
 endif ()
