@@ -11,7 +11,7 @@ void SolverInternal<double, InstructionSet::FMA3>::VectorizedDelogifier<Instruct
 
 	size_t idx = 0;
 	for (; idx < NBlock; idx += blockSize) {
-	#if defined(ECHMET_PLATFORM_WIN32) && defined(__x86_64__)
+	#if defined(ECHMET_PLATFORM_WIN32) && defined(__x86_64__) && (defined(ECHMET_COMPILER_MINGW) || defined(ECHMET_COMPILER_MSYS))
 		m_vecMath.exp10m(src + idx, dst + idx);
 	#else
 		__m256d _s = M256D(src + idx);

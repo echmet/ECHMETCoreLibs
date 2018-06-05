@@ -11,7 +11,7 @@ void SolverInternal<double, InstructionSet::AVX>::VectorizedDelogifier<Instructi
 
 	size_t idx = 0;
 	for (; idx < NBlock; idx += blockSize) {
-	#if defined(ECHMET_PLATFORM_WIN32) && defined(__x86_64__)
+	#if defined(ECHMET_PLATFORM_WIN32) && defined(__x86_64__) && (defined(ECHMET_COMPILER_MINGW) || defined(ECHMET_COMPILER_MSYS))
 		m_vecMath.exp10m(src + idx, dst + idx);
 	#else
 		__m256d _s = M256D(src + idx);
@@ -19,7 +19,7 @@ void SolverInternal<double, InstructionSet::AVX>::VectorizedDelogifier<Instructi
 		_s = m_vecMath.exp10m(_s);
 
 		_mm256_store_pd(dst + idx, _s);
-	#endif
+	#endif // ECHMET_WIN64_ABI_BUG_CHECK
 	}
 
 	for (; idx < N; idx++)
