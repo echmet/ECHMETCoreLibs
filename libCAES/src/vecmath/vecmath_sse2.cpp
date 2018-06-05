@@ -64,7 +64,7 @@ typename VecMath<InstructionSet::SSE2>::TD VecMath<InstructionSet::SSE2>::exp10m
 	x = _mm_mul_pd(x, M128D(MINUS_ONE));
 
 	/* Over and underflow checks */
-	uint64_t CHECKS[2] ECHMET_ALIGNED_16;
+	uint64_t ECHMET_ALIGNED_BEF_16 CHECKS[2] ECHMET_ALIGNED_AFT_16;
 	__m128d tmp = _mm_cmpgt_pd(x, M128D(MAXL10));
 	_mm_store_pd((double *)CHECKS, tmp);
 	if (std::memcmp(CHECKS, ZERO_BLOCK, 2 * sizeof(uint64_t)))
@@ -135,7 +135,7 @@ typename VecMath<InstructionSet::SSE2>::TD VecMath<InstructionSet::SSE2>::exp10m
 typename VecMath<InstructionSet::SSE2>::TD VecMath<InstructionSet::SSE2>::mlog10(const double *ECHMET_RESTRICT_PTR inx) const
 {
 	VD vx;
-	int32_t ve[2] ECHMET_ALIGNED_16;
+	int32_t ECHMET_ALIGNED_BEF_16 ve[2] ECHMET_ALIGNED_AFT_16;
 	vx[0] = VecMathCommon::cephes_frexp(inx[0], &ve[0]);
 	vx[1] = VecMathCommon::cephes_frexp(inx[1], &ve[1]);
 

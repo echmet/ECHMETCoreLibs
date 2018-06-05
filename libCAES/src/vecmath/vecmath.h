@@ -18,14 +18,20 @@
 #undef ECHMET_IMPORT_INTERNAL
 
 #if defined(ECHMET_COMPILER_GCC_LIKE) || defined(ECHMET_COMPILER_MINGW) || defined(ECHMET_COMPILER_MSYS)
-	#define ECHMET_ALIGNED_16 __attribute__((aligned(16)))
-	#define ECHMET_ALIGNED_32 __attribute__((aligned(32)))
+	#define ECHMET_ALIGNED_BEF_16
+	#define ECHMET_ALIGNED_BEF_32
+	#define ECHMET_ALIGNED_AFT_16 __attribute__((aligned(16)))
+	#define ECHMET_ALIGNED_AFT_32 __attribute__((aligned(32)))
 #elif defined ECHMET_COMPILER_MSVC
-	#define ECHMET_ALIGNED_16 __declspec(align(16))
-	#define ECHMET_ALIGNED_32 __declspec(align(32))
+	#define ECHMET_ALIGNED_BEF_16 __declspec(align(16))
+	#define ECHMET_ALIGNED_BEF_32 __declspec(align(32))
+	#define ECHMET_ALIGNED_AFT_16
+	#define ECHMET_ALIGNED_AFT_32
 #else
-	#define ECHMET_ALIGNED_16
-	#define ECHMET_ALIGNED_32
+	#define ECHMET_ALIGNED_BEF_16
+	#define ECHMET_ALIGNED_BEF_32
+	#define ECHMET_ALIGNED_AFT_16
+	#define ECHMET_ALIGNED_AFT_32
 #endif // ECHMET_COMPILER_
 
 #define M64(v) *(__m64 *)(v)
@@ -93,7 +99,7 @@ template <>
 class VDType<InstructionSet::SSE2> {
 public:
 	typedef __m128d TD;
-	typedef double VD[2] ECHMET_ALIGNED_16;
+	typedef double ECHMET_ALIGNED_BEF_16 VD[2] ECHMET_ALIGNED_AFT_16;
 
 	constexpr static const size_t ALIGNMENT_BYTES = 16;
 };
@@ -102,7 +108,7 @@ template <>
 class VDType<InstructionSet::AVX> {
 public:
 	typedef __m256d TD;
-	typedef double VD[4] ECHMET_ALIGNED_32;
+	typedef double ECHMET_ALIGNED_BEF_32 VD[4] ECHMET_ALIGNED_AFT_32;
 
 	constexpr static const size_t ALIGNMENT_BYTES = 32;
 };
@@ -111,7 +117,7 @@ template <>
 class VDType<InstructionSet::FMA3> {
 public:
 	typedef __m256d TD;
-	typedef double VD[4] ECHMET_ALIGNED_32;
+	typedef double ECHMET_ALIGNED_BEF_32 VD[4] ECHMET_ALIGNED_AFT_32;
 
 	constexpr static const size_t ALIGNMENT_BYTES = 32;
 };

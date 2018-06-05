@@ -69,7 +69,7 @@ typename VecMath<InstructionSet::FMA3>::TD VecMath<InstructionSet::FMA3>::exp10m
 	x = _mm256_mul_pd(x, M256D(MINUS_ONE));
 
 	/* Over and underflow checks */
-	uint64_t CHECKS[4] ECHMET_ALIGNED_32;
+	uint64_t ECHMET_ALIGNED_BEF_32 CHECKS[4] ECHMET_ALIGNED_AFT_32;
 	__m256d tmp = _mm256_cmp_pd(x, M256D(MAXL10), _CMP_GT_OS);
 	_mm256_store_pd((double *)CHECKS, tmp);
 	if (std::memcmp(CHECKS, ZERO_BLOCK, 4 * sizeof(uint64_t))) {
@@ -157,7 +157,7 @@ typename VecMath<InstructionSet::FMA3>::TD VecMath<InstructionSet::FMA3>::exp10m
 typename VecMath<InstructionSet::FMA3>::TD VecMath<InstructionSet::FMA3>::mlog10(const double *ECHMET_RESTRICT_PTR inx) const
 {
 	VD vx;
-	int32_t ve[4] ECHMET_ALIGNED_32;
+	int32_t ECHMET_ALIGNED_BEF_32 ve[4] ECHMET_ALIGNED_AFT_32;
 	vx[0] = VecMathCommon::cephes_frexp(inx[0], &ve[0]);
 	vx[1] = VecMathCommon::cephes_frexp(inx[1], &ve[1]);
 	vx[2] = VecMathCommon::cephes_frexp(inx[2], &ve[2]);
