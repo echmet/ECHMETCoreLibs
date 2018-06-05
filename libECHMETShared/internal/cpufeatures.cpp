@@ -3,6 +3,11 @@
 #include <cassert>
 #include <cstring>
 
+#ifdef ECHMET_COMPILER_MSVC
+	#include <intrin.h>
+	#include <immintrin.h>
+#endif // ECHMET_COMPILER_MSVC
+
 namespace ECHMET {
 
 std::mutex CPUFeatures::s_init_lock;
@@ -72,38 +77,51 @@ CPUFeatures::SupportedSIMD & CPUFeatures::SupportedSIMD::operator=(const Support
 
 CPUFeatures::CPUFeatures()
 {
-	uint32_t feature_flags_eax;
-	uint32_t feature_flags_ebx;
-	uint32_t feature_flags_ecx;
-	uint32_t feature_flags_edx;
+	union {
+		int32_t block[4];
+		uint32_t feature_flags_eax;
+		uint32_t feature_flags_ebx;
+		uint32_t feature_flags_ecx;
+		uint32_t feature_flags_edx;
+	} regs;
 	uint32_t cpuid_mode;
 	const uint32_t xgetbv_mode = 0x0;
 
 	/* Get info from CPUID */
 	cpuid_mode = 0x1; /* Check support of older instruction sets */
+#if defined(ECHMET_COMPILER_GCC_LIKE) || defined(ECHMET_COMPILER_MINGW) || defined(ECHMET_COMPILER_MSYS)
 	asm("cpuid;"
-	    : "=a"(feature_flags_eax), "=b"(feature_flags_ebx), "=c"(feature_flags_ecx), "=d"(feature_flags_edx)
+	    : "=a"(regs.feature_flags_eax), "=b"(regs.feature_flags_ebx), "=c"(regs.efeature_flags_ecx), "=d"(regs.feature_flags_edx)
 	    : "a"(cpuid_mode)
 	    : );
+#elif defined(ECHMET_COMPILER_MSVC)
+	__cpuidex(regs.block, cpuid_mode, 0);
+#endif // ECHMET_COMPILER_
 
-	const bool cpu_has_sse2 = is_bit_set(feature_flags_edx, SSE2_FEATURE_BIT_EDX);
-	const bool cpu_has_sse3 = is_bit_set(feature_flags_ecx, SSE3_FEATURE_BIT_ECX);
-	const bool cpu_has_ssse3 = is_bit_set(feature_flags_ecx, SSSE3_FEATURE_BIT_ECX);
-	const bool cpu_has_sse41 = is_bit_set(feature_flags_ecx, SSE41_FEATURE_BIT_ECX);
-	const bool cpu_has_sse42 = is_bit_set(feature_flags_ecx, SSE42_FEATURE_BIT_ECX);
-	const bool cpu_has_avx = is_bit_set(feature_flags_ecx, AVX_FEATURE_BIT_ECX);
-	const bool cpu_has_fma = is_bit_set(feature_flags_ecx, FMA3_FEATURE_BIT_ECX);
-	const bool cpu_has_xsave = is_bit_set(feature_flags_ecx, XSAVE_FEATURE_BIT_ECX);
+
+	const bool cpu_has_sse2 = is_bit_set(regs.feature_flags_edx, SSE2_FEATURE_BIT_EDX);
+	const bool cpu_has_sse3 = is_bit_set(regs.feature_flags_ecx, SSE3_FEATURE_BIT_ECX);
+	const bool cpu_has_ssse3 = is_bit_set(regs.feature_flags_ecx, SSSE3_FEATURE_BIT_ECX);
+	const bool cpu_has_sse41 = is_bit_set(regs.feature_flags_ecx, SSE41_FEATURE_BIT_ECX);
+	const bool cpu_has_sse42 = is_bit_set(regs.feature_flags_ecx, SSE42_FEATURE_BIT_ECX);
+	const bool cpu_has_avx = is_bit_set(regs.feature_flags_ecx, AVX_FEATURE_BIT_ECX);
+	const bool cpu_has_fma = is_bit_set(regs.feature_flags_ecx, FMA3_FEATURE_BIT_ECX);
+	const bool cpu_has_xsave = is_bit_set(regs.feature_flags_ecx, XSAVE_FEATURE_BIT_ECX);
 
 	cpuid_mode = 0x7; /* Check support of AVX2 and AVX512 */
 	const uint32_t cpuid_mode_ecx = 0x0;
+#if defined(ECHMET_COMPILER_GCC_LIKE) || defined(ECHMET_COMPILER_MINGW) || defined(ECHMET_COMPILER_MSYS)
 	asm("cpuid;"
 	    : "=a"(feature_flags_eax), "=b"(feature_flags_ebx), "=c"(feature_flags_ecx), "=d"(feature_flags_edx)
 	    : "a"(cpuid_mode), "c"(cpuid_mode_ecx)
 	    : );
+#elif defined(ECHMET_COMPILER_MSVC)
+	__cpuidex(regs.block, cpuid_mode, cpuid_mode_ecx);
+#endif // ECHMET_COMPILER_
 
-	const bool cpu_has_avx2 = is_bit_set(feature_flags_ebx, AVX2_FEATURE_BIT_EBX);
-	const bool cpu_has_avx512 = is_bit_set(feature_flags_ebx, AVX512_FEATURE_BIT_EBX);
+
+	const bool cpu_has_avx2 = is_bit_set(regs.feature_flags_ebx, AVX2_FEATURE_BIT_EBX);
+	const bool cpu_has_avx512 = is_bit_set(regs.feature_flags_ebx, AVX512_FEATURE_BIT_EBX);
 
 	m_cpu_name = fetch_cpu_name();
 
@@ -113,15 +131,24 @@ CPUFeatures::CPUFeatures()
 		m_supportedSIMD = SupportedSIMD();
 	else {
 		/* Check what level of support was enabled by OS through XCR0 register */
+	#if defined(ECHMET_COMPILER_GCC_LIKE) || defined(ECHMET_COMPILER_MINGW) || defined(ECHMET_COMPILER_MSYS)
 		asm("xgetbv;"
 		    : "=a"(feature_flags_eax), "=d"(feature_flags_edx)
 		    : "c"(xgetbv_mode)
 		    : );
-		const bool os_xmm_aware = is_bit_set(feature_flags_eax, XMM_FEATURE_BIT); /* 128-bit long FPU registers available */
-		const bool os_avx_aware = is_bit_set(feature_flags_eax, YMM_FEATURE_BIT) & os_xmm_aware; /* 256-bit and 128-bit long FPU registers available */
-		const bool os_avx512_aware = is_bit_set(feature_flags_eax, AVX512_OPMASK_BIT) &
-					     is_bit_set(feature_flags_eax, AVX512_HI256_BIT) &
-					     is_bit_set(feature_flags_eax, AVX512_ZMM_HI256_BIT);
+		const bool os_xmm_aware = is_bit_set(regs.feature_flags_eax, XMM_FEATURE_BIT); /* 128-bit long FPU registers available */
+		const bool os_avx_aware = is_bit_set(regs.feature_flags_eax, YMM_FEATURE_BIT) & os_xmm_aware; /* 256-bit and 128-bit long FPU registers available */
+		const bool os_avx512_aware = is_bit_set(regs.feature_flags_eax, AVX512_OPMASK_BIT) &
+					     is_bit_set(regs.feature_flags_eax, AVX512_HI256_BIT) &
+					     is_bit_set(regs.feature_flags_eax, AVX512_ZMM_HI256_BIT);
+	#elif defined(ECHMET_COMPILER_MSVC)
+		const uint32_t xcr0 = _xgetbv(0);
+		const bool os_xmm_aware = is_bit_set(xcr0, XMM_FEATURE_BIT);
+		const bool os_avx_aware = is_bit_set(xcr0, YMM_FEATURE_BIT) & os_xmm_aware;
+		const bool os_avx512_aware = is_bit_set(xcr0, AVX512_OPMASK_BIT) &
+					     is_bit_set(xcr0, AVX512_HI256_BIT) &
+					     is_bit_set(xcr0, AVX512_ZMM_HI256_BIT);
+	#endif // ECHMET_COMPILER_
 
 		m_supportedSIMD = SupportedSIMD(
 					cpu_has_sse2 & os_xmm_aware,
@@ -155,33 +182,46 @@ std::string CPUFeatures::fetch_cpu_name()
 {
 	const size_t SZ = sizeof(uint32_t);
 
-	auto fetch_string_part = [](char *str, uint32_t opcode) {
-		uint32_t eax;
-		uint32_t ebx;
-		uint32_t ecx;
-		uint32_t edx;
+	auto fetch_string_part = [SZ](char *str, uint32_t opcode) {
+		union {
+			int32_t block[4];
+			uint32_t eax;
+			uint32_t ebx;
+			uint32_t ecx;
+			uint32_t edx;
+		} regs;
 
+	#if defined(ECHMET_COMPILER_GCC_LIKE) || defined(ECHMET_COMPILER_MINGW) || defined(ECHMET_COMPILER_MSYS)
 		asm("cpuid;"
-		    : "=a"(eax), "=b"(ebx), "=c"(ecx), "=d"(edx)
+		    : "=a"(regs.eax), "=b"(regs.ebx), "=c"(regs.ecx), "=d"(regs.edx)
 		    : "a"(opcode)
 		    : );
-		memcpy(str, &eax, SZ);
-		memcpy(str + SZ, &ebx, SZ);
-		memcpy(str + (2 * SZ), &ecx, SZ);
-		memcpy(str + (3 * SZ), &edx, SZ);
+	#elif defined(ECHMET_COMPILER_MSVC)
+		__cpuidex(regs.block, opcode, 0);
+	#endif // ECHMET_COMPILER_
+		memcpy(str, &regs.eax, SZ);
+		memcpy(str + SZ, &regs.ebx, SZ);
+		memcpy(str + (2 * SZ), &regs.ecx, SZ);
+		memcpy(str + (3 * SZ), &regs.edx, SZ);
 	};
 
 	char name_array[48];
 	name_array[47] = 0;
 
 	uint32_t cpuid_mode = 0x80000000;
-	uint32_t ret;
+	union {
+		int32_t block[4];
+		uint32_t ret;
+	} regs;
+#if defined(ECHMET_COMPILER_GCC_LIKE) || defined(ECHMET_COMPILER_MINGW) || defined(ECHMET_COMPILER_MSYS)
 	asm("cpuid;"
-	    : "=a"(ret)
+	    : "=a"(regs.ret)
 	    : "a"(cpuid_mode)
 	    : "ebx", "ecx", "edx");
-
-	if (ret < 0x80000004)
+#elif defined(ECHMET_COMPILER_MSVC)
+	__cpuidex(regs.block, cpuid_mode, 0);
+#endif // ECHMET_COMPILER_
+	if (regs.ret < 0x80000004)
 		return "";
 
 	char *str = name_array;
