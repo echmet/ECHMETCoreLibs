@@ -57,7 +57,6 @@ VecMath<InstructionSet::FMA3>::VecMath() :
 	QSixLog10 MK_VD4(*(double*)&VecMathCommon::QLog10[20])
 {}
 
-__attribute__((target("fma")))
 #if defined(ECHMET_PLATFORM_WIN32) && defined(__x86_64__)
 void VecMath<InstructionSet::FMA3>::exp10m(const double *__restrict__ inx, double *__restrict__ outx) const
 #else
@@ -147,7 +146,6 @@ typename VecMath<InstructionSet::FMA3>::TD VecMath<InstructionSet::FMA3>::exp10m
 #endif
 }
 
-__attribute__((target("fma")))
 typename VecMath<InstructionSet::FMA3>::TD VecMath<InstructionSet::FMA3>::mlog10(const double *__restrict__ inx) const
 {
 	VD vx;

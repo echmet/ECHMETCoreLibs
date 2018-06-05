@@ -38,27 +38,21 @@ std::ostream & operator<<(std::ostream &ostr, const ECHMET::CAES::SolverMatrix<C
 #endif // ECHMET_DEBUG_OUTPUT
 
 template <> template <>
-__attribute__((target("sse2")))
 void SolverInternal<double, InstructionSet::SSE2>::VectorizedDelogifier<InstructionSet::SSE2>::operator()(double  *__restrict__ dst, const double *__restrict__ src);
 
 template <> template <>
-__attribute__((target("sse2")))
 void SolverInternal<double, InstructionSet::SSE2>::VectorizedLogifier<InstructionSet::SSE2>::operator()(double  *__restrict__ dst, const double *__restrict__ src);
 
 template <> template <>
-__attribute__((target("avx")))
 void SolverInternal<double, InstructionSet::AVX>::VectorizedDelogifier<InstructionSet::AVX>::operator()(double  *__restrict__ dst, const double *__restrict__ src);
 
 template <> template <>
-__attribute__((target("avx")))
 void SolverInternal<double, InstructionSet::AVX>::VectorizedLogifier<InstructionSet::AVX>::operator()(double  *__restrict__ dst, const double *__restrict__ src);
 
 template <> template <>
-__attribute__((target("fma")))
 void SolverInternal<double, InstructionSet::FMA3>::VectorizedDelogifier<InstructionSet::FMA3>::operator()(double  *__restrict__ dst, const double *__restrict__ src);
 
 template <> template <>
-__attribute__((target("fma")))
 void SolverInternal<double, InstructionSet::FMA3>::VectorizedLogifier<InstructionSet::FMA3>::operator()(double  *__restrict__ dst, const double *__restrict__ src);
 
 template <typename CAESReal, InstructionSet ISet>

@@ -59,7 +59,6 @@ VecMath<InstructionSet::SSE2>::VecMath() :
 	QSixLog10 MK_VD2(*(double*)&VecMathCommon::QLog10[20])
 {}
 
-__attribute__((target("sse2")))
 typename VecMath<InstructionSet::SSE2>::TD VecMath<InstructionSet::SSE2>::exp10m(TD x) const
 {
 	x = _mm_mul_pd(x, M128D(MINUS_ONE));
@@ -129,7 +128,6 @@ typename VecMath<InstructionSet::SSE2>::TD VecMath<InstructionSet::SSE2>::exp10m
 	return x;
 }
 
-__attribute__((target("sse2")))
 typename VecMath<InstructionSet::SSE2>::TD VecMath<InstructionSet::SSE2>::mlog10(const double *__restrict__ inx) const
 {
 	VD vx;

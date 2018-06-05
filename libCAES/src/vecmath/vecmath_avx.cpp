@@ -57,7 +57,6 @@ VecMath<InstructionSet::AVX>::VecMath() :
 	QSixLog10 MK_VD4(*(double*)&VecMathCommon::QLog10[20])
 {}
 
-__attribute__((target("avx")))
 #if defined(ECHMET_PLATFORM_WIN32) && defined(__x86_64__)
 void VecMath<InstructionSet::AVX>::exp10m(const double *__restrict__ inx, double *__restrict__ outx) const
 #else
@@ -153,7 +152,6 @@ typename VecMath<InstructionSet::AVX>::TD VecMath<InstructionSet::AVX>::exp10m(T
 #endif
 }
 
-__attribute__((target("avx")))
 typename VecMath<InstructionSet::AVX>::TD VecMath<InstructionSet::AVX>::mlog10(const double *__restrict__ inx) const
 {
 	VD vx;
