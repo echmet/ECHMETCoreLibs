@@ -17,9 +17,13 @@
 	#include <echmetmodule.h>
 #undef ECHMET_IMPORT_INTERNAL
 
-/* GCC or ICC */
-#define ECHMET_ALIGNED_16 __attribute__((aligned(16)))
-#define ECHMET_ALIGNED_32 __attribute__((aligned(32)))
+#if defined(ECHMET_COMPILER_GCC_LIKE) || defined(ECHMET_COMPILER_MINGW) || defined(ECHMET_COMPILER_MSYS)
+	#define ECHMET_ALIGNED_16 __attribute__((aligned(16)))
+	#define ECHMET_ALIGNED_32 __attribute__((aligned(32)))
+#else
+	#define ECHMET_ALIGNED_16
+	#define ECHMET_ALIGNED_32
+#endif // ECHMET_COMPILER_
 
 #define M64(v) *(__m64 *)(v)
 #define M128D(v) *(__m128d *)(v)
