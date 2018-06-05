@@ -127,7 +127,7 @@ typename VecMath<InstructionSet::SSE2>::TD VecMath<InstructionSet::SSE2>::exp10m
 	_mm_store_pd(d_x, x);
 
 	x = _mm_set_pd(VecMathCommon::cephes_ldexp(d_x[1], d_n[1]), VecMathCommon::cephes_ldexp(d_x[0], d_n[0]));
-#endif ECHMET_COMPILER_
+#endif // ECHMET_COMPILER_
 
 	return x;
 }
