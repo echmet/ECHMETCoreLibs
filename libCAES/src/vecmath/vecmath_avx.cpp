@@ -142,8 +142,8 @@ typename VecMath<InstructionSet::AVX>::TD VecMath<InstructionSet::AVX>::exp10m(T
 			  VecMathCommon::cephes_ldexp(x[1], n[1]),
 			  VecMathCommon::cephes_ldexp(x[0], n[0])); /* Array-like access to SIMD types is a GCC 4.6+ extension! */
 #else
-	VD4 d_n;
-	VD4 d_x;
+	VD d_n;
+	VD d_x;
 	_mm256_store_pd(d_n, n);
 	_mm256_store_pd(d_x, x);
 

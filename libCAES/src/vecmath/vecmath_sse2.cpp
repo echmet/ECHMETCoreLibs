@@ -121,8 +121,8 @@ typename VecMath<InstructionSet::SSE2>::TD VecMath<InstructionSet::SSE2>::exp10m
 #if defined(ECHMET_COMPILER_GCC_LIKE) || defined(ECHMET_COMPILER_MINGW) || defined(ECHMET_COMPILER_MSYS)
 	x = _mm_set_pd(VecMathCommon::cephes_ldexp(x[1], n[1]), VecMathCommon::cephes_ldexp(x[0], n[0])); /* Array-like access to SIMD types is a GCC 4.6+ extenstion! */
 #else
-	VD2 d_n;
-	VD2 d_x;
+	VD d_n;
+	VD d_x;
 	_mm_store_pd(d_n, n);
 	_mm_store_pd(d_x, x);
 
