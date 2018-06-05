@@ -20,6 +20,9 @@
 #if defined(ECHMET_COMPILER_GCC_LIKE) || defined(ECHMET_COMPILER_MINGW) || defined(ECHMET_COMPILER_MSYS)
 	#define ECHMET_ALIGNED_16 __attribute__((aligned(16)))
 	#define ECHMET_ALIGNED_32 __attribute__((aligned(32)))
+#elif defined ECHMET_COMPILER_MSVC
+	#define ECHMET_ALIGNED_16 __declspec(align(16))
+	#define ECHMET_ALIGNED_32 __declspec(align(32))
 #else
 	#define ECHMET_ALIGNED_16
 	#define ECHMET_ALIGNED_32
