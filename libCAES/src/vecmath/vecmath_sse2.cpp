@@ -117,13 +117,17 @@ typename VecMath<InstructionSet::SSE2>::TD VecMath<InstructionSet::SSE2>::exp10m
 	x = _mm_mul_pd(x, M128D(TWO));
 	x = _mm_add_pd(x, M128D(ONE));
 
-	/*VD2 d_n;
+
+#if defined(ECHMET_COMPILER_GCC_LIKE) || defined(ECHMET_COMPILER_MINGW) || defined(ECHMET_COMPILER_MSYS)
+	x = _mm_set_pd(VecMathCommon::cephes_ldexp(x[1], n[1]), VecMathCommon::cephes_ldexp(x[0], n[0])); /* Array-like access to SIMD types is a GCC 4.6+ extenstion! */
+#else
+	VD2 d_n;
 	VD2 d_x;
 	_mm_store_pd(d_n, n);
 	_mm_store_pd(d_x, x);
 
-	x = _mm_set_pd(cephes_ldexp(d_x[1], d_n[1]), cephes_ldexp(d_x[0], d_n[0]));*/
-	x = _mm_set_pd(VecMathCommon::cephes_ldexp(x[1], n[1]), VecMathCommon::cephes_ldexp(x[0], n[0])); /* Array-like access to SIMD types is a GCC 4.6+ extenstion! */
+	x = _mm_set_pd(VecMathCommon::cephes_ldexp(d_x[1], d_n[1]), VecMathCommon::cephes_ldexp(d_x[0], d_n[0]));
+#endif ECHMET_COMPILER_
 
 	return x;
 }

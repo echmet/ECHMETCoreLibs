@@ -134,16 +134,24 @@ typename VecMath<InstructionSet::AVX>::TD VecMath<InstructionSet::AVX>::exp10m(T
 	x = _mm256_mul_pd(x, M256D(TWO));
 	x = _mm256_add_pd(x, M256D(ONE));
 
-	/*VD2 d_n;
-	VD2 d_x;
-	_mm_store_pd(d_n, n);
-	_mm_store_pd(d_x, x);
 
-	x = _mm_set_pd(cephes_ldexp(d_x[1], d_n[1]), cephes_ldexp(d_x[0], d_n[0]));*/
+
+#if defined(ECHMET_COMPILER_GCC_LIKE) || defined(ECHMET_COMPILER_MINGW) || defined(ECHMET_COMPILER_MSYS)
 	x = _mm256_set_pd(VecMathCommon::cephes_ldexp(x[3], n[3]),
 			  VecMathCommon::cephes_ldexp(x[2], n[2]),
 			  VecMathCommon::cephes_ldexp(x[1], n[1]),
 			  VecMathCommon::cephes_ldexp(x[0], n[0])); /* Array-like access to SIMD types is a GCC 4.6+ extension! */
+#else
+	VD4 d_n;
+	VD4 d_x;
+	_mm256_store_pd(d_n, n);
+	_mm256_store_pd(d_x, x);
+
+	x = _mm256_set_pd(VecMathCommon::cephes_ldexp(d_x[3], d_n[3]),
+			  VecMathCommon::cephes_ldexp(d_x[2], d_n[2]),
+			  VecMathCommon::cephes_ldexp(d_x[1], d_n[1]),
+			  VecMathCommon::cephes_ldexp(d_x[0], d_n[0]));
+#endif // ECHMET_COMPILER_
 
 #if defined(ECHMET_PLATFORM_WIN32) && defined(__x86_64__)
 	_mm256_storeu_pd(outx, x);
