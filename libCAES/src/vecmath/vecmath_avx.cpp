@@ -13,23 +13,23 @@ namespace CAES {
 
 typedef typename VecMath<InstructionSet::AVX>::VD VD;
 
-constexpr const uint64_t VecMath<InstructionSet::AVX>::ZERO_BLOCK[VDType<InstructionSet::AVX>::ALIGNMENT_BYTES / sizeof(double)] = MK_VD4(0);
-constexpr const VD VecMath<InstructionSet::AVX>::INFS = MK_VD4(VecMathCommon::DBL_INF);
-constexpr const VD VecMath<InstructionSet::AVX>::MINUS_INFS = MK_VD4(VecMathCommon::DBL_INF);
-constexpr const VD VecMath<InstructionSet::AVX>::MINUS_ONE = MK_VD4(-1.0);
-constexpr const VD VecMath<InstructionSet::AVX>::HALF = MK_VD4(0.5);
-constexpr const VD VecMath<InstructionSet::AVX>::ONE = MK_VD4(1.0);
-constexpr const VD VecMath<InstructionSet::AVX>::TWO = MK_VD4(2.0);
-constexpr const VD VecMath<InstructionSet::AVX>::MAXL10 = MK_VD4(VecMathCommon::MAXL10);
-constexpr const VD VecMath<InstructionSet::AVX>::MINUS_MAXL10 = MK_VD4(-VecMathCommon::MAXL10);
-constexpr const VD VecMath<InstructionSet::AVX>::LG102A = MK_VD4(VecMathCommon::LG102A);
-constexpr const VD VecMath<InstructionSet::AVX>::LG102B = MK_VD4(VecMathCommon::LG102B);
-constexpr const VD VecMath<InstructionSet::AVX>::LOG210 = MK_VD4(VecMathCommon::LOG210);
-constexpr const VD VecMath<InstructionSet::AVX>::L102A_LOG10 = MK_VD4(VecMathCommon::L102A_LOG10);
-constexpr const VD VecMath<InstructionSet::AVX>::L102B_LOG10 = MK_VD4(VecMathCommon::L102B_LOG10);
-constexpr const VD VecMath<InstructionSet::AVX>::L10EA_LOG10 = MK_VD4(VecMathCommon::L10EA_LOG10);
-constexpr const VD VecMath<InstructionSet::AVX>::L10EB_LOG10 = MK_VD4(VecMathCommon::L10EB_LOG10);
-constexpr const VD VecMath<InstructionSet::AVX>::SQRTH_LOG10 = MK_VD4(VecMathCommon::SQRTH_LOG10);
+const uint64_t VecMath<InstructionSet::AVX>::ZERO_BLOCK[VDType<InstructionSet::AVX>::ALIGNMENT_BYTES / sizeof(double)] = MK_VD4(0);
+const VD VecMath<InstructionSet::AVX>::INFS = MK_VD4(VecMathCommon::DBL_INF);
+const VD VecMath<InstructionSet::AVX>::MINUS_INFS = MK_VD4(VecMathCommon::DBL_INF);
+const VD VecMath<InstructionSet::AVX>::MINUS_ONE = MK_VD4(-1.0);
+const VD VecMath<InstructionSet::AVX>::HALF = MK_VD4(0.5);
+const VD VecMath<InstructionSet::AVX>::ONE = MK_VD4(1.0);
+const VD VecMath<InstructionSet::AVX>::TWO = MK_VD4(2.0);
+const VD VecMath<InstructionSet::AVX>::MAXL10 = MK_VD4(VecMathCommon::MAXL10);
+const VD VecMath<InstructionSet::AVX>::MINUS_MAXL10 = MK_VD4(-VecMathCommon::MAXL10);
+const VD VecMath<InstructionSet::AVX>::LG102A = MK_VD4(VecMathCommon::LG102A);
+const VD VecMath<InstructionSet::AVX>::LG102B = MK_VD4(VecMathCommon::LG102B);
+const VD VecMath<InstructionSet::AVX>::LOG210 = MK_VD4(VecMathCommon::LOG210);
+const VD VecMath<InstructionSet::AVX>::L102A_LOG10 = MK_VD4(VecMathCommon::L102A_LOG10);
+const VD VecMath<InstructionSet::AVX>::L102B_LOG10 = MK_VD4(VecMathCommon::L102B_LOG10);
+const VD VecMath<InstructionSet::AVX>::L10EA_LOG10 = MK_VD4(VecMathCommon::L10EA_LOG10);
+const VD VecMath<InstructionSet::AVX>::L10EB_LOG10 = MK_VD4(VecMathCommon::L10EB_LOG10);
+const VD VecMath<InstructionSet::AVX>::SQRTH_LOG10 = MK_VD4(VecMathCommon::SQRTH_LOG10);
 
 VecMath<InstructionSet::AVX>::VecMath() :
 	POne MK_VD4(*(double *)&VecMathCommon::PExp10[0]),
