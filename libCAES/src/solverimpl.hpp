@@ -5,11 +5,11 @@
 #include "solverinternal.h"
 #include "estimator_helpers.hpp"
 
-#if defined(ECHMET_COMPILER_GCC_LIKE) || defined (ECHMET_COMPILER_MINGW) || defined (ECHMET_COMPILER_MSYS)
-#include <x86intrin.h>
+#if defined(ECHMET_COMPILER_GCC_LIKE) || defined(ECHMET_COMPILER_MINGW) || defined(ECHMET_COMPILER_MSYS)
+	#include <x86intrin.h>
 #else
-#include <xmmintrin.h>
-#include <immintrin.h>
+	#include <xmmintrin.h>
+	#include <immintrin.h>
 #endif // ECHMET_COMPILER_
 
 namespace ECHMET {
