@@ -3,6 +3,10 @@
 #include <cassert>
 #include <cstring>
 
+#if defined(ECHMET_COMPILER_GCC_LIKE) || defined(ECHMET_COMPILER_MINGW) || defined(ECHMET_COMPILER_MSYS)
+	#pragma GCC diagnostic ignored "-Wpedantic"
+#endif // ECHMET_COMPILER_
+
 #ifdef ECHMET_COMPILER_MSVC
 	#include <intrin.h>
 	#include <immintrin.h>
@@ -79,10 +83,12 @@ CPUFeatures::CPUFeatures()
 {
 	union {
 		int32_t block[4];
-		uint32_t feature_flags_eax;
-		uint32_t feature_flags_ebx;
-		uint32_t feature_flags_ecx;
-		uint32_t feature_flags_edx;
+		struct {
+			uint32_t feature_flags_eax;
+			uint32_t feature_flags_ebx;
+			uint32_t feature_flags_ecx;
+			uint32_t feature_flags_edx;
+		};
 	} regs;
 	uint32_t cpuid_mode;
 	const uint32_t xgetbv_mode = 0x0;
@@ -97,7 +103,6 @@ CPUFeatures::CPUFeatures()
 #elif defined(ECHMET_COMPILER_MSVC)
 	__cpuidex(regs.block, cpuid_mode, 0);
 #endif // ECHMET_COMPILER_
-
 
 	const bool cpu_has_sse2 = is_bit_set(regs.feature_flags_edx, SSE2_FEATURE_BIT_EDX);
 	const bool cpu_has_sse3 = is_bit_set(regs.feature_flags_ecx, SSE3_FEATURE_BIT_ECX);
@@ -185,10 +190,12 @@ std::string CPUFeatures::fetch_cpu_name()
 	auto fetch_string_part = [SZ](char *str, uint32_t opcode) {
 		union {
 			int32_t block[4];
-			uint32_t eax;
-			uint32_t ebx;
-			uint32_t ecx;
-			uint32_t edx;
+			struct {
+				uint32_t eax;
+				uint32_t ebx;
+				uint32_t ecx;
+				uint32_t edx;
+			};
 		} regs;
 
 	#if defined(ECHMET_COMPILER_GCC_LIKE) || defined(ECHMET_COMPILER_MINGW) || defined(ECHMET_COMPILER_MSYS)
