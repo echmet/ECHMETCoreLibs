@@ -128,7 +128,7 @@ typename VecMath<InstructionSet::SSE2>::TD VecMath<InstructionSet::SSE2>::exp10m
 	return x;
 }
 
-typename VecMath<InstructionSet::SSE2>::TD VecMath<InstructionSet::SSE2>::mlog10(const double *__restrict__ inx) const
+typename VecMath<InstructionSet::SSE2>::TD VecMath<InstructionSet::SSE2>::mlog10(const double *ECHMET_RESTRICT_PTR inx) const
 {
 	VD vx;
 	int32_t ve[2] ECHMET_ALIGNED_16;

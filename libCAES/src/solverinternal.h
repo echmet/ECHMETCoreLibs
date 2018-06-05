@@ -62,7 +62,7 @@ private:
 		{
 		}
 
-		void operator()(CAESReal *__restrict__ dst, const CAESReal *__restrict__ src)
+		void operator()(CAESReal *ECHMET_RESTRICT_PTR dst, const CAESReal *ECHMET_RESTRICT_PTR src)
 		{
 			ECHMET_DEBUG_CODE(fprintf(stderr, "Generic delogifier\n"));
 
@@ -94,7 +94,7 @@ private:
 			NBlock(N - (N % blockSize))
 		{}
 
-		void operator()(CAESReal *__restrict__ dst, const CAESReal *__restrict__ src)
+		void operator()(CAESReal *ECHMET_RESTRICT_PTR dst, const CAESReal *ECHMET_RESTRICT_PTR src)
 		{
 			ECHMET_DEBUG_CODE(fprintf(stderr, "Generic logifier\n"));
 

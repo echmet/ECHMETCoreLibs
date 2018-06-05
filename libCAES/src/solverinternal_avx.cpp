@@ -5,7 +5,7 @@ namespace ECHMET {
 namespace CAES {
 
 template <> template <>
-void SolverInternal<double, InstructionSet::AVX>::VectorizedDelogifier<InstructionSet::AVX>::operator()(double  *__restrict__ dst, const double *__restrict__ src)
+void SolverInternal<double, InstructionSet::AVX>::VectorizedDelogifier<InstructionSet::AVX>::operator()(double  *ECHMET_RESTRICT_PTR dst, const double *ECHMET_RESTRICT_PTR src)
 {
 	ECHMET_DEBUG_CODE(fprintf(stderr, "AVX delogifier, NBlock: %zu, total: %zu\n", NBlock, N));
 
@@ -27,7 +27,7 @@ void SolverInternal<double, InstructionSet::AVX>::VectorizedDelogifier<Instructi
 }
 
 template <> template <>
-void SolverInternal<double, InstructionSet::AVX>::VectorizedLogifier<InstructionSet::AVX>::operator()(double  *__restrict__ dst, const double *__restrict__ src)
+void SolverInternal<double, InstructionSet::AVX>::VectorizedLogifier<InstructionSet::AVX>::operator()(double  *ECHMET_RESTRICT_PTR dst, const double *ECHMET_RESTRICT_PTR src)
 {
 	ECHMET_DEBUG_CODE(fprintf(stderr, "AVX logifier, NBlock: %zu, total: %zu\n", NBlock, N));
 

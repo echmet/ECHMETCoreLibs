@@ -129,7 +129,7 @@ public:
 	VecMath();
 	TD exp10m(TD x) const;
 	static double exp10m_single(double x) noexcept;
-	TD mlog10(const double *__restrict__ inx) const;
+	TD mlog10(const double *ECHMET_RESTRICT_PTR inx) const;
 	static double mlog10_single(double x) noexcept;
 
 	void operator delete(void *ptr);
@@ -187,12 +187,12 @@ public:
 
 	VecMath();
 #if defined(ECHMET_PLATFORM_WIN32) && defined(__x86_64__)
-	void exp10m(const double *__restrict__ inx, double *__restrict__ outx) const;
+	void exp10m(const double *ECHMET_RESTRICT_PTR inx, double *ECHMET_RESTRICT_PTR outx) const;
 #else
 	TD exp10m(TD x) const;
 #endif
 	static double exp10m_single(double x) noexcept;
-	TD mlog10(const double *__restrict__ inx) const;
+	TD mlog10(const double *ECHMET_RESTRICT_PTR inx) const;
 	static double mlog10_single(double x) noexcept;
 
 	void operator delete(void *ptr);
@@ -251,12 +251,12 @@ public:
 
 	VecMath();
 #if defined(ECHMET_PLATFORM_WIN32) && defined(__x86_64__)
-	void exp10m(const double *__restrict__ inx, double *__restrict__ outx) const;
+	void exp10m(const double *ECHMET_RESTRICT_PTR inx, double *ECHMET_RESTRICT_PTR outx) const;
 #else
 	TD exp10m(TD x) const;
 #endif
 	static double exp10m_single(double x) noexcept;
-	TD mlog10(const double *__restrict__ inx) const;
+	TD mlog10(const double *ECHMET_RESTRICT_PTR inx) const;
 	static double mlog10_single(double x) noexcept;
 
 	void operator delete(void *ptr);

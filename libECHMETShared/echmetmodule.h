@@ -40,6 +40,17 @@
 	#endif // ECHMET_PLATFORM_*
 #endif // ECHMET_FORCE_INLINE
 
+/* Define non-aliased pointer */
+#ifndef ECHMET_RESTRICT_PTR
+	#if defined ECHMET_COMPILER_GCC_LIKE || defined ECHMET_COMPILER_MINGW || defined ECHMET_COMPILER_MSYS
+		#define ECHMET_RESTRICT_PTR __restrict__
+	#elif defined ECHMET_COMPILER_MSVC
+		#define ECHMET_RESTRICT_PTR __restrict
+	#else
+		#define ECHMET_RESTRICT_PTR
+	#endif // ECHMET_COMPILER_*
+#endif // ECHMET_RESTRICT_PTR
+
 /* Allow for redefinitions of ECHMET_API as needed */
 #ifdef ECHMET_API
 	#undef ECHMET_API

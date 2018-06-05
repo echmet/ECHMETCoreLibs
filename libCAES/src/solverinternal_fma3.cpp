@@ -5,7 +5,7 @@ namespace ECHMET {
 namespace CAES {
 
 template <> template <>
-void SolverInternal<double, InstructionSet::FMA3>::VectorizedDelogifier<InstructionSet::FMA3>::operator()(double  *__restrict__ dst, const double *__restrict__ src)
+void SolverInternal<double, InstructionSet::FMA3>::VectorizedDelogifier<InstructionSet::FMA3>::operator()(double  *ECHMET_RESTRICT_PTR dst, const double *ECHMET_RESTRICT_PTR src)
 {
 	ECHMET_DEBUG_CODE(fprintf(stderr, "FMA3 delogifier, NBlock: %zu, total: %zu\n", NBlock, N));
 
@@ -27,7 +27,7 @@ void SolverInternal<double, InstructionSet::FMA3>::VectorizedDelogifier<Instruct
 }
 
 template <> template <>
-void SolverInternal<double, InstructionSet::FMA3>::VectorizedLogifier<InstructionSet::FMA3>::operator()(double  *__restrict__ dst, const double *__restrict__ src)
+void SolverInternal<double, InstructionSet::FMA3>::VectorizedLogifier<InstructionSet::FMA3>::operator()(double  *ECHMET_RESTRICT_PTR dst, const double *ECHMET_RESTRICT_PTR src)
 {
 	ECHMET_DEBUG_CODE(fprintf(stderr, "FMA3 logifier, NBlock: %zu, total: %zu\n", NBlock, N));
 

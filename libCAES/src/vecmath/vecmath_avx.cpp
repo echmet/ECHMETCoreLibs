@@ -58,7 +58,7 @@ VecMath<InstructionSet::AVX>::VecMath() :
 {}
 
 #if defined(ECHMET_PLATFORM_WIN32) && defined(__x86_64__)
-void VecMath<InstructionSet::AVX>::exp10m(const double *__restrict__ inx, double *__restrict__ outx) const
+void VecMath<InstructionSet::AVX>::exp10m(const double *ECHMET_RESTRICT_PTR inx, double *ECHMET_RESTRICT_PTR outx) const
 #else
 typename VecMath<InstructionSet::AVX>::TD VecMath<InstructionSet::AVX>::exp10m(TD x) const
 #endif
@@ -152,7 +152,7 @@ typename VecMath<InstructionSet::AVX>::TD VecMath<InstructionSet::AVX>::exp10m(T
 #endif
 }
 
-typename VecMath<InstructionSet::AVX>::TD VecMath<InstructionSet::AVX>::mlog10(const double *__restrict__ inx) const
+typename VecMath<InstructionSet::AVX>::TD VecMath<InstructionSet::AVX>::mlog10(const double *ECHMET_RESTRICT_PTR inx) const
 {
 	VD vx;
 	int32_t ve[4] ECHMET_ALIGNED_32;
