@@ -38,22 +38,22 @@ std::ostream & operator<<(std::ostream &ostr, const ECHMET::CAES::SolverMatrix<C
 #endif // ECHMET_DEBUG_OUTPUT
 
 template <> template <>
-void SolverInternal<double, InstructionSet::SSE2>::VectorizedDelogifier<InstructionSet::SSE2>::operator()(double  *ECHMET_RESTRICT_PTR dst, const double *ECHMET_RESTRICT_PTR src);
+void SolverInternal<double, InstructionSet::SSE2>::VectorizedDelogifier<InstructionSet::SSE2>::operator()(double *ECHMET_RESTRICT_PTR dst, const double *ECHMET_RESTRICT_PTR src);
 
 template <> template <>
-void SolverInternal<double, InstructionSet::SSE2>::VectorizedLogifier<InstructionSet::SSE2>::operator()(double  *ECHMET_RESTRICT_PTR dst, const double *ECHMET_RESTRICT_PTR src);
+void SolverInternal<double, InstructionSet::SSE2>::VectorizedLogifier<InstructionSet::SSE2>::operator()(double *ECHMET_RESTRICT_PTR dst, const double *ECHMET_RESTRICT_PTR src);
 
 template <> template <>
-void SolverInternal<double, InstructionSet::AVX>::VectorizedDelogifier<InstructionSet::AVX>::operator()(double  *ECHMET_RESTRICT_PTR dst, const double *ECHMET_RESTRICT_PTR src);
+void SolverInternal<double, InstructionSet::AVX>::VectorizedDelogifier<InstructionSet::AVX>::operator()(double *ECHMET_RESTRICT_PTR dst, const double *ECHMET_RESTRICT_PTR src);
 
 template <> template <>
-void SolverInternal<double, InstructionSet::AVX>::VectorizedLogifier<InstructionSet::AVX>::operator()(double  *ECHMET_RESTRICT_PTR dst, const double *ECHMET_RESTRICT_PTR src);
+void SolverInternal<double, InstructionSet::AVX>::VectorizedLogifier<InstructionSet::AVX>::operator()(double *ECHMET_RESTRICT_PTR dst, const double *ECHMET_RESTRICT_PTR src);
 
 template <> template <>
-void SolverInternal<double, InstructionSet::FMA3>::VectorizedDelogifier<InstructionSet::FMA3>::operator()(double  *ECHMET_RESTRICT_PTR dst, const double *ECHMET_RESTRICT_PTR src);
+void SolverInternal<double, InstructionSet::FMA3>::VectorizedDelogifier<InstructionSet::FMA3>::operator()(double *ECHMET_RESTRICT_PTR dst, const double *ECHMET_RESTRICT_PTR src);
 
 template <> template <>
-void SolverInternal<double, InstructionSet::FMA3>::VectorizedLogifier<InstructionSet::FMA3>::operator()(double  *ECHMET_RESTRICT_PTR dst, const double *ECHMET_RESTRICT_PTR src);
+void SolverInternal<double, InstructionSet::FMA3>::VectorizedLogifier<InstructionSet::FMA3>::operator()(double *ECHMET_RESTRICT_PTR dst, const double *ECHMET_RESTRICT_PTR src);
 
 template <typename CAESReal, InstructionSet ISet>
 const char * SolverInternal<CAESReal, ISet>::NumericErrorException::infError = "Result of numeric operation is infinity";

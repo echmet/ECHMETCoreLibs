@@ -5,7 +5,7 @@ namespace ECHMET {
 namespace CAES {
 
 template <> template <>
-void SolverInternal<double, InstructionSet::FMA3>::VectorizedDelogifier<InstructionSet::FMA3>::operator()(double  *ECHMET_RESTRICT_PTR dst, const double *ECHMET_RESTRICT_PTR src)
+void SolverInternal<double, InstructionSet::FMA3>::VectorizedDelogifier<InstructionSet::FMA3>::operator()(double *ECHMET_RESTRICT_PTR dst, const double *ECHMET_RESTRICT_PTR src)
 {
 	ECHMET_DEBUG_CODE(fprintf(stderr, "FMA3 delogifier, NBlock: %zu, total: %zu\n", NBlock, N));
 
@@ -19,15 +19,16 @@ void SolverInternal<double, InstructionSet::FMA3>::VectorizedDelogifier<Instruct
 		_s = m_vecMath.exp10m(_s);
 
 		_mm256_store_pd(dst + idx, _s);
-	#endif
+	#endif // ECHMET_WIN64_ABI_BUG_CHECK
 	}
 
 	for (; idx < N; idx++)
 		dst[idx] = m_vecMath.exp10m_single(src[idx]);
 }
+template void SolverInternal<double, InstructionSet::FMA3>::VectorizedDelogifier<InstructionSet::FMA3>::operator()(double *ECHMET_RESTRICT_PTR dst, const double *ECHMET_RESTRICT_PTR src);
 
 template <> template <>
-void SolverInternal<double, InstructionSet::FMA3>::VectorizedLogifier<InstructionSet::FMA3>::operator()(double  *ECHMET_RESTRICT_PTR dst, const double *ECHMET_RESTRICT_PTR src)
+void SolverInternal<double, InstructionSet::FMA3>::VectorizedLogifier<InstructionSet::FMA3>::operator()(double *ECHMET_RESTRICT_PTR dst, const double *ECHMET_RESTRICT_PTR src)
 {
 	ECHMET_DEBUG_CODE(fprintf(stderr, "FMA3 logifier, NBlock: %zu, total: %zu\n", NBlock, N));
 
@@ -41,6 +42,7 @@ void SolverInternal<double, InstructionSet::FMA3>::VectorizedLogifier<Instructio
 	for (; idx < N; idx++)
 		dst[idx] = m_vecMath.mlog10_single(src[idx]);
 }
+template void SolverInternal<double, InstructionSet::FMA3>::VectorizedLogifier<InstructionSet::FMA3>::operator()(double *ECHMET_RESTRICT_PTR dst, const double *ECHMET_RESTRICT_PTR src);
 
 } // namespace CAES
 } // namespace ECHMET
