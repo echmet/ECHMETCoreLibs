@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.12)
 
 project(libCAES LANGUAGES CXX)
 
-add_definitions("-D_USE_MATH_DEFINES")
+add_definitions("-D_USE_MATH_DEFINES -DEIGEN_MAX_ALIGN_BYTES=32")
 
 if (WIN32)
     if (MINGW)
