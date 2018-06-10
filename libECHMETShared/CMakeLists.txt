@@ -28,7 +28,8 @@ add_library(ECHMETShared SHARED ${ECHMETShared_SRCS})
 target_include_directories(ECHMETShared PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 set_target_properties(ECHMETShared
                       PROPERTIES VERSION 0.1
-                                 SOVERSION 0.1)
+                                 SOVERSION 0.1
+                                 LINK_FLAGS ${DEFAULT_SYMVER_LINK})
 target_link_libraries(ECHMETShared
                       PRIVATE ${ECHMET_SHARED_LINK_LIBS}
 					  PRIVATE ${ECHMET_HIPREC_LIBS})

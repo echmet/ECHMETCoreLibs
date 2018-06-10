@@ -52,6 +52,7 @@ elseif (UNIX)
         ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -std=c++14 -Wall -Wextra -pedantic -Wno-unused-function -fvisibility=hidden -g -O3")
         add_definitions("-DECHMET_COMPILER_GCC_LIKE ")
+        set(DEFAULT_SYMVER_LINK "-Wl,--default-symver")
     endif()
 
     if (MANUAL_HIPREC_LIBS_PATH)

@@ -50,6 +50,7 @@ target_include_directories(IonProps PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
 set_target_properties(IonProps
                       PROPERTIES VERSION 0.2
                                  SOVERSION 0.2
+                                 LINK_FLAGS ${DEFAULT_SYMVER_LINK}
                       PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/include/echmetionprops.h")
 target_link_libraries(IonProps
                       PRIVATE ${IONPROPS_LINK_LIBS})

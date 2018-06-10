@@ -29,6 +29,7 @@ target_include_directories(SysComp PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 set_target_properties(SysComp
                       PROPERTIES VERSION 0.1
                                  SOVERSION 0.1
+                                 LINK_FLAGS ${DEFAULT_SYMVER_LINK}
                       PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/include/echmetsyscomp.h")
 target_link_libraries(SysComp
                       PRIVATE ${SYSCOMP_LINK_LIBS})
