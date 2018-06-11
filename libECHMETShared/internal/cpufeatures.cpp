@@ -23,7 +23,7 @@ bool is_bit_set(const T field, const uint8_t bit) noexcept
 {
 	assert((sizeof(T) * 8) > bit);
 
-	return field & (1 << bit);
+	return field & ((T)1 << bit);
 }
 
 CPUFeatures::SupportedSIMD::SupportedSIMD() noexcept :
@@ -148,7 +148,7 @@ CPUFeatures::CPUFeatures()
 					     is_bit_set(regs.feature_flags_eax, AVX512_HI256_BIT) &
 					     is_bit_set(regs.feature_flags_eax, AVX512_ZMM_HI256_BIT);
 	#elif defined(ECHMET_COMPILER_MSVC)
-		const uint32_t xcr0 = _xgetbv(0);
+		const uint64_t xcr0 = _xgetbv(0);
 		const bool os_xmm_aware = is_bit_set(xcr0, XMM_FEATURE_BIT);
 		const bool os_avx_aware = is_bit_set(xcr0, YMM_FEATURE_BIT) & os_xmm_aware;
 		const bool os_avx512_aware = is_bit_set(xcr0, AVX512_OPMASK_BIT) &

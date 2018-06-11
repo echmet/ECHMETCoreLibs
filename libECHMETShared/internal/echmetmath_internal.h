@@ -157,7 +157,11 @@ double pow<double, int, int>(const int &base, const int &exponent)
 template <>
 int pow<int, int, int>(const int &base, const int &exponent)
 {
+#ifdef ECHMET_COMPILER_MSVC
+	return static_cast<int>(::std::pow(base, exponent));
+#else
 	return ::std::pow(base, exponent);
+#endif // ECHMET_COMPILER_MSVC
 }
 
 /**/

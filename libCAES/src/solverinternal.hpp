@@ -623,7 +623,7 @@ RetCode SolverInternal<CAESReal, ISet>::solve(const SolverVector<CAESReal> *anal
 
 		try {
 			this->ASolve(&m_pCx);
-		} catch (NumericErrorException &ex) {
+		} catch (NumericErrorException &) {
 			ECHMET_DEBUG_CODE(fprintf(stderr, "NRS failure: %s\n", ex.what()));
 			return RetCode::E_NRS_FAILURE;
 		}
