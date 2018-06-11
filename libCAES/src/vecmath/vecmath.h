@@ -17,23 +17,6 @@
 	#include <echmetmodule.h>
 #undef ECHMET_IMPORT_INTERNAL
 
-#if defined(ECHMET_COMPILER_GCC_LIKE) || defined(ECHMET_COMPILER_MINGW) || defined(ECHMET_COMPILER_MSYS)
-	#define ECHMET_ALIGNED_BEF_16
-	#define ECHMET_ALIGNED_BEF_32
-	#define ECHMET_ALIGNED_AFT_16 __attribute__((aligned(16)))
-	#define ECHMET_ALIGNED_AFT_32 __attribute__((aligned(32)))
-#elif defined ECHMET_COMPILER_MSVC
-	#define ECHMET_ALIGNED_BEF_16 __declspec(align(16))
-	#define ECHMET_ALIGNED_BEF_32 __declspec(align(32))
-	#define ECHMET_ALIGNED_AFT_16
-	#define ECHMET_ALIGNED_AFT_32
-#else
-	#define ECHMET_ALIGNED_BEF_16
-	#define ECHMET_ALIGNED_BEF_32
-	#define ECHMET_ALIGNED_AFT_16
-	#define ECHMET_ALIGNED_AFT_32
-#endif // ECHMET_COMPILER_
-
 #define M64(v) *(__m64 *)(v)
 #define M128D(v) *(__m128d *)(v)
 #define M128I(v) *(__m128i *)(v)

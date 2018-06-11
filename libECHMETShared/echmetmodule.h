@@ -51,6 +51,43 @@
 	#endif // ECHMET_COMPILER_*
 #endif // ECHMET_RESTRICT_PTR
 
+/* Data alignment specifiers */
+#ifndef ECHMET_DATA_ALIGNMENT
+	#define ECHMET_DATA_ALIGNMENT
+	#if defined ECHMET_PLATFORM_WIN32
+		#if defined ECHMET_COMPILER_MINGW || defined ECHMET_COMPILER_MSYS
+			#define ECHMET_ALIGNED_BEF_16
+			#define ECHMET_ALIGNED_BEF_32
+			#define ECHMET_ALIGNED_BEF_64
+			#define ECHMET_ALIGNED_AFT_16 __attribute__((aligned(16)))
+			#define ECHMET_ALIGNED_AFT_32 __attribute__((aligned(32)))
+			#define ECHMET_ALIGNED_AFT_64 __attribute__((aligned(64)))
+		#elif defined ECHMET_COMPILER_MSVC
+			#define ECHMET_ALIGNED_BEF_16 __declspec(align(16))
+			#define ECHMET_ALIGNED_BEF_32 __declspec(align(32))
+			#define ECHMET_ALIGNED_BEF_64 __declspec(align(64))
+			#define ECHMET_ALIGNED_AFT_16
+			#define ECHMET_ALIGNED_AFT_32
+			#define ECHMET_ALIGNED_AFT_64
+		#else
+			#error "Unsupported or misdetected compiler"
+		#endif // ECHMET_COMPILER_*
+	#elif defined ECHMET_PLATFORM_UNIX
+		#ifdef ECHMET_COMPILER_GCC_LIKE
+			#define ECHMET_ALIGNED_BEF_16
+			#define ECHMET_ALIGNED_BEF_32
+			#define ECHMET_ALIGNED_BEF_64
+			#define ECHMET_ALIGNED_AFT_16 __attribute__((aligned(16)))
+			#define ECHMET_ALIGNED_AFT_32 __attribute__((aligned(32)))
+			#define ECHMET_ALIGNED_AFT_64 __attribute__((aligned(64)))
+		#else
+			#error "Unsupported or misdetected compiler"
+		#endif // ECHMET_COMPILER_*
+	#else
+		#error "Unsupported or misdetected target platform"
+	#endif // ECHMET_PLATFORM_*
+#endif // ECHMET_DATA_ALIGNMENT
+
 /* Allow for redefinitions of ECHMET_API as needed */
 #ifdef ECHMET_API
 	#undef ECHMET_API
