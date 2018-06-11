@@ -21,6 +21,7 @@ private:
 };
 
 template<typename TN, typename TH>
+static
 TN firstDerivativeCalculator2O(const TN &low, const TN &high, const TH &H)
 {
 	thread_local static const TH TWO{2.0};
@@ -30,6 +31,7 @@ TN firstDerivativeCalculator2O(const TN &low, const TN &high, const TH &H)
 }
 
 template<typename TN, typename TH>
+static
 TN mixedDerivativeCalculator2O(const TN &LL, const TN &LH, const TN &HL, const TN &HH, const TH &h1, const TH &h2)
 {
 	const TN TOne = HH + LL;
@@ -41,6 +43,7 @@ TN mixedDerivativeCalculator2O(const TN &LL, const TN &LH, const TN &HL, const T
 }
 
 template<typename TN, typename TH>
+static
 TN secondDerivativeCalculator2O(const TN &low, const TN &center, const TN &high, const TH &H)
 {
 	const TN t = (low - 2.0 * center + high) / (H * H);
@@ -48,6 +51,7 @@ TN secondDerivativeCalculator2O(const TN &low, const TN &center, const TN &high,
 	return t;
 }
 
+static
 RetCode calculatepHResponse(ECHMETReal &bufferCapacity, const ECHMETReal &H, const NonidealityCorrections corrections, const SysComp::ChemicalSystem &chemSystem, const SysComp::CalculatedProperties &calcProps,
 			    const RealVec *analyticalConcentrations, const SysComp::Constituent *perturbedConstituent)
 {
@@ -359,6 +363,7 @@ RetCode ECHMET_CC calculateCrossConcentrationDerivatives_prepared(RealVec *deriv
 		return calculateMixedConcentrationDerivatives(derivatives, solver, H, chemSystem, analyticalConcentrations, perturbedConstituentJ, perturbedConstituentK);
 }
 
+static
 RetCode calculateSecondConcentrationDerivatives(RealVec *derivatives, Solver *solver, const ECHMETReal &H, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const SysComp::Constituent *perturbedConstituent)
 {
 	typedef std::function<RetCode (RealVec *, const ECHMETReal &, SolverImpl<mpfr::mpreal> *, const SysComp::ChemicalSystem &, const RealVec *, const SolverVector<mpfr::mpreal> &, const SysComp::Constituent *)> ExFunc;
@@ -411,6 +416,7 @@ RetCode calculateSecondConcentrationDerivatives(RealVec *derivatives, Solver *so
 	return derivatorSkin(derivatives, H, solver, chemSystem, analyticalConcentrations, executor, perturbedConstituent);
 }
 
+static
 RetCode calculateMixedConcentrationDerivatives(RealVec *derivatives, Solver *solver, const ECHMETReal &H, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const SysComp::Constituent *perturbedConstituentJ, const SysComp::Constituent *perturbedConstituentK)
 {
 	typedef std::function<RetCode (RealVec *, const ECHMETReal &, SolverImpl<mpfr::mpreal> *, const SysComp::ChemicalSystem &, const RealVec *, const SolverVector<mpfr::mpreal> &, const SysComp::Constituent *, const SysComp::Constituent *)> ExFunc;

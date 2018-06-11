@@ -36,6 +36,7 @@ namespace SysComp {
  * @retval RetCode::E_NO_MEMORY Insufficient memory to perform the initialization
  * @retval RetCode::E_INVALID_COMPLEXATION The system contains nonsensical complexation relation
  */
+static
 RetCode buildComplexForms(Constituent *c, IonicFormVec *ifVec, const InConstituent &ic, const ConstituentVec *ligandsVec) noexcept
 {
 	RetCode tRet;
@@ -131,6 +132,7 @@ RetCode buildComplexForms(Constituent *c, IonicFormVec *ifVec, const InConstitue
  * @retval RetCode::E_INVALID_COMPLEXATION The system contains nonsensical complexation relation
  * @retval RetCode::E_DUPLICIT_CONSTITUENTS The system contains multiple constituents with the same name
  */
+static
 RetCode buildConstituentVec(ConstituentVec *cVec, IonicFormVec *ifVec, const InConstituentVec *inputData) noexcept
 {
 	RetCode tRet;
@@ -491,6 +493,7 @@ RetCode buildConstituentVec(ConstituentVec *cVec, IonicFormVec *ifVec, const InC
  * @retval RetCode::OK Success
  * @retval RetCode::E_NO_MEMORY Insufficient memory to create ionic forms
  */
+static
 RetCode buildLigandIonicForms(const Constituent *c, IonicFormVec *ligandIFVec, const FixedString *name) noexcept
 {
 	for (int charge = c->chargeLow; charge <= c->chargeHigh; charge++) {
@@ -528,6 +531,7 @@ RetCode buildLigandIonicForms(const Constituent *c, IonicFormVec *ligandIFVec, c
  * @param[in,out] total Total number of forms counted so far. This must be initialized to zero by the first callee.
  * @param[in] accum Total number of forms propagating through one branch of recursive calls
  */
+static
 void calculateMaximumVariants(const size_t i, const InLFVec *ligandIFs, int32_t &total, int32_t accum) noexcept
 {
 	const size_t N = ligandIFs->size();
@@ -556,6 +560,7 @@ void calculateMaximumVariants(const size_t i, const InLFVec *ligandIFs, int32_t 
  * @retval RetCode::E_NO_MEMORY Insufficient memory to generate all complex forms
  * @retval RetCode::E_INVALID_COMPLEXATION Nonsensical complexation scheme
  */
+static
 RetCode generateComplexForms(IonicForm *baseIF, IonicFormVec *groupIFVec, IonicFormVec *ifVec, InLFVec *ligandIFs,
 			     size_t formShift, int32_t toGenerate, const ConstituentVec *ligandsVec) noexcept(false)
 {
@@ -731,6 +736,7 @@ RetCode generateComplexForms(IonicForm *baseIF, IonicFormVec *groupIFVec, IonicF
  * @retval Pointer to \p Constituent if a match is found
  * @retval nullptr No match was found
  */
+static
 Constituent * findLigand(const InLigandForm *lF, const ConstituentVec *ligandsVec) noexcept
 {
 	if (lF == nullptr || ligandsVec == nullptr)
@@ -753,6 +759,7 @@ Constituent * findLigand(const InLigandForm *lF, const ConstituentVec *ligandsVe
  *
  * @param[in] chemSystem Chemical system to create the mapping for
  */
+static
 void initializeChemicalSystemMapping(ChemicalSystem &chemSystem) noexcept(false)
 {
 	const size_t NIF = chemSystem.ionicForms->size();
@@ -799,6 +806,7 @@ void initializeChemicalSystemMapping(ChemicalSystem &chemSystem) noexcept(false)
  * @retval true The constituent is contained
  * @retval false The constituent is not contained
  */
+static
 bool isConstituentContained(const ConstituentVec *cVec, const ConstituentVec *ligandsVec, const FixedString *newName) noexcept
 {
 	auto _internal = [](const ConstituentVec *vec, const FixedString *name) {
@@ -827,6 +835,7 @@ bool isConstituentContained(const ConstituentVec *cVec, const ConstituentVec *li
  * @retval true The ionic form is contained
  * @retval false The ionic form is not contained
  */
+static
 bool isIonicFormContained(const IonicFormVec *ionicForms, const IonicForm *iF) noexcept
 {
 	for (size_t idx = 0; idx < ionicForms->size(); idx++) {
@@ -849,6 +858,7 @@ bool isIonicFormContained(const IonicFormVec *ionicForms, const IonicForm *iF) n
  * @retval true The ligand with the given charge is contained
  * @retval false The ligand iwth the given charge is not contained
  */
+static
 bool isLigandFormContained(const ContainedLigandIonicFormVec *containedLigandIFs, const InLigandForm *ligand, const int charge) noexcept
 {
 	if (containedLigandIFs == nullptr)
@@ -872,6 +882,7 @@ bool isLigandFormContained(const ContainedLigandIonicFormVec *containedLigandIFs
  *
  * @return Initialized \p ContainedLigandIonicForm
  */
+static
 ContainedLigandIonicForm makeContainedLigandIonicForm(const Constituent *ligand, const int charge)
 {
 	ContainedLigandIonicForm cLF;
@@ -893,6 +904,7 @@ ContainedLigandIonicForm makeContainedLigandIonicForm(const Constituent *ligand,
  * @retval RetCode::OK Success
  * @retval RetCode::E_NO_MEMORY Insufficient memory to create the ionic form
  */
+static
 RetCode makeIonicForm(IonicForm **iF, const Constituent *c, const int charge, const ECHMETReal &limitMobility, const FixedString *name) noexcept
 {
 	std::string _name;
@@ -929,6 +941,7 @@ RetCode makeIonicForm(IonicForm **iF, const Constituent *c, const int charge, co
  *
  * @param[in] iF \p IonicForm to operate on
  */
+static
 void makeNonComplex(IonicForm *iF) noexcept
 {
 	iF->ligand = nullptr;
@@ -945,6 +958,7 @@ void makeNonComplex(IonicForm *iF) noexcept
  *
  * @param[in] vec \p ConstituentVec to be released
  */
+static
 void releaseConstituentVec(const ConstituentVec *vec) noexcept
 {
 	for (size_t idx = 0; idx < vec->size(); idx++) {
@@ -964,6 +978,7 @@ void releaseConstituentVec(const ConstituentVec *vec) noexcept
  *
  * @param[in] \p IonicFormVec to be released
  */
+static
 void releaseIonicFormVec(const IonicFormVec *vec) noexcept
 {
 	for (size_t idx = 0; idx < vec->size(); idx++) {

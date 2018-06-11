@@ -18,6 +18,7 @@ std::mutex CPUFeatures::s_init_lock;
 CPUFeatures * CPUFeatures::s_instance{nullptr};
 
 template <typename T>
+static
 bool is_bit_set(const T field, const uint8_t bit) noexcept
 {
 	assert((sizeof(T) * 8) > bit);

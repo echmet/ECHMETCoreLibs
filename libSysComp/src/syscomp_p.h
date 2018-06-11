@@ -12,22 +12,23 @@
 namespace ECHMET {
 namespace SysComp {
 
-RetCode buildComplexForms(Constituent *c, IonicFormVec *ifVec, const InConstituent &ic, const ConstituentVec *ligandsVec) noexcept;
-RetCode buildConstituentVec(ConstituentVec *cVec, IonicFormVec *ifVec, const InConstituentVec *inputData) noexcept;
-RetCode buildLigandIonicForms(const Constituent *c, IonicFormVec *ligandIFVec, const FixedString *name) noexcept;
-void calculateMaximumVariants(const size_t i, const InLFVec *ligandIFs, int32_t &total, int32_t accum) noexcept;
-Constituent * findLigand(const InLigandForm *lF, const ConstituentVec *cVec) noexcept;
-RetCode generateComplexForms(IonicForm *baseIF, IonicFormVec *groupIFVec, IonicFormVec *ifVec, InLFVec *ligandIFs, size_t formShift, int32_t toGenerate,
-			     const ConstituentVec *ligandsVec) noexcept(false);
-void initializeChemicalSystemMapping(ChemicalSystem &chemSystem) noexcept(false);
-bool isConstituentContained(const ConstituentVec *cVec, const ConstituentVec *ligandsVec, const FixedString *newName) noexcept;
-bool isIonicFormContained(const IonicFormVec *ionicForms, const IonicForm *iF) noexcept;
-bool isLigandFormContained(const ContainedLigandIonicFormVec *containedLigandIFs, const InLigandForm *ligand, const int charge) noexcept;
-ContainedLigandIonicForm makeContainedLigandIonicForm(const Constituent *ligand, const int charge);
-RetCode makeIonicForm(IonicForm **iF, const Constituent *c, const int charge, const ECHMETReal &limitMobility, const FixedString *name) noexcept;
-void makeNonComplex(IonicForm *iF) noexcept;
+static RetCode buildComplexForms(Constituent *c, IonicFormVec *ifVec, const InConstituent &ic, const ConstituentVec *ligandsVec) noexcept;
+static RetCode buildConstituentVec(ConstituentVec *cVec, IonicFormVec *ifVec, const InConstituentVec *inputData) noexcept;
+static RetCode buildLigandIonicForms(const Constituent *c, IonicFormVec *ligandIFVec, const FixedString *name) noexcept;
+static void calculateMaximumVariants(const size_t i, const InLFVec *ligandIFs, int32_t &total, int32_t accum) noexcept;
+static Constituent * findLigand(const InLigandForm *lF, const ConstituentVec *cVec) noexcept;
+static RetCode generateComplexForms(IonicForm *baseIF, IonicFormVec *groupIFVec, IonicFormVec *ifVec, InLFVec *ligandIFs, size_t formShift, int32_t toGenerate,
+				    const ConstituentVec *ligandsVec) noexcept(false);
+static void initializeChemicalSystemMapping(ChemicalSystem &chemSystem) noexcept(false);
+static bool isConstituentContained(const ConstituentVec *cVec, const ConstituentVec *ligandsVec, const FixedString *newName) noexcept;
+static bool isIonicFormContained(const IonicFormVec *ionicForms, const IonicForm *iF) noexcept;
+static bool isLigandFormContained(const ContainedLigandIonicFormVec *containedLigandIFs, const InLigandForm *ligand, const int charge) noexcept;
+static ContainedLigandIonicForm makeContainedLigandIonicForm(const Constituent *ligand, const int charge);
+static RetCode makeIonicForm(IonicForm **iF, const Constituent *c, const int charge, const ECHMETReal &limitMobility, const FixedString *name) noexcept;
+static void makeNonComplex(IonicForm *iF) noexcept;
 
 template <typename T>
+static
 void releaseConcentrationVec(Vec<T> *vec) noexcept
 {
 	static_assert(std::is_pointer<T>::value, "Type " _STRINGIFY(T) " is not a pointer");
@@ -36,8 +37,8 @@ void releaseConcentrationVec(Vec<T> *vec) noexcept
 		delete vec->at(idx);
 }
 
-void releaseConstituentVec(const ConstituentVec *vec) noexcept;
-void releaseIonicFormVec(const IonicFormVec *vec) noexcept;
+static void releaseConstituentVec(const ConstituentVec *vec) noexcept;
+static void releaseIonicFormVec(const IonicFormVec *vec) noexcept;
 
 } // namespace SysComp
 } // ECHMET

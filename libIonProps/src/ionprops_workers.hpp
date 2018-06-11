@@ -40,6 +40,7 @@ public:
  * @param[in,out] calcProps. Corresponding \p SysComp\::CalculatedProperties struct where the corrected ionic mobilities will be stored.
  */
 template <typename IPReal, typename ConcentrationsVec, template <typename> class Retriever>
+static
 void correctIonicMobilities(typename ComputationContextImpl<IPReal>::OnsagerFuossPack *onsFuoPack, const std::vector<Ion<IPReal>> &ions, const ConcentrationsVec &icConcs, const IPReal &ionicStrength, SysComp::CalculatedProperties &calcProps)
 {
 	const IPReal dk = PhChConsts::dkWat * PhChConsts::eAbsVac;
@@ -150,6 +151,7 @@ void correctIonicMobilities(typename ComputationContextImpl<IPReal>::OnsagerFuos
 }
 
 template <typename IPReal>
+static
 void correctIonicMobilitiesViscosity(const SysComp::ChemicalSystem &chemSystem, SysComp::CalculatedProperties &calcProps, const RealVec *analyticalConcentrations)
 {
 	/*
@@ -231,6 +233,7 @@ void correctIonicMobilitiesViscosity(const SysComp::ChemicalSystem &chemSystem, 
  *
  * @return Electric conductivity of the system in <tt>S/m</tt>.
  */
+static
 ECHMETReal calculateConductivityWorker(const SysComp::ChemicalSystem &chemSystem, SysComp::CalculatedProperties &calcProps) noexcept
 {
 	const RealVec *icVec = calcProps.ionicConcentrations;
@@ -281,6 +284,7 @@ ECHMETReal calculateConductivityWorker(const SysComp::ChemicalSystem &chemSystem
  * @return Electric conductivity of the system in <tt>S/m</tt>.
  */
 template <typename IPReal>
+static
 IPReal calculateConductivityWorker(const std::vector<IPReal> &icConcs, const SysComp::ChemicalSystem &chemSystem, SysComp::CalculatedProperties &calcProps) noexcept
 {
 	const SysComp::IonicFormVec *ifVec = chemSystem.ionicForms;
@@ -327,6 +331,7 @@ IPReal calculateConductivityWorker(const std::vector<IPReal> &icConcs, const Sys
  * @retval RetCode::E_NO_MEMORY Insufficient memory to perform the calculation.
  * @retval RetCode::E_BAD_INPUT Invalid chemical system.
  */
+static
 RetCode calculateEffectiveMobilitiesWorker(const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept
 {
 	/* NOTE:
@@ -376,6 +381,7 @@ RetCode calculateEffectiveMobilitiesWorker(const SysComp::ChemicalSystem &chemSy
  * @param[in] cH Concentration of H<sub>3</sub>O<sup>+</sup> ions.
  * @param[in] ionicStrength Ionic strength of the system in <tt>mol/dm<sup>3</sup></tt>.
  */
+static
 ECHMETReal calculatepH_directWorker(const ECHMETReal &cH, const ECHMETReal &ionicStrength) noexcept
 {
 	const ECHMETReal gamma = activityCoefficientInternal(ionicStrength, VMath::sqrt(ionicStrength), 1);
@@ -391,6 +397,7 @@ ECHMETReal calculatepH_directWorker(const ECHMETReal &cH, const ECHMETReal &ioni
  * @param[in] ionicStrength Ionic strength of the system in <tt>mol/dm<sup>3</sup></tt>.
  */
 template <typename IPReal>
+static
 IPReal calculatepH_directWorker(const IPReal &cH, const IPReal &ionicStrength) noexcept
 {
 	const IPReal gamma = activityCoefficientInternal(ionicStrength, VMath::sqrt(ionicStrength), 1);
@@ -404,6 +411,7 @@ IPReal calculatepH_directWorker(const IPReal &cH, const IPReal &ionicStrength) n
  * @param[in] isCorrection Correct for ionic strength.
  * @param[in] calcProps Corresponding \p SysComp\::CalculatedProperties struct.
  */
+static
 ECHMETReal calculatepHWorker(const NonidealityCorrections corrections, const SysComp::CalculatedProperties &calcProps) noexcept
 {
 	const bool isCorrection = nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_DEBYE_HUCKEL);
@@ -418,6 +426,7 @@ ECHMETReal calculatepHWorker(const NonidealityCorrections corrections, const Sys
  * @param[in] calcProps Corresponding \p SysComp\::CalculatedProperties struct.
  */
 template <typename IPReal>
+static
 IPReal calculatepHWorker(const std::vector<IPReal> &icConcs, const SysComp::CalculatedProperties &calcProps, const NonidealityCorrections corrections) noexcept
 {
 	const bool isCorrection = nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_DEBYE_HUCKEL);
@@ -439,6 +448,7 @@ IPReal calculatepHWorker(const std::vector<IPReal> &icConcs, const SysComp::Calc
  * @retval \p RetCode::E_DATA_TOO_LARGE Size of the data exceeds maximum size of \p std::vector
  * @retval \p RetCode::E_INVALID_ARGUMENT \p nullptr passed as \p analyticalConcentrations when viscosity correction was requested
  */
+static
 RetCode correctMobilitiesWorker(typename ComputationContextImpl<ECHMETReal>::OnsagerFuossPack *onsFuoPack, const std::vector<Ion<ECHMETReal>> &ions, const SysComp::ChemicalSystem &chemSystem,
 				SysComp::CalculatedProperties &calcProps, const RealVec *analyticalConcentrations,
 				const NonidealityCorrections corrections) noexcept
@@ -479,6 +489,7 @@ RetCode correctMobilitiesWorker(typename ComputationContextImpl<ECHMETReal>::Ons
  * @retval \p RetCode::E_INVALID_ARGUMENT \p nullptr passed as \p analyticalConcentrations when viscosity correction was requested
  */
 template <typename IPReal>
+static
 RetCode correctMobilitiesWorker(const std::vector<IPReal> &icConcs, typename ComputationContextImpl<IPReal>::OnsagerFuossPack *onsFuoPack, const std::vector<Ion<IPReal>> &ions,
 				const SysComp::ChemicalSystem &chemSystem, SysComp::CalculatedProperties &calcProps, const RealVec *analyticalConcentrations,
 			        const NonidealityCorrections corrections) noexcept

@@ -23,6 +23,7 @@ public:
 InstructionSet detectInstructionSet();
 
 template <typename CAESReal, bool V = std::is_same<CAESReal, mpfr::mpreal>::value>
+static
 FreeMPFRCacheSwitch<V> freeMPFRCache()
 {
 	return FreeMPFRCacheSwitch<V>{};

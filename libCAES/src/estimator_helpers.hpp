@@ -5,6 +5,7 @@ namespace ECHMET {
 namespace CAES {
 
 template <typename CAESReal>
+static
 void calculateActivityCoefficients(const CAESReal &ionicStrength, std::vector<CAESReal> &activityCoefficients, const std::vector<int> &chargesSquared)
 {
 	const CAESReal isSqrt = VMath::sqrt<CAESReal>(ionicStrength);
@@ -23,6 +24,7 @@ void calculateActivityCoefficients(const CAESReal &ionicStrength, std::vector<CA
  * @param[in] totalEquilibria Vector of objects that descibe the given equilibria.
  */
 template <typename CAESReal, bool ThreadSafe>
+static
 void calculateDistributionWithDerivative(const CAESReal &v, SolverVector<CAESReal> &distribution, SolverVector<CAESReal> &dDistdV, std::vector<TotalEquilibriumBase *> &totalEquilibria, const RealVec *analyticalConcentrations, const std::vector<CAESReal> &activityCoefficients)
 {
 	size_t rowCounter = 2;
@@ -63,6 +65,7 @@ void calculateDistributionWithDerivative(const CAESReal &v, SolverVector<CAESRea
  * @param[in] totalEquilibria Vector of objects that descibe the given equilibria.
  */
 template <typename CAESReal, bool ThreadSafe>
+static
 void calculateDistribution(const CAESReal &v, SolverVector<CAESReal> &distribution, std::vector<TotalEquilibriumBase *> &totalEquilibria, const RealVec *analyticalConcentrations,
 			   const std::vector<CAESReal> &activityCoefficients)
 {
@@ -85,6 +88,7 @@ void calculateDistribution(const CAESReal &v, SolverVector<CAESReal> &distributi
 }
 
 template <typename CAESReal, bool ThreadSafe>
+static
 CAESReal calculateIonicStrength(const SolverVector<CAESReal> &icConcs, std::vector<TotalEquilibriumBase *> &totalEquilibria, const std::vector<int> &chargesSquared)
 {
 	CAESReal ionicStrength = 0.0;
@@ -103,6 +107,7 @@ CAESReal calculateIonicStrength(const SolverVector<CAESReal> &icConcs, std::vect
 }
 
 template <typename CAESReal, bool ThreadSafe>
+static
 CAESReal calcTotalCharge(const SolverVector<CAESReal> &icConcs, const std::vector<TotalEquilibriumBase *> &totalEquilibria)
 {
 	CAESReal z = 0;
@@ -128,6 +133,7 @@ CAESReal calcTotalCharge(const SolverVector<CAESReal> &icConcs, const std::vecto
  * @param[in,out] estimatedConcentrations Vector of ionic concentrations of all species.
  */
 template <typename CAESReal>
+static
 void estimateComplexesDistribution(const CNVec<CAESReal> *complexNuclei, const LigandVec<CAESReal> *allLigands, const SolverVector<CAESReal> &estConcentrations, const size_t LGBlockOffset, SolverVector<CAESReal> &estimatedConcentrations)
 {
 	size_t rowCounter = 2;

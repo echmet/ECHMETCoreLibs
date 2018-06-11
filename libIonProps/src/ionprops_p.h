@@ -269,6 +269,7 @@ inline constexpr T cxpow(const T &x, const unsigned int exp)
 }
 
 template <typename T>
+static
 int sgn(const T &val)
 {
 	return (T(0) < val) - (val < T(0));

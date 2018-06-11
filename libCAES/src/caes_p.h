@@ -78,27 +78,35 @@ private:
 };
 
 template <typename CAESReal, bool ThreadSafe>
+static
 void calculateDistribution(const CAESReal &v, SolverVector<CAESReal> &distribution, std::vector<TotalEquilibriumBase *> &totalEquilibria, const RealVec *analyticalConcentrations);
 
 template <typename CAESReal>
+static
 void calculateMaximumVariants(const size_t i, const LigandIonicFormVec<CAESReal> &ligandIFs, uint32_t &total, uint32_t accum, const bool exclusive) noexcept;
 
 template <typename CAESReal>
+static
 Solver * createSolverInternal(SolverContext *ctx, const Solver::Options options, const NonidealityCorrections corrections) noexcept;
 
 template <typename CAESReal>
+static
 RetCode createSolverContextInternal(SolverContext *&ctx, const SysComp::ChemicalSystem &chemSystem) noexcept;
 
 template <typename CAESReal>
+static
 void generateComplexForms(Form<CAESReal> *f, FormVec<CAESReal> &forms, std::vector<FormVec<CAESReal>> &blocks, const LigandIonicFormVec<CAESReal> &ligandIFs, size_t gidx, const size_t stop);
 
 template <typename CAESReal>
+static
 RetCode globalDataToInternal(LigandVec<CAESReal> *allLigands, LigandIonicFormVec<CAESReal> *allLigandIFs, CNVec<CAESReal> *cnVec, FormVec<CAESReal> *allForms,
 			     const SysComp::IonicFormVec *gIfVec, const SysComp::ConstituentVec *gcVec) noexcept;
 template <typename CAESReal>
+static
 RetCode initializeForms(ComplexNucleus<CAESReal> *cn, FormVec<CAESReal> *allForms, const SysComp::Constituent *ic, const SysComp::IonicFormVec *gIfVec, const LigandIonicFormVec<CAESReal> *allLigandIFs);
 
 template <typename CAESReal>
+static
 SolverMatrix<CAESReal> * prepareJacobian(const CNVec<CAESReal> *complexNuclei, const LigandVec<CAESReal> *allLigands,
 					 const size_t allFormsCount, const size_t allLigandIFsCount);
 

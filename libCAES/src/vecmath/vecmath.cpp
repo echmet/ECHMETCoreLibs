@@ -6,6 +6,7 @@
  * Functions borrowed from the Cephes math library
  * http://www.netlib.org/cephes/
  */
+static
 double polevl(const double x, const double coef[], const int32_t N)
 {
 	double ans;
@@ -23,6 +24,7 @@ double polevl(const double x, const double coef[], const int32_t N)
 	return ans;
 }
 
+static
 double p1evl(const double x, const double coef[], const int32_t N)
 {
 	double ans;

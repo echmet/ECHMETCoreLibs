@@ -41,6 +41,7 @@ DEF_DISPATCHER(calculateEffectiveMobilities, RetCode,
  * Internal \p calculateEffectiveMobilities dispatching function.
  */
 template <typename IPReal>
+static
 RetCode calculateEffectiveMobilitiesInternal(const ComputationContext *ctx, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept
 {
 	const ComputationContextImpl<IPReal> *ctxImpl = dynamic_cast<const ComputationContextImpl<IPReal> *>(ctx);
@@ -60,6 +61,7 @@ DEF_DISPATCHER(calculatepH, IPReal,
  * Internal \p calculatepH dispatching function.
  */
 template <typename IPReal>
+static
 IPReal calculatepHInternal(const ComputationContext *ctx, const NonidealityCorrections corrections, SysComp::CalculatedProperties &calcProps) noexcept
 {
 	const ComputationContextImpl<IPReal> *ctxImpl = dynamic_cast<const ComputationContextImpl<IPReal> *>(ctx);
@@ -78,6 +80,7 @@ DEF_DISPATCHER(calculatepH_direct, IPReal,
  * Internal \p calculatepH_direct dispatching function.
  */
 template <typename IPReal>
+static
 IPReal calculatepH_directInternal(const IPReal &cH, const IPReal &ionicStrength) noexcept
 {
 	DISPATCH(calculatepH_direct, cH, ionicStrength);
@@ -92,6 +95,7 @@ DEF_DISPATCHER(correctMobilities, RetCode,
  * Internal \p correctMobilities dispatching function.
  */
 template <typename IPReal>
+static
 RetCode correctMobilitiesInternal(ComputationContext *ctx, const NonidealityCorrections corrections, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept
 {
 	ComputationContextImpl<IPReal> *ctxImpl = dynamic_cast<ComputationContextImpl<IPReal> *>(ctx);
@@ -110,6 +114,7 @@ DEF_DISPATCHER(calculateConductivity, IPReal,
  * Internal \p calculateConductivity dispatching function.
  */
 template <typename IPReal>
+static
 IPReal calculateConductivityInternal(const ComputationContext *ctx, SysComp::CalculatedProperties &calcProps) noexcept
 {
 	const ComputationContextImpl<IPReal> *ctxImpl = dynamic_cast<const ComputationContextImpl<IPReal> *>(ctx);

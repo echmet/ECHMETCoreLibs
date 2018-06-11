@@ -13,6 +13,7 @@ namespace ECHMET {
 namespace CAES {
 
 template <typename CAESReal>
+static
 int findAbsoluteMaximumCharge(const CNVec<CAESReal> *complexNuclei, const LigandVec<CAESReal> *allLigands)
 {
 	int chargeMax = 1;
@@ -49,6 +50,7 @@ int findAbsoluteMaximumCharge(const CNVec<CAESReal> *complexNuclei, const Ligand
 }
 
 template <typename CAESReal>
+static
 RetCode globalDataToInternal(LigandVec<CAESReal> *allLigands, LigandIonicFormVec<CAESReal> *allLigandIFs, CNVec<CAESReal> *cnVec, FormVec<CAESReal> *allForms, const SysComp::IonicFormVec *inGIfVec, const SysComp::ConstituentVec *gcVec) noexcept
 {
 	if (inGIfVec->size() < 3)	/* Empty system containing just the solvent */
@@ -203,6 +205,7 @@ RetCode globalDataToInternal(LigandVec<CAESReal> *allLigands, LigandIonicFormVec
 
 
 template <typename CAESReal>
+static
 RetCode initializeForms(ComplexNucleus<CAESReal> *cn, FormVec<CAESReal> *allForms, const SysComp::Constituent *ic, const SysComp::IonicFormVec *gIfVec, const LigandIonicFormVec<CAESReal> *allLigandIFs)
 {
 	/* This is a somewhat tricky part.
@@ -321,6 +324,7 @@ RetCode initializeForms(ComplexNucleus<CAESReal> *cn, FormVec<CAESReal> *allForm
  * @return A pointer to \p SolverMatrix<CAESReal> matrix containing the precomputed Jacobian.
  */
 template <typename CAESReal>
+static
 SolverMatrix<CAESReal> * prepareJacobian(const CNVec<CAESReal> *complexNuclei, const LigandVec<CAESReal> *allLigands,
 					 const size_t allFormsCount, const size_t allLigandIFsCount)
 {
@@ -438,6 +442,7 @@ SolverMatrix<CAESReal> * prepareJacobian(const CNVec<CAESReal> *complexNuclei, c
 }
 
 template <typename CAESReal>
+static
 Solver * createSolverInternal(SolverContext *ctx, const Solver::Options options, const NonidealityCorrections corrections) noexcept
 {
 	SolverContextImpl<CAESReal> *ctxImpl = dynamic_cast<SolverContextImpl<CAESReal> *>(ctx);
@@ -460,6 +465,7 @@ Solver * createSolverInternal(SolverContext *ctx, const Solver::Options options,
  * @retval RetCode::E_MISSING_PB Complexation constant was not set.
  */
 template <typename CAESReal>
+static
 RetCode createSolverContextInternal(SolverContext *&ctx, const SysComp::ChemicalSystem &chemSystem) noexcept
 {
 	LigandVec<CAESReal> *allLigands = nullptr;

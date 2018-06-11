@@ -9,33 +9,32 @@
 namespace ECHMET {
 namespace CAES {
 
-/* Prevent multiple definitions during linking */
-namespace {
-
 template <typename NRReal>
+inline
 NRReal getDefaultDxPrecision()
 {
 	return 1.0e-12;
 }
 
 template <typename NRReal>
+inline
 NRReal getDefaultFPrecision()
 {
 	return 1.0e-12;
 }
 
 template <>
+inline
 mpfr::mpreal getDefaultDxPrecision()
 {
 	return "1.0e-50";
 }
 
 template <>
+inline
 mpfr::mpreal getDefaultFPrecision()
 {
 	return "1.0e-50";
-}
-
 }
 
 template <typename NRReal, InstructionSet ISet>

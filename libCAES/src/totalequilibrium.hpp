@@ -5,7 +5,7 @@ namespace ECHMET {
 namespace CAES {
 
 template <typename CAESReal>
-ECHMET_FORCE_INLINE
+static ECHMET_FORCE_INLINE
 void calculateTs(std::vector<CAESReal> &ts, const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, CAESReal &X, const std::vector<CAESReal> &Ls, const int numLow)
 {
 	const size_t len = ts.size();
@@ -27,7 +27,7 @@ void calculateTs(std::vector<CAESReal> &ts, const CAESReal &v, const std::vector
 }
 
 template <typename CAESReal>
-ECHMET_FORCE_INLINE
+static ECHMET_FORCE_INLINE
 void calculatedTsdV(std::vector<CAESReal> &dts, const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, CAESReal &X, const std::vector<CAESReal> &Ls, const int numLow)
 {
 	const size_t len = dts.size();

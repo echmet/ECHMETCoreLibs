@@ -21,6 +21,7 @@ namespace CAES {
 #ifdef ECHMET_DEBUG_OUTPUT
 #include <iostream>
 template <typename CAESReal>
+static
 std::ostream & operator<<(std::ostream &ostr, const ECHMET::CAES::SolverMatrix<CAESReal> &m)
 {
 	for (int row = 0; row < m.rows(); row++) {

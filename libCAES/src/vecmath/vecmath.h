@@ -50,6 +50,7 @@ enum InstructionSet {
 };
 
 template <typename T, size_t Alignment>
+static
 T * alignedAlloc(const size_t N)
 {
 	T *p = static_cast<T *>(_mm_malloc(sizeof(T) * N, Alignment));

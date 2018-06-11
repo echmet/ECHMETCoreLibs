@@ -27,6 +27,7 @@ namespace CAES {
  * @retval . Any other \p RetCode value returned by \p executor.
  */
 template <typename... EParams>
+static
 RetCode derivatorSkin(RealVec *derivatives, const ECHMETReal &H, Solver *solver, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, std::function<RetCode (RealVec *, const ECHMETReal &, SolverImpl<mpfr::mpreal> *, const SysComp::ChemicalSystem &, const RealVec *, const SolverVector<mpfr::mpreal> &, EParams...)> &executor, EParams... params)
 {
 	RetCode tRet;
