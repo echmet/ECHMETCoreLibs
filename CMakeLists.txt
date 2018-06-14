@@ -35,6 +35,9 @@ if (WIN32)
     include_directories(SYSTEM ${ECHMET_HIPREC_INCLUDE_DIR})
 
     if (MINGW)
+        if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9.2)
+            message(FATAL_ERROR "MinGW 4.9.2 or newer is required to build ECHMETCoreLibs")
+        endif ()
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -pedantic -Wno-unused-function -fvisibility=hidden -ftree-vectorize -g -O3 -msse2")
         add_definitions("-DECHMET_COMPILER_MINGW")
     elseif (MSYS)
@@ -51,10 +54,18 @@ elseif (UNIX)
 
     if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" OR
         ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
+        if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" AND
+            CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9.2)
+            message(FATAL_ERROR "GCC 4.9.2 or newer is required to build ECHMETCoreLibs")
+        elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" AND
+	        CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.4)
+            message(FATAL_ERROR "Clang 3.4 or newer is required to build ECHMETCoreLibs")
+        endif ()
+
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -std=c++14 -Wall -Wextra -pedantic -Wno-unused-function -fvisibility=hidden -g -O3")
         add_definitions("-DECHMET_COMPILER_GCC_LIKE ")
         set(DEFAULT_SYMVER_LINK "-Wl,--default-symver")
-    endif()
+    endif ()
 
     if (MANUAL_HIPREC_LIBS_PATH)
         set(ECHMET_HIPREC_LIBS
