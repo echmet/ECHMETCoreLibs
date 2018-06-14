@@ -29,7 +29,7 @@ Building
 
 Prior to building ECHMETCoreLibs make sure that you have all the necessary dependencies installed. ECHMETCoreLibs depend on the following tools and libraries:
 
- - C++11-aware C++ compiler. Recent versions of the GNU C Compiler or Clang are recommended.
+ - C++14-aware C++ compiler. Recent versions of the GNU C Compiler or Clang are recommended.
  - [GNU Multiple Precision library (GMP)](https://gmplib.org/)
  - [GNU MPFR library](http://www.mpfr.org/)
  - [Eigen](http://eigen.tuxfamily.org/)
