@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 2.8.12)
 
-project(libIonProps LANGUAGES CXX)
+if (CMAKE_MAJOR_VERSION LESS 3)
+    project(libIonProps)
+else ()
+    project(libIonProps LANGUAGES CXX)
+endif ()
 
 option(IONPROPS_DISABLE_COMPLEX_ONSFUO "Do not correct mobilities of complexes by Onsager-Fuoss law" ON)
 

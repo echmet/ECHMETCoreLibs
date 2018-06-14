@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 2.8.12)
 
-project(libCAES LANGUAGES CXX)
+if (CMAKE_MAJOR_VERSION LESS 3)
+    project(libCAES)
+else ()
+    project(libCAES LANGUAGES CXX)
+endif ()
 
 add_definitions("-D_USE_MATH_DEFINES -DEIGEN_MAX_ALIGN_BYTES=32")
 

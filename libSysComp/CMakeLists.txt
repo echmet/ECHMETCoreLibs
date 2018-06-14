@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 2.8.12)
 
-project(libSysComp LANGUAGES CXX)
+if (CMAKE_MAJOR_VERSION LESS 3)
+    project(libSysComp)
+else ()
+    project(libSysComp LANGUAGES CXX)
+endif ()
 
 include_directories(${INCLUDE_DIRECTORIES}
                     "${CMAKE_CURRENT_SOURCE_DIR}/include")
