@@ -36,7 +36,7 @@ set_target_properties(ECHMETShared
                                  LINK_FLAGS ${DEFAULT_SYMVER_LINK})
 target_link_libraries(ECHMETShared
                       PRIVATE ${ECHMET_SHARED_LINK_LIBS}
-					  PRIVATE ${ECHMET_HIPREC_LIBS})
+                      PRIVATE ${ECHMET_HIPREC_LIBS})
 
 if (WIN32)
     install(TARGETS ECHMETShared
