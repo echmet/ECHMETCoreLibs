@@ -15,7 +15,8 @@ public:
 	virtual ~SolverInternalBase() {};
 	virtual const SolverContext * context() const noexcept = 0;
 	virtual SolverIterations iterations() const noexcept = 0;
-	virtual RetCode solve(const SolverVector<CAESReal> *analyticalConcentrations, const CAESReal *estimatedConcentrations,  const bool isCorrection, const size_t iterations) noexcept = 0;
+	virtual RetCode solve(const SolverVector<CAESReal> *analyticalConcentrations, const CAESReal *estimatedConcentrations,
+			      const bool isCorrection, const size_t iterations, const CAESReal &ionicStrength) noexcept = 0;
 	virtual SolverVector<CAESReal> rawConcentrations() const = 0;
 	virtual CAESReal rawIonicStrength() const = 0;
 	virtual void resultsToOutput(SysComp::CalculatedProperties &calcProps) noexcept = 0;
@@ -28,7 +29,8 @@ public:
 	~SolverInternal();
 	const SolverContext * context() const noexcept override;
 	SolverIterations iterations() const noexcept override;
-	RetCode solve(const SolverVector<CAESReal> *analyticalConcentrations, const CAESReal *estimatedConcentrations, const bool isCorrection, const size_t iterations) noexcept override;
+	RetCode solve(const SolverVector<CAESReal> *analyticalConcentrations, const CAESReal *estimatedConcentrations,
+		      const bool isCorrection, const size_t iterations, const CAESReal &ionicStrength) noexcept override;
 	SolverVector<CAESReal> rawConcentrations() const override;
 	CAESReal rawIonicStrength() const override;
 	void resultsToOutput(SysComp::CalculatedProperties &calcProps) noexcept override;

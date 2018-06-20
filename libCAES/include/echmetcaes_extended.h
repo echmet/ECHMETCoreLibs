@@ -68,7 +68,7 @@ ECHMET_API RetCode ECHMET_CC calculateBufferCapacity(ECHMETReal &bufferCapacity,
  * @retval RetCode::E_NO_MEMORY Insufficient memory to perform the calculation.
  * @retval . Any other \p RetCode value returned by \p executor.
  */
-ECHMET_API RetCode ECHMET_CC calculateFirstConcentrationDerivatives(RealVec *&derivatives, ECHMETReal &conductivityDerivative, const ECHMETReal &H, const NonidealityCorrections corrections, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const SysComp::Constituent *perturbedConstituent) ECHMET_NOEXCEPT;
+ECHMET_API RetCode ECHMET_CC calculateFirstConcentrationDerivatives(RealVec *&derivatives, ECHMETReal &conductivityDerivative, const ECHMETReal &H, const NonidealityCorrections corrections, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const SysComp::Constituent *perturbedConstituent, const ECHMETReal &ionicStrength) ECHMET_NOEXCEPT;
 
 /*!
  * Returns mixed derivatives of all ionic concentrations when the system is perturbed by a small
@@ -88,7 +88,7 @@ ECHMET_API RetCode ECHMET_CC calculateFirstConcentrationDerivatives(RealVec *&de
  * @retval RetCode::E_NO_MEMORY Insufficient memory to perform the calculation.
  * @retval . Any other \p RetCode value returned by \p executor.
  */
-ECHMET_API RetCode ECHMET_CC calculateCrossConcentrationDerivatives(RealVec *&derivatives, const ECHMETReal &H, const NonidealityCorrections corrections, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const SysComp::Constituent *perturbedConstituentJ, const SysComp::Constituent *perturbedConstituentK) ECHMET_NOEXCEPT;
+ECHMET_API RetCode ECHMET_CC calculateCrossConcentrationDerivatives(RealVec *&derivatives, const ECHMETReal &H, const NonidealityCorrections corrections, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const SysComp::Constituent *perturbedConstituentJ, const SysComp::Constituent *perturbedConstituentK, const ECHMETReal &ionicStrength) ECHMET_NOEXCEPT;
 
 /*!
  * Returns first derivatives of all ionic concentrations when the system is perturbed by a small
@@ -109,7 +109,7 @@ ECHMET_API RetCode ECHMET_CC calculateCrossConcentrationDerivatives(RealVec *&de
  * @retval RetCode::E_NO_MEMORY Insufficient memory to perform the calculation.
  * @retval . Any other \p RetCode value returned by \p executor.
  */
-ECHMET_API RetCode ECHMET_CC calculateFirstConcentrationDerivatives_prepared(RealVec *derivatives, ECHMETReal &conductivityDerivative, Solver *solver, const ECHMETReal &H, const NonidealityCorrections corrections, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const SysComp::Constituent *perturbedConstituent) ECHMET_NOEXCEPT;
+ECHMET_API RetCode ECHMET_CC calculateFirstConcentrationDerivatives_prepared(RealVec *derivatives, ECHMETReal &conductivityDerivative, Solver *solver, const ECHMETReal &H, const NonidealityCorrections corrections, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const SysComp::Constituent *perturbedConstituent, const ECHMETReal &ionicStrength) ECHMET_NOEXCEPT;
 
 /*!
  * Returns mixed derivatives of all ionic concentrations when the system is perturbed by a small
@@ -131,7 +131,7 @@ ECHMET_API RetCode ECHMET_CC calculateFirstConcentrationDerivatives_prepared(Rea
  * @retval RetCode::E_NO_MEMORY Insufficient memory to perform the calculation.
  * @retval . Any other \p RetCode value returned by \p executor.
  */
-ECHMET_API RetCode ECHMET_CC calculateCrossConcentrationDerivatives_prepared(RealVec *derivatives, Solver *solver, const ECHMETReal &H, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const SysComp::Constituent *perturbedConstituentJ, const SysComp::Constituent *perturbedConstituentK) ECHMET_NOEXCEPT;
+ECHMET_API RetCode ECHMET_CC calculateCrossConcentrationDerivatives_prepared(RealVec *derivatives, Solver *solver, const ECHMETReal &H, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const SysComp::Constituent *perturbedConstituentJ, const SysComp::Constituent *perturbedConstituentK, const ECHMETReal &ionicStrength) ECHMET_NOEXCEPT;
 
 /*!
  * Prepares solver and output vector of results for derivators.

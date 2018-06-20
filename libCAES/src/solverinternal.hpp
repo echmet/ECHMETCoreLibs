@@ -599,7 +599,8 @@ void SolverInternal<CAESReal, ISet>::recalculatepACoeffs(const CAESReal &is)
  * @retval RetCode::E_IS_NO_CONVERGENCE Solver failed to find a solution within the given number of iterations.
  */
 template <typename CAESReal, InstructionSet ISet>
-RetCode SolverInternal<CAESReal, ISet>::solve(const SolverVector<CAESReal> *analyticalConcentrations, const CAESReal *estimatedConcentrations, const bool isCorrection, const size_t iterations) noexcept
+RetCode SolverInternal<CAESReal, ISet>::solve(const SolverVector<CAESReal> *analyticalConcentrations, const CAESReal *estimatedConcentrations,
+					      const bool isCorrection, const size_t iterations, const CAESReal &inIonicStrength) noexcept
 {
 	const size_t maxOuterIterations = 100;
 	uint32_t totalIterationsCtr = 0;
@@ -610,11 +611,14 @@ RetCode SolverInternal<CAESReal, ISet>::solve(const SolverVector<CAESReal> *anal
 	m_outerIterations = 0;
 	m_finalIonicStrength = 0;
 	m_correctForIS = isCorrection;
-	CAESReal ionicStrength = 0.0;
+	CAESReal ionicStrength = m_correctForIS ? inIonicStrength : 0.0;
 	m_analyticalConcentrations = analyticalConcentrations;
 
 	for (int idx = 0; idx < m_pCx.rows(); idx++)
 		CVI(m_pCx, idx) = pX(estimatedConcentrations[idx]);
+
+	if (m_correctForIS)
+		recalculatepACoeffs(ionicStrength);
 
 	this->maxIterations = iterations;
 

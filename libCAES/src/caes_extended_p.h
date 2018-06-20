@@ -18,8 +18,12 @@ template <typename... EParams>
 static
 RetCode derivatorSkin(RealVec *&derivatives, const ECHMETReal &H, const bool isCorrection, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, std::function<RetCode (RealVec *, const ECHMETReal &, SolverImpl<mpfr::mpreal> *, const SysComp::ChemicalSystem &, const RealVec *, const SolverVector<mpfr::mpreal>, EParams...)> &executor, EParams... params);
 
-static RetCode calculateMixedConcentrationDerivatives(RealVec *derivatives, Solver *solver, const ECHMETReal &H, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const SysComp::Constituent *perturbedConstituentJ, const SysComp::Constituent *perturbedConstituentK);
-static RetCode calculateSecondConcentrationDerivatives(RealVec *derivatives, Solver *solver, const ECHMETReal &H, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const SysComp::Constituent *perturbedConstituent);
+static RetCode calculateMixedConcentrationDerivatives(RealVec *derivatives, Solver *solver, const ECHMETReal &H, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations,
+						      const SysComp::Constituent *perturbedConstituentJ, const SysComp::Constituent *perturbedConstituentK,
+						      const ECHMETReal &inIonicStrength);
+static RetCode calculateSecondConcentrationDerivatives(RealVec *derivatives, Solver *solver, const ECHMETReal &H, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations,
+						       const SysComp::Constituent *perturbedConstituent,
+						       const ECHMETReal &inIonicStrength);
 
 } // namespace CAES
 } // namespace ECHMET

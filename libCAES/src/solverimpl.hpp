@@ -606,7 +606,7 @@ RetCode ECHMET_CC SolverImpl<CAESReal>::solve(const RealVec *analyticalConcentra
 		for (size_t idx = 0; idx < calcProps.ionicConcentrations->size(); idx++)
 			estimatedConcentrations[idx] = calcProps.ionicConcentrations->elem(idx);
 
-		const RetCode tRet = internal->solve(anCVec, estimatedConcentrations, m_correctDebyeHuckel, iterations);
+		const RetCode tRet = internal->solve(anCVec, estimatedConcentrations, m_correctDebyeHuckel, iterations, calcProps.ionicStrength);
 		if (tRet != RetCode::OK) {
 			releaseResources();
 
@@ -675,7 +675,7 @@ RetCode SolverImpl<CAESReal>::solveRaw(SolverVector<CAESReal> &concentrations, C
 	for (int idx = 0; idx < estimatedConcentrations.rows(); idx++)
 		estimatedConcentrationsInternal[idx] = estimatedConcentrations(idx);
 
-	const RetCode tRet = internal->solve(anCVec, estimatedConcentrationsInternal, m_correctDebyeHuckel, iterations);
+	const RetCode tRet = internal->solve(anCVec, estimatedConcentrationsInternal, m_correctDebyeHuckel, iterations, ionicStrength);
 	if (tRet != RetCode::OK) {
 		releaseResources();
 

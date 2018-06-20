@@ -41,7 +41,8 @@ public:
 	virtual RetCode ECHMET_CC setContext(SolverContext *ctx) noexcept override;
 	virtual RetCode ECHMET_CC setOptions(const Options options) noexcept override;
 	virtual RetCode ECHMET_CC solve(const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps, const size_t iterations, SolverIterations *iterationsNeeded = nullptr) noexcept override;
-	RetCode solveRaw(SolverVector<CAESReal> &concentrations, CAESReal &ionicStrength, const SolverVector<CAESReal> *anCVec, const SolverVector<CAESReal> &estimatedConcentrations, const size_t iterations, SolverIterations *iterationsNeeded = nullptr) noexcept;
+	RetCode solveRaw(SolverVector<CAESReal> &concentrations, CAESReal &ionicStrength, const SolverVector<CAESReal> *anCVec, const SolverVector<CAESReal> &estimatedConcentrations,
+			 const size_t iterations, SolverIterations *iterationsNeeded = nullptr) noexcept;
 
 private:
 	void defaultActivityCoefficients(std::vector<CAESReal> &activityCoefficients) const;
