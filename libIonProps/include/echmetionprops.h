@@ -33,6 +33,11 @@ public:
 	 */
 	virtual void ECHMET_CC destroy() const ECHMET_NOEXCEPT = 0;
 
+	static Options ECHMET_CC defaultOptions() ECHMET_NOEXCEPT
+	{
+		return static_cast<Options>(0);
+	}
+
 protected:
 	virtual ~ComputationContext() ECHMET_NOEXCEPT = 0;
 };
