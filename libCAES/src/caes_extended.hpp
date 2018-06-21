@@ -18,6 +18,7 @@ namespace CAES {
  * @param[in] isCorrection Correct the system composition for ionic strength.
  * @param[in] chemSystem The chemical system to solve.
  * @param[in] analyticalConcentrations Analytical concentrations of constituents.
+ * @param[in] inIonicStrength Ionic strength of unperturbed system
  * @param[in] executor Function computing the derivation.
  * @param[in] params List of additional parameters for the \p executor.
  *
@@ -28,7 +29,9 @@ namespace CAES {
  */
 template <typename... EParams>
 static
-RetCode derivatorSkin(RealVec *derivatives, const ECHMETReal &H, Solver *solver, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, std::function<RetCode (RealVec *, const ECHMETReal &, SolverImpl<mpfr::mpreal> *, const SysComp::ChemicalSystem &, const RealVec *, const SolverVector<mpfr::mpreal> &, EParams...)> &executor, EParams... params)
+RetCode derivatorSkin(RealVec *derivatives, const ECHMETReal &H, Solver *solver, const SysComp::ChemicalSystem &chemSystem,
+		      const RealVec *analyticalConcentrations, const ECHMETReal &inIonicStrength,
+		      std::function<RetCode (RealVec *, const ECHMETReal &, SolverImpl<mpfr::mpreal> *, const SysComp::ChemicalSystem &, const RealVec *, const SolverVector<mpfr::mpreal> &, EParams...)> &executor, EParams... params)
 {
 	RetCode tRet;
 	const int currentMpfrPrec = mpfr::mpreal::get_default_prec();
@@ -48,8 +51,8 @@ RetCode derivatorSkin(RealVec *derivatives, const ECHMETReal &H, Solver *solver,
 	mpfr::mpreal::set_default_prec(mpfr::digits2bits(200));
 
 	SolverVector<mpfr::mpreal> estimatedConcentrations{};
-	mpfr::mpreal dummy; /* Will contain ionic strength but we do not need this here */
-	tRet = solverImpl->estimateDistributionInternal(mpfr::mpreal(0.0), analyticalConcentrations, estimatedConcentrations, dummy, false);
+        mpfr::mpreal ionicStrength = mpfr::mpreal(inIonicStrength);
+	tRet = solverImpl->estimateDistributionInternal(mpfr::mpreal(0.0), analyticalConcentrations, estimatedConcentrations, ionicStrength, false);
 	if (tRet != RetCode::OK) {
 		mpfr::mpreal::set_default_prec(currentMpfrPrec);
 		return tRet;

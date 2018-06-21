@@ -108,8 +108,6 @@ std::vector<Ion<IPReal>> makeIonVector(const SysComp::IonicFormVec *ifVec)
 		const SysComp::IonicForm *iF = ifVec->at(idx);
 		const ECHMETReal limitMobility = iF->limitMobility;
 
-		ECHMET_DEBUG_CODE(fprintf(stderr, "IonVec c: %g\n", IPRealToDouble(ic)));
-
 		if (iF->totalCharge == 0)
 			continue;
 #ifdef IONPROPS_DISABLE_COMPLEX_ONSFUO

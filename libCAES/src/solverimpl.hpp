@@ -673,7 +673,7 @@ RetCode SolverImpl<CAESReal>::solveRaw(SolverVector<CAESReal> &concentrations, C
 	}
 
 	for (int idx = 0; idx < estimatedConcentrations.rows(); idx++)
-		estimatedConcentrationsInternal[idx] = estimatedConcentrations(idx);
+		estimatedConcentrationsInternal[idx] = CAESReal(estimatedConcentrations(idx));
 
 	const RetCode tRet = internal->solve(anCVec, estimatedConcentrationsInternal, m_correctDebyeHuckel, iterations, ionicStrength);
 	if (tRet != RetCode::OK) {
