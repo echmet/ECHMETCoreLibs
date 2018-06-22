@@ -25,8 +25,11 @@ typename NewtonRaphson<double, InstructionSet::AVX>::TX const & NewtonRaphson<do
 		ACalculateF(m_f, *m_px);
 		ACalculateJ(m_j, *m_px);
 
+		m_luCalc->compute(m_j);
+		m_dx = m_luCalc->solve(m_f);
+
 		ZCalculateMeasures(m_f, m_fMin, m_fMax);
-		ZCalculateMeasures(m_dx, m_dxMin, m_dxMax);                                  // 1
+		ZCalculateMeasures(m_dx, m_dxMin, m_dxMax);
 
 		ZCheckStatus();
 
@@ -34,9 +37,6 @@ typename NewtonRaphson<double, InstructionSet::AVX>::TX const & NewtonRaphson<do
 			return *m_px;
 
 		this->m_iteration++;
-
-		m_luCalc->compute(m_j);
-		m_dx = m_luCalc->solve(m_f);
 
 		*m_px -= m_dx;
 	};

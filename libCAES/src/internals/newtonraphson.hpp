@@ -87,8 +87,11 @@ typename NewtonRaphson<NRReal, ISet>::TX const & NewtonRaphson<NRReal, ISet>::AS
 		ACalculateF(m_f, *m_px);
 		ACalculateJ(m_j, *m_px);
 
+		m_luCalc->compute(m_j);
+		m_dx = m_luCalc->solve(m_f);
+
 		ZCalculateMeasures(m_f, m_fMin, m_fMax);
-		ZCalculateMeasures(m_dx, m_dxMin, m_dxMax);                                  // 1
+		ZCalculateMeasures(m_dx, m_dxMin, m_dxMax);
 
 		ZCheckStatus();
 
@@ -97,14 +100,10 @@ typename NewtonRaphson<NRReal, ISet>::TX const & NewtonRaphson<NRReal, ISet>::AS
 
 		this->m_iteration++;
 
-		m_luCalc->compute(m_j);
-		m_dx = m_luCalc->solve(m_f);
-
 		*m_px -= m_dx;
 	};
 }
 
-//  1 : it also applies to the 0th call when dxMin and dxMax only result in 0
 // !2 : implementers may rely on the order of F/J evaluation
 //---------------------------------------------------------------------------
 
