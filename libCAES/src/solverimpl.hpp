@@ -559,7 +559,7 @@ RetCode ECHMET_CC SolverImpl<CAESReal>::setOptions(const Options options) noexce
  * @retval RetCode::E_NRS_STUCK Greatest change of X-value calculated by the Newton-Raphson solver is below the precision threshold.
  * @retval RetCode::E_NRS_NO_SOLUTION System appears to have no solution.
  * @retval RetCode::E_IS_NO_CONVERGENCE Solver failed to find a solution within the given number of iterations.
- * @retval RetCode::E_INVALID_ARGUMENT Vector of analytical concentrations has invalid size.
+ * @retval RetCode::E_INVALID_ARGUMENT Vector of analytical concentrations has invalid size or initial value of ionic strength is invalid.
  */
 template <typename CAESReal>
 RetCode ECHMET_CC SolverImpl<CAESReal>::solve(const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps, const size_t iterations, SolverIterations *iterationsNeeded) ECHMET_NOEXCEPT
@@ -633,7 +633,8 @@ RetCode ECHMET_CC SolverImpl<CAESReal>::solve(const RealVec *analyticalConcentra
  *
  * @param[in,out] concentrations Vector where the resulting concentrations will be stored. The concentrations are sorted in the
  *		  same order as in the <tt>CalculatedProperties::ionicConcentrations</tt> vector.
- * @param[out] ionicStrength Ionic strength of the solved system.
+ * @param[in, out] ionicStrength Ionic strength of the solved system. If correction for Debye-Hückel is enabled,
+ *                 the input value shall be set to ionic strength of the estimated system.
  * @param[in] anCVec Analytical concentrations of constituents in the system.
  * @param[in,out] estimatedConcentrations Vector of estimated concentrations.
  * @param[in] iterations Maximum number of iterations to try.
@@ -646,6 +647,7 @@ RetCode ECHMET_CC SolverImpl<CAESReal>::solve(const RealVec *analyticalConcentra
  * @retval RetCode::E_NRS_STUCK Greatest change of X-value calculated by the Newton-Raphson solver is below the precision threshold.
  * @retval RetCode::E_NRS_NO_SOLUTION System appears to have no solution.
  * @retval RetCode::E_IS_NO_CONVERGENCE Solver failed to find a solution within the given number of iterations.
+ * @retval RetCode::E_INVALID_ARGUMENT Initial value of ionic strength is invalid.
  */
 template <typename CAESReal>
 RetCode SolverImpl<CAESReal>::solveRaw(SolverVector<CAESReal> &concentrations, CAESReal &ionicStrength, const SolverVector<CAESReal> *anCVec, const SolverVector<CAESReal> &estimatedConcentrations, const size_t iterations, SolverIterations *iterationsNeeded) noexcept

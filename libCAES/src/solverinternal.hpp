@@ -589,6 +589,8 @@ void SolverInternal<CAESReal, ISet>::recalculatepACoeffs(const CAESReal &is)
  * @param[in] estimatedConcentrations Estimated ionic concentrations.
  * @param[in] isCorrection Correct for ionic strength.
  * @param[in] iterations Maximum number of iterations to try.
+ * @param[in] inIonicStrength Value of ionic strength in <tt>mM/dm<sup>3</sup></tt> to start with.
+ *            Ignored unless correction for Debye-Hückel is enabled.
  *
  * @retval RetCode::OK Success.
  * @retval RetCode::E_NO_MEMORY Not enough memory to perform the calculation.

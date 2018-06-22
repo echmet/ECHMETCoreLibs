@@ -62,6 +62,7 @@ ECHMET_API RetCode ECHMET_CC calculateBufferCapacity(ECHMETReal &bufferCapacity,
  * @param[in] chemSystem The chemical system to solve.
  * @param[in] analyticalConcentration Vector of analytical concentrations of all constituents.
  * @param[in] perturbedConstituent Constituent whose concentrations is to be perturbed.
+ * @param[in] ionicStrength Ionic strength of the system in <tt>mM/dm<sup>3</sup></tt>.
  *
  * @retval RetCode::OK Success.
  * @retval RetCode::E_INVALID_ARGUMENT Invalid parameter was passed to the function.
@@ -82,6 +83,7 @@ ECHMET_API RetCode ECHMET_CC calculateFirstConcentrationDerivatives(RealVec *&de
  * @param[in] analyticalConcentration Vector of analytical concentrations of all constituents.
  * @param[in] perturbedConstituentJ First constituent whose concentrations is to be perturbed.
  * @param[in] perturbedConstituentJ Second constituent whose concentrations is to be perturbed.
+ * @param[in] ionicStrength Ionic strength of the system in <tt>mM/dm<sup>3</sup></tt>.
  *
  * @retval RetCode::OK Success.
  * @retval RetCode::E_INVALID_ARGUMENT Invalid parameter was passed to the function.
@@ -103,6 +105,7 @@ ECHMET_API RetCode ECHMET_CC calculateCrossConcentrationDerivatives(RealVec *&de
  * @param[in] chemSystem The chemical system to solve.
  * @param[in] analyticalConcentration Vector of analytical concentrations of all constituents.
  * @param[in] perturbedConstituent Constituent whose concentrations is to be perturbed.
+ * @param[in] ionicStrength Ionic strength of the system in <tt>mM/dm<sup>3</sup></tt>.
  *
  * @retval RetCode::OK Success.
  * @retval RetCode::E_INVALID_ARGUMENT Invalid parameter was passed to the function.
@@ -125,6 +128,7 @@ ECHMET_API RetCode ECHMET_CC calculateFirstConcentrationDerivatives_prepared(Rea
  * @param[in] analyticalConcentration Vector of analytical concentrations of all constituents.
  * @param[in] perturbedConstituentJ First constituent whose concentrations is to be perturbed.
  * @param[in] perturbedConstituentJ Second constituent whose concentrations is to be perturbed.
+ * @param[in] ionicStrength Ionic strength of the system in <tt>mM/dm<sup>3</sup></tt>.
  *
  * @retval RetCode::OK Success.
  * @retval RetCode::E_INVALID_ARGUMENT Invalid parameter was passed to the function.

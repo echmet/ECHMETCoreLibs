@@ -160,6 +160,7 @@ public:
 	 * @retval RetCode::E_NRS_STUCK Greatest change of X-value calculated by the Newton-Raphson solver is below the precision threshold.
 	 * @retval RetCode::E_NRS_NO_SOLUTION System appears to have no solution.
 	 * @retval RetCode::E_IS_NO_CONVERGENCE Solver failed to find a solution within the given number of iterations.
+	 * @retval RetCode::E_INVALID_ARGUMENT Initial value of ionic strength is invalid.
 	 */
 	virtual RetCode ECHMET_CC solve(const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps, const size_t iterations, SolverIterations *iterationsNeeded = ECHMET_NULLPTR) ECHMET_NOEXCEPT = 0;
 
