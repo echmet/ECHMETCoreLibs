@@ -575,6 +575,28 @@ ECHMET_API const char * ECHMET_CC errorToString(const RetCode tRet) ECHMET_NOEXC
 
 } // extern "C"
 
+namespace EnumOps {
+
+template <typename T>
+T operator|(const T &lhs, const T &rhs)
+{
+	typedef typename std::underlying_type<T>::type Type;
+	return static_cast<T>(static_cast<Type>(lhs) | static_cast<Type>(rhs));
+}
+
+template <typename T>
+T operator|=(T &lhs, const T &rhs)
+{
+	typedef typename std::underlying_type<T>::type Type;
+
+	Type n = static_cast<Type>(lhs) | static_cast<Type>(rhs);
+	lhs = static_cast<T>(n);
+
+	return lhs;
+}
+
+} // namespace EnumOps
+
 } // namespace ECHMET
 
 #endif // ECHMET_ELEMS_H

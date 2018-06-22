@@ -187,25 +187,6 @@ ECHMET_API RetCode ECHMET_CC createSolverContext(SolverContext *&ctx, const SysC
 
 } // extern "C"
 
-template <typename T>
-T operator|(const T &lhs, const T &rhs)
-{
-	typedef typename std::underlying_type<T>::type Type;
-	return static_cast<T>(static_cast<Type>(lhs) | static_cast<Type>(rhs));
-}
-
-template <typename T>
-T operator|=(T &lhs, const T &rhs)
-{
-	typedef typename std::underlying_type<T>::type Type;
-
-	Type n = static_cast<Type>(lhs) | static_cast<Type>(rhs);
-	lhs = static_cast<T>(n);
-
-	return lhs;
-}
-
-
 } // namespace CAES
 } // namespace ECHMET
 
