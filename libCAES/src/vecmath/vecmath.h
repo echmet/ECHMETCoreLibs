@@ -32,18 +32,54 @@ enum InstructionSet {
 	FMA3
 };
 
+template <typename T, size_t Alignment, bool RawAllocation>
+class AlignedAllocatorWorker;
+
 template <typename T, size_t Alignment>
-static
-T * alignedAlloc(const size_t N)
-{
-	T *p = static_cast<T *>(_mm_malloc(sizeof(T) * N, Alignment));
-	if (p == nullptr)
-		throw std::bad_alloc{};
+class AlignedAllocatorWorker<T, Alignment, true> {
+public:
+	static T * alloc(const size_t N)
+	{
+		T *p = static_cast<T *>(_mm_malloc(sizeof(T) * N, Alignment));
+		if (p == nullptr)
+			throw std::bad_alloc{};
 
-	return p;
-}
+		return p;
+	}
 
-void alignedFree(void *ptr);
+	static void free(T *ptr)
+	{
+		_mm_free(ptr);
+	}
+};
+
+template <typename T, size_t Alignment>
+class AlignedAllocatorWorker<T, Alignment, false> {
+public:
+	static T * alloc(const size_t N)
+	{
+		return new T[N];
+	}
+
+	static void free(T *ptr)
+	{
+		delete [] ptr;
+	}
+};
+
+template <typename T, size_t Alignment>
+class AlignedAllocator {
+public:
+	static T * alloc(const size_t N)
+	{
+		return AlignedAllocatorWorker<T, Alignment, std::is_fundamental<T>::value>::alloc(N);
+	}
+
+	static void free(T *ptr)
+	{
+		return AlignedAllocatorWorker<T, Alignment, std::is_fundamental<T>::value>::free(ptr);
+	}
+};
 
 class VecMathCommon {
 public:

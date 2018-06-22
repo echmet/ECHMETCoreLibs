@@ -21,17 +21,17 @@ NewtonRaphson<NRReal, ISet>::NewtonRaphson(const int elements) :
 	maxIterations(defaultMaxIterations()),
 	xPrecision(defaultDxPrecision()),
 	fPrecision(defaultFPrecision()),
-	m_f_raw(alignedAlloc<NRReal, VDType<ISet>::ALIGNMENT_BYTES>(elements)),
-	m_j_raw(alignedAlloc<NRReal, VDType<ISet>::ALIGNMENT_BYTES>(elements * elements)),
-	m_dx_raw(alignedAlloc<NRReal, VDType<ISet>::ALIGNMENT_BYTES>(elements)),
+	m_f_raw(AlignedAllocator<NRReal, VDType<ISet>::ALIGNMENT_BYTES>::alloc(elements)),
+	m_j_raw(AlignedAllocator<NRReal, VDType<ISet>::ALIGNMENT_BYTES>::alloc(elements * elements)),
+	m_dx_raw(AlignedAllocator<NRReal, VDType<ISet>::ALIGNMENT_BYTES>::alloc(elements)),
 	m_f(m_f_raw, elements),
 	m_j(m_j_raw, elements, elements),
 	m_dx(m_dx_raw, elements)
 {
 	if (m_f_raw == nullptr || m_j_raw == nullptr || m_dx_raw == nullptr) {
-		alignedFree(m_f_raw);
-		alignedFree(m_j_raw);
-		alignedFree(m_dx_raw);
+		AlignedAllocator<NRReal, VDType<ISet>::ALIGNMENT_BYTES>::free(m_f_raw);
+		AlignedAllocator<NRReal, VDType<ISet>::ALIGNMENT_BYTES>::free(m_j_raw);
+		AlignedAllocator<NRReal, VDType<ISet>::ALIGNMENT_BYTES>::free(m_dx_raw);
 
 		throw std::bad_alloc();
 	}
@@ -41,9 +41,9 @@ NewtonRaphson<NRReal, ISet>::NewtonRaphson(const int elements) :
 	try {
 		initializeLu(elements);
 	} catch (std::bad_alloc &) {
-		alignedFree(m_f_raw);
-		alignedFree(m_j_raw);
-		alignedFree(m_dx_raw);
+		AlignedAllocator<NRReal, VDType<ISet>::ALIGNMENT_BYTES>::free(m_f_raw);
+		AlignedAllocator<NRReal, VDType<ISet>::ALIGNMENT_BYTES>::free(m_j_raw);
+		AlignedAllocator<NRReal, VDType<ISet>::ALIGNMENT_BYTES>::free(m_dx_raw);
 
 		throw;
 	}
@@ -54,9 +54,9 @@ NewtonRaphson<NRReal, ISet>::NewtonRaphson(const int elements) :
 template <typename NRReal, InstructionSet ISet>
 NewtonRaphson<NRReal, ISet>::~NewtonRaphson()
 {
-	alignedFree(m_f_raw);
-	alignedFree(m_j_raw);
-	alignedFree(m_dx_raw);
+	AlignedAllocator<NRReal, VDType<ISet>::ALIGNMENT_BYTES>::free(m_f_raw);
+	AlignedAllocator<NRReal, VDType<ISet>::ALIGNMENT_BYTES>::free(m_j_raw);
+	AlignedAllocator<NRReal, VDType<ISet>::ALIGNMENT_BYTES>::free(m_dx_raw);
 
 	delete m_luCalc;
 }

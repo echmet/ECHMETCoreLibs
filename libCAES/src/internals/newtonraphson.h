@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <internal/echmetmath_internal.h>
+
 #include "../types.h"
 #include "../vecmath/vecmath.h"
 
@@ -40,8 +41,15 @@ mpfr::mpreal getDefaultFPrecision()
 template <typename NRReal, InstructionSet ISet>
 class NRTypes {
 public:
-	typedef Eigen::Map<SolverMatrix<NRReal>, Eigen::AlignmentType::Aligned16> Matrix;
-	typedef Eigen::Map<SolverVector<NRReal>, Eigen::AlignmentType::Aligned16> Vector;
+	typedef Eigen::Map<SolverMatrix<NRReal>, Eigen::AlignmentType::Unaligned> Matrix;
+	typedef Eigen::Map<SolverVector<NRReal>, Eigen::AlignmentType::Unaligned> Vector;
+};
+
+template <>
+class NRTypes<double, InstructionSet::SSE2> {
+public:
+	typedef Eigen::Map<SolverMatrix<double>, Eigen::AlignmentType::Aligned16> Matrix;
+	typedef Eigen::Map<SolverVector<double>, Eigen::AlignmentType::Aligned16> Vector;
 };
 
 template <>

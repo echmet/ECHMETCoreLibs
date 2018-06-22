@@ -81,11 +81,6 @@ const unsigned short VecMathCommon::QLog10[] = {
 	0xc9c8,0x4e89,0xd578,0x404d
 };
 
-void alignedFree(void *ptr)
-{
-	_mm_free(ptr);
-}
-
 double VecMathCommon::cephes_frexp(const double x, int32_t *pw2) noexcept
 {
 union

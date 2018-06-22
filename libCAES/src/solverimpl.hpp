@@ -71,7 +71,7 @@ SolverImpl<CAESReal>::SolverImpl(SolverContextImpl<CAESReal> *ctx, const Options
 
 			m_internalUnsafe = makeSolverInternal(ctx);
 			m_anCVecUnsafe = new SolverVector<CAESReal>(ctx->analyticalConcentrationCount);
-			m_estimatedConcentrationsUnsafe = alignedAlloc<CAESReal, 32>(ctx->concentrationCount);
+			m_estimatedConcentrationsUnsafe = AlignedAllocator<CAESReal, 32>::alloc(ctx->concentrationCount);
 		} catch (const std::bad_alloc &) {
 			delete m_internalUnsafe;
 			delete m_anCVecUnsafe;
@@ -92,7 +92,7 @@ SolverImpl<CAESReal>::~SolverImpl() ECHMET_NOEXCEPT
 	delete m_anCVecUnsafe;
 
 	releaseTotalEquilibria();
-	alignedFree(m_estimatedConcentrationsUnsafe);
+	AlignedAllocator<CAESReal, 32>::free(m_estimatedConcentrationsUnsafe);
 }
 
 /*!
@@ -500,7 +500,7 @@ RetCode SolverImpl<CAESReal>::setContextInternal(SolverContextImpl<CAESReal> *ct
 	if (m_options & Solver::Options::DISABLE_THREAD_SAFETY) {
 		delete m_internalUnsafe;
 		delete m_anCVecUnsafe;
-		alignedFree(m_estimatedConcentrationsUnsafe);
+		AlignedAllocator<CAESReal, 32>::free(m_estimatedConcentrationsUnsafe);
 
 		m_internalUnsafe = nullptr;
 		m_anCVecUnsafe = nullptr;
@@ -510,7 +510,7 @@ RetCode SolverImpl<CAESReal>::setContextInternal(SolverContextImpl<CAESReal> *ct
 			initializeEstimators();
 			m_internalUnsafe = makeSolverInternal(ctx);
 			m_anCVecUnsafe = new SolverVector<CAESReal>(ctx->analyticalConcentrationCount);
-			m_estimatedConcentrationsUnsafe = alignedAlloc<CAESReal, 32>(ctx->concentrationCount);
+			m_estimatedConcentrationsUnsafe = AlignedAllocator<CAESReal, 32>::alloc(ctx->concentrationCount);
 		} catch (const std::bad_alloc &) {
 			delete m_anCVecUnsafe;
 			delete m_internalUnsafe;
@@ -572,7 +572,7 @@ RetCode ECHMET_CC SolverImpl<CAESReal>::solve(const RealVec *analyticalConcentra
 		releaseSolverInternal(internal, freeMPFRCache<CAESReal>());
 		if (!(m_options & Solver::Options::DISABLE_THREAD_SAFETY)) {
 			delete anCVec;
-			alignedFree(estimatedConcentrations);
+			AlignedAllocator<CAESReal, 32>::free(estimatedConcentrations);
 		}
 	};
 
@@ -584,7 +584,7 @@ RetCode ECHMET_CC SolverImpl<CAESReal>::solve(const RealVec *analyticalConcentra
 		try {
 			internal = makeSolverInternal(m_ctx);
 			anCVec = new SolverVector<CAESReal>(m_ctx->analyticalConcentrationCount);
-			estimatedConcentrations = alignedAlloc<CAESReal, 32>(m_ctx->concentrationCount);
+			estimatedConcentrations = AlignedAllocator<CAESReal, 32>::alloc(m_ctx->concentrationCount);
 		} catch (const std::bad_alloc &) {
 			delete anCVec;
 			delete internal;
@@ -656,7 +656,7 @@ RetCode SolverImpl<CAESReal>::solveRaw(SolverVector<CAESReal> &concentrations, C
 	const auto releaseResources = [&]() {
 		releaseSolverInternal(internal, freeMPFRCache<CAESReal>());
 		if (!(m_options & Solver::Options::DISABLE_THREAD_SAFETY))
-			alignedFree(estimatedConcentrationsInternal);
+			AlignedAllocator<CAESReal, 32>::free(estimatedConcentrationsInternal);
 	};
 
 	if (m_options & Solver::Options::DISABLE_THREAD_SAFETY) {
@@ -665,7 +665,7 @@ RetCode SolverImpl<CAESReal>::solveRaw(SolverVector<CAESReal> &concentrations, C
 	} else {
 		try {
 			internal = makeSolverInternal(m_ctx);
-			estimatedConcentrationsInternal = alignedAlloc<CAESReal, 32>(m_ctx->concentrationCount);
+			estimatedConcentrationsInternal = AlignedAllocator<CAESReal, 32>::alloc(m_ctx->concentrationCount);
 		} catch (const std::bad_alloc &) {
 			delete internal;
 			return RetCode::E_NO_MEMORY;
@@ -673,7 +673,7 @@ RetCode SolverImpl<CAESReal>::solveRaw(SolverVector<CAESReal> &concentrations, C
 	}
 
 	for (int idx = 0; idx < estimatedConcentrations.rows(); idx++)
-		estimatedConcentrationsInternal[idx] = CAESReal(estimatedConcentrations(idx));
+		estimatedConcentrationsInternal[idx] = estimatedConcentrations(idx);
 
 	const RetCode tRet = internal->solve(anCVec, estimatedConcentrationsInternal, m_correctDebyeHuckel, iterations, ionicStrength);
 	if (tRet != RetCode::OK) {

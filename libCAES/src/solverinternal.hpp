@@ -96,8 +96,8 @@ SolverInternal<CAESReal, ISet>::SolverInternal(const SolverContextImpl<CAESReal>
 	m_complexNuclei(ctx->complexNuclei),
 	m_preJacobian(ctx->preJacobian),
 	/* This is horrible but Eigen::Map won't let us do this in a sane way */
-	m_pCx_raw(alignedAlloc<CAESReal, VDType<ISet>::ALIGNMENT_BYTES>(ctx->concentrationCount)),
-	m_rCx_raw(alignedAlloc<CAESReal, VDType<ISet>::ALIGNMENT_BYTES>(ctx->concentrationCount)),
+	m_pCx_raw(AlignedAllocator<CAESReal, VDType<ISet>::ALIGNMENT_BYTES>::alloc(ctx->concentrationCount)),
+	m_rCx_raw(AlignedAllocator<CAESReal, VDType<ISet>::ALIGNMENT_BYTES>::alloc(ctx->concentrationCount)),
 	m_pCx(m_pCx_raw, ctx->concentrationCount),
 	m_rCx(m_rCx_raw, ctx->concentrationCount),
 	m_vecMath(new VecMath<ISet>()),
@@ -106,8 +106,9 @@ SolverInternal<CAESReal, ISet>::SolverInternal(const SolverContextImpl<CAESReal>
 	if (m_pCx_raw == nullptr || m_rCx_raw == nullptr) {
 		delete m_vecMath;
 
-		alignedFree(m_pCx_raw);
-		alignedFree(m_rCx_raw);
+		AlignedAllocator<CAESReal, VDType<ISet>::ALIGNMENT_BYTES>::free(m_pCx_raw);
+		AlignedAllocator<CAESReal, VDType<ISet>::ALIGNMENT_BYTES>::free(m_rCx_raw);
+
 		throw std::bad_alloc{};
 	}
 
@@ -121,8 +122,8 @@ SolverInternal<CAESReal, ISet>::~SolverInternal()
 {
 	delete m_vecMath;
 
-	alignedFree(m_pCx_raw);
-	alignedFree(m_rCx_raw);
+	AlignedAllocator<CAESReal, VDType<ISet>::ALIGNMENT_BYTES>::free(m_pCx_raw);
+	AlignedAllocator<CAESReal, VDType<ISet>::ALIGNMENT_BYTES>::free(m_rCx_raw);
 }
 
 /*!
@@ -144,8 +145,6 @@ void SolverInternal<CAESReal, ISet>::ACalculateF(typename NewtonRaphson<CAESReal
 	validateVector(pCx);
 
 	/* Precalculate actual values of concetrations */
-	/*for (size_t idx = 0; idx < pCx.rows(); idx++)
-			m_rCx_raw[idx] = X10(m_pCx_raw[idx]);*/
 	m_vecDelog(m_rCx_raw, m_pCx_raw);
 
 	/* Zeroize ligand block of Fx */
