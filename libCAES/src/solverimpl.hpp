@@ -400,7 +400,7 @@ void SolverImpl<CAESReal>::initializeTotalEquilibria(const SolverContextImpl<CAE
 		return new TotalEquilibrium<CAESReal, true>(ct->chargeLow, ct->chargeHigh, ct->pKas, ct->analyticalConcentrationIndex);
 	};
 
-	m_totalEquilibria.clear();
+	releaseTotalEquilibria();
 	m_totalEquilibria.reserve(ctx->complexNuclei->size() + ctx->allLigands->size());
 
 	for (const ComplexNucleus<CAESReal> *cn : *ctx->complexNuclei)
@@ -450,8 +450,10 @@ typename SolverImpl<CAESReal>::Options ECHMET_CC SolverImpl<CAESReal>::options()
 template <typename CAESReal>
 void SolverImpl<CAESReal>::releaseTotalEquilibria()
 {
-	for (auto *teb : m_totalEquilibria)
+	for (auto teb : m_totalEquilibria)
 		delete teb;
+
+	m_totalEquilibria.clear();
 }
 
 /*!
