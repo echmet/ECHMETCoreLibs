@@ -611,17 +611,20 @@ RetCode SolverInternal<CAESReal, ISet>::solve(const SolverVector<CAESReal> *anal
 	m_outerIterations = 0;
 	m_finalIonicStrength = 0;
 	m_correctForIS = isCorrection;
-	CAESReal ionicStrength = m_correctForIS ? inIonicStrength : 0.0;
 	m_analyticalConcentrations = analyticalConcentrations;
-
-	if (m_correctForIS && ionicStrength <= 0.0)
-		return RetCode::E_INVALID_ARGUMENT;
+	CAESReal ionicStrength;
 
 	for (int idx = 0; idx < m_pCx.rows(); idx++)
 		CVI(m_pCx, idx) = pX(estimatedConcentrations[idx]);
 
-	if (m_correctForIS)
+	if (m_correctForIS) {
+		if (inIonicStrength <= 0.0)
+			return RetCode::E_INVALID_ARGUMENT;
+
+		ionicStrength = inIonicStrength;
 		recalculatepACoeffs(ionicStrength);
+	} else
+		ionicStrength = 0.0;
 
 	this->maxIterations = iterations;
 
