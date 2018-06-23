@@ -201,8 +201,6 @@ void NewtonRaphson<NRReal, ISet>::ZCheckStatus()
 		m_status = Status::SUCCEEDED;
 	else if (m_iteration >= maxIterations)
 		m_status = Status::NO_CONVERGENCE;
-	else if (m_iteration == 0)
-		m_status = Status::CONTINUE;
 	else if (m_dxMax <= xPrecision && m_stuckCounter++ > 20)
 		m_status = Status::STUCK;
 	else {
