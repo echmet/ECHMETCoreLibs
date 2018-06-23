@@ -198,6 +198,8 @@ RetCode calculatepHResponse(ECHMETReal &bufferCapacity, const ECHMETReal &H, con
 	 */
 	bufferCapacity = std::abs((cHDelta / pHDelta).toDouble());
 
+	mpfr_free_cache();
+
 	return RetCode::OK;
 }
 
@@ -516,6 +518,8 @@ RetCode ECHMET_CC prepareDerivatorContext(RealVec *&derivatives, Solver *&solver
 
 		return tRet;
 	}
+
+	mpfr_free_cache();
 
 	return RetCode::OK;
 }
