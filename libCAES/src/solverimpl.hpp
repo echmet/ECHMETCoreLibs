@@ -59,9 +59,9 @@ SolverImpl<CAESReal>::SolverImpl(SolverContextImpl<CAESReal> *ctx, const Options
 	m_internalUnsafe(nullptr),
 	m_anCVecUnsafe(nullptr),
 	m_estimatedConcentrationsUnsafe(nullptr),
+	m_correctDebyeHuckel(nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_DEBYE_HUCKEL)),
 	m_instructionSet(detectInstructionSet())
 {
-	m_correctDebyeHuckel = nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_DEBYE_HUCKEL);
 
 	initializeTotalEquilibria(ctx);
 

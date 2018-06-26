@@ -67,7 +67,7 @@ private:
 	SolverInternalBase<CAESReal> *m_internalUnsafe;		/*!< Internal solver used by thread-unsafe variant of the solver */
 	SolverVector<CAESReal> *m_anCVecUnsafe;			/*!< Vector of analytical concentrations used by thread-unsafe variant of the solver */
 	CAESReal *m_estimatedConcentrationsUnsafe;		/*!< Aligned array of estimated concentrations used by thread-unsafe variant of the solver */
-	bool m_correctDebyeHuckel;				/*!< Correct with Debye-Hückel */
+	const bool m_correctDebyeHuckel;			/*!< Correct with Debye-Hückel */
 
 	const InstructionSet m_instructionSet;			/*!< Highest available CPU SIMD instruction set */
 
