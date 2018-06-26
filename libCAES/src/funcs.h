@@ -79,6 +79,26 @@ mpfr::mpreal electroneturalityPrecision<mpfr::mpreal>()
 	return mpfr::mpreal("1.0e-60");
 }
 
+template <typename CAESReal>
+inline constexpr CAESReal ionicStrengthPrecision()
+{
+	return CAESReal(1.0e-5);
+}
+
+template <typename CAESReal>
+inline bool hasIonicStrengthConverged(const CAESReal &activityLast, const CAESReal &activityCurrent)
+{
+	CAESReal high = VMath::abs(activityLast);
+	CAESReal low = VMath::abs(activityCurrent);
+
+	if (low > high)
+		std::swap(high, low);
+
+	const CAESReal difference = (high - low) / low;
+
+	return difference <= ionicStrengthPrecision<CAESReal>();
+}
+
 template<typename T>
 static inline T pX(const T &t)
 {

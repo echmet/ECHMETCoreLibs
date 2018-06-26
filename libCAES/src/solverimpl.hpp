@@ -241,9 +241,10 @@ std::pair<SolverVector<CAESReal>, CAESReal> SolverImpl<CAESReal>::estimatepHFast
 	CAESReal cH = cHInitial;
 	CAESReal cHNew;
 
-	CAESReal ionicStrengthPrev = 0.0;
 	CAESReal ionicStrength = 0.0;
 	size_t isLoopCtr = 0;
+	CAESReal maxChargeActivityCoeff;
+	bool ionicStrengthUnstable;
 
 	if (m_correctDebyeHuckel || ThreadSafe)
 		defaultActivityCoefficients(activityCoefficients);
@@ -251,9 +252,8 @@ std::pair<SolverVector<CAESReal>, CAESReal> SolverImpl<CAESReal>::estimatepHFast
 	do {
 		const CAESReal activityOneSquared = activityCoefficients[1] * activityCoefficients[1];
 		size_t ctr = 0;
+		maxChargeActivityCoeff = activityCoefficients.back();
 		CAESReal cOH;
-
-		ionicStrengthPrev = ionicStrength;
 
 		while (true) {
 			calculateDistributionWithDerivative<CAESReal, ThreadSafe>(cH, icConcs, dIcConcsdH, m_totalEquilibria, analyticalConcentrations, activityCoefficients);
@@ -292,9 +292,12 @@ std::pair<SolverVector<CAESReal>, CAESReal> SolverImpl<CAESReal>::estimatepHFast
 		icConcs(1) = cOH;
 
 		ionicStrength = calculateIonicStrength<CAESReal, ThreadSafe>(icConcs, m_totalEquilibria, m_ctx->chargesSquared);
-		if (m_correctDebyeHuckel)
+		if (m_correctDebyeHuckel) {
 			calculateActivityCoefficients(ionicStrength, activityCoefficients, m_ctx->chargesSquared);
-	} while (m_correctDebyeHuckel && VMath::abs(ionicStrength - ionicStrengthPrev) > 1.0e-5 && isLoopCtr++ < 100);
+			ionicStrength = !hasIonicStrengthConverged(maxChargeActivityCoeff, activityCoefficients.back());
+		} else
+			ionicStrengthUnstable = false;
+	} while (m_correctDebyeHuckel && ionicStrengthUnstable && isLoopCtr++ < 100);
 
 	return { icConcs, ionicStrength };
 }
@@ -314,9 +317,10 @@ std::pair<SolverVector<CAESReal>, CAESReal> SolverImpl<CAESReal>::estimatepHSafe
 	const CAESReal KW_298 = CAESReal(PhChConsts::KW_298) * 1e6;
 	const CAESReal threshold = electroneturalityPrecision<CAESReal>();
 
-	CAESReal ionicStrengthPrev = 0.0;
 	CAESReal ionicStrength = 0.0;
 	size_t isLoopCtr = 0;
+	CAESReal maxChargeActivityCoeff;
+	bool ionicStrengthUnstable;
 
 	if (m_correctDebyeHuckel || ThreadSafe)
 		defaultActivityCoefficients(activityCoefficients);
@@ -327,8 +331,8 @@ std::pair<SolverVector<CAESReal>, CAESReal> SolverImpl<CAESReal>::estimatepHSafe
 		CAESReal leftWall = 0.0;
 		CAESReal rightWall = 100000.0;
 		size_t ctr = 0;
+		maxChargeActivityCoeff = activityCoefficients.back();
 
-		ionicStrengthPrev = ionicStrength;
 		CAESReal cOH;
 
 		while (true) {
@@ -360,9 +364,12 @@ std::pair<SolverVector<CAESReal>, CAESReal> SolverImpl<CAESReal>::estimatepHSafe
 		icConcs(1) = cOH;
 
 		ionicStrength = calculateIonicStrength<CAESReal, ThreadSafe>(icConcs, m_totalEquilibria, m_ctx->chargesSquared);
-		if (m_correctDebyeHuckel)
+		if (m_correctDebyeHuckel) {
 			calculateActivityCoefficients(ionicStrength, activityCoefficients, m_ctx->chargesSquared);
-	} while (m_correctDebyeHuckel && VMath::abs(ionicStrength - ionicStrengthPrev) > 1.0e-5 && isLoopCtr++ < 100);
+			ionicStrength = !hasIonicStrengthConverged(maxChargeActivityCoeff, activityCoefficients.back());
+		} else
+			ionicStrengthUnstable = false;
+	} while (m_correctDebyeHuckel && ionicStrengthUnstable && isLoopCtr++ < 100);
 
 	return { icConcs, ionicStrength };
 }

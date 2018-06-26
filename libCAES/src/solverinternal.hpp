@@ -607,7 +607,6 @@ RetCode SolverInternal<CAESReal, ISet>::solve(const SolverVector<CAESReal> *anal
 	const size_t maxOuterIterations = 100;
 	uint32_t totalIterationsCtr = 0;
 	uint32_t outerIterationsCtr = 0;
-	CAESReal prevIonicStrength;
 
 	m_totalIterations = 0;
 	m_outerIterations = 0;
@@ -615,6 +614,8 @@ RetCode SolverInternal<CAESReal, ISet>::solve(const SolverVector<CAESReal> *anal
 	m_correctForIS = isCorrection;
 	m_analyticalConcentrations = analyticalConcentrations;
 	CAESReal ionicStrength;
+	CAESReal maxChargepACoeff;
+	bool ionicStrengthUnstable;
 
 	for (int idx = 0; idx < m_pCx.rows(); idx++)
 		CVI(m_pCx, idx) = pX(estimatedConcentrations[idx]);
@@ -631,8 +632,7 @@ RetCode SolverInternal<CAESReal, ISet>::solve(const SolverVector<CAESReal> *anal
 	this->maxIterations = iterations;
 
 	do {
-		prevIonicStrength = ionicStrength;
-
+		maxChargepACoeff = m_pACoeffs.back();
 		try {
 			this->ASolve(&m_pCx);
 		} catch (NumericErrorException &ex) {
@@ -660,15 +660,18 @@ RetCode SolverInternal<CAESReal, ISet>::solve(const SolverVector<CAESReal> *anal
 			return RetCode::E_IS_NO_CONVERGENCE;
 
 		ionicStrength = calculateIonicStrength();
-		if (m_correctForIS)
+		if (m_correctForIS) {
 			recalculatepACoeffs(ionicStrength);
+			ionicStrengthUnstable = !hasIonicStrengthConverged(X10(maxChargepACoeff), X10(m_pACoeffs.back()));
+		} else
+			ionicStrengthUnstable = false;
 
 		ECHMET_DEBUG_CODE(std::cerr << m_pCx << "\n");
 
 		ECHMET_DEBUG_CODE(fprintf(stderr, "Solver finished: Ionic strength = %g [mol/dm3], delta IS = %g\n", CAESRealToDouble(ionicStrength), CAESRealToDouble(VMath::abs(ionicStrength - prevIonicStrength))));
 
 
-	} while (VMath::abs(prevIonicStrength - ionicStrength) > 1.0e-5 && m_correctForIS);
+	} while (ionicStrengthUnstable);
 
 	ECHMET_DEBUG_CODE(fprintf(stderr, "Total iterations = %u\n", totalIterationsCtr));
 
