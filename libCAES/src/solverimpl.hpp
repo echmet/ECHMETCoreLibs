@@ -184,7 +184,7 @@ RetCode SolverImpl<CAESReal>::estimateDistributionInternal(const CAESReal &cHIni
 					SolverVector<CAESReal> dIcConcsdH(m_TECount);
 
 					activityCoefficients.resize(m_ctx->chargesSquared.size());
-					return estimatepHFast<true>(cHInitial, analyticalConcentrations, icConcs, dIcConcsdH, m_activityCoefficients);
+					return estimatepHFast<true>(cHInitial, analyticalConcentrations, icConcs, dIcConcsdH, activityCoefficients);
 				}
 			} else {
 				if (m_options & Solver::Options::DISABLE_THREAD_SAFETY)
