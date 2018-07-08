@@ -136,6 +136,11 @@ CPUSIMD ECHMET_CC cpuSupportedSIMD() ECHMET_NOEXCEPT
 	return simd;
 }
 
+NonidealityCorrections ECHMET_CC defaultNonidealityCorrections() noexcept
+{
+	return static_cast<NonidealityCorrections>(0);
+}
+
 bool ECHMET_CC nonidealityCorrectionIsSet(const NonidealityCorrections corrections, const NonidealityCorrectionsItems item) noexcept
 {
 	typedef typename std::underlying_type<NonidealityCorrectionsItems>::type Type;

@@ -526,6 +526,7 @@ typedef ECHMET_ST_ENUM_UTYPE(NonidealityCorrectionsItems) NonidealityCorrections
 
 extern "C" {
 
+ECHMET_API NonidealityCorrections ECHMET_CC defaultNonidealityCorrections() ECHMET_NOEXCEPT;
 ECHMET_API bool ECHMET_CC nonidealityCorrectionIsSet(const NonidealityCorrections corrections, const NonidealityCorrectionsItems item) ECHMET_NOEXCEPT;
 ECHMET_API void ECHMET_CC nonidealityCorrectionSet(NonidealityCorrections &corrections, const NonidealityCorrectionsItems item) ECHMET_NOEXCEPT;
 
