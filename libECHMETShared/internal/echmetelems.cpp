@@ -63,7 +63,7 @@ FixedStringImpl::FixedStringImpl(const std::string &stlStr) :
 {
 }
 
-FixedStringImpl::~FixedStringImpl()
+FixedStringImpl::~FixedStringImpl() noexcept
 {
 }
 
