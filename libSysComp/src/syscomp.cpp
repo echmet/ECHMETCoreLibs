@@ -546,6 +546,133 @@ void calculateMaximumVariants(const size_t i, const InLFVec *ligandIFs, int32_t 
 }
 
 /*!
+ * Deep-copies \p InComplexForms vector of \p InConstituent
+ *
+ * @param[in] src \p InComplexForms vector to be copied.
+ *
+ * @return Pointer to the duplicated vector, \p NULL on failure.
+ */
+static
+InCFVec * duplicateComplexForms(const InCFVec *src) noexcept
+{
+	const auto releaseLigandForm = [](InLigandForm &lf) {
+		lf.ligandName->destroy();
+		lf.pBs->destroy();
+		lf.mobilities->destroy();
+	};
+
+	const auto releaseLigandsVec = [&releaseLigandForm](InLFVec *vec) {
+		for (size_t idx = 0; idx < vec->size(); idx++)
+			releaseLigandForm(vec->operator[](idx));
+
+		vec->destroy();
+	};
+
+	const auto releaseLigandGroupsVec = [&releaseLigandsVec](InLGVec *vec) {
+		for (size_t idx = 0; idx < vec->size(); idx++) {
+			const auto &lgGroup = vec->operator[](idx);
+
+			releaseLigandsVec(lgGroup.ligands);
+		}
+
+		vec->destroy();
+	};
+
+	const auto releaseComplexForms = [&releaseLigandGroupsVec](InCFVec *cfVec) {
+		for (size_t idx = 0; idx < cfVec->size(); idx++)
+			releaseLigandGroupsVec(cfVec->operator[](idx).ligandGroups);
+	};
+
+	InCFVec *dupCfVec = createInCFVec(src->size());
+
+	if (dupCfVec == nullptr)
+		return nullptr;
+
+	for (size_t idx = 0; idx < src->size(); idx++) {
+		const auto &cForm = src->at(idx);
+
+		InComplexForm dupCForm;
+		InLGVec *dupLgVec = createInLGVec(cForm.ligandGroups->size());
+		if (dupLgVec == nullptr)
+			goto err_out;
+
+		dupCForm.nucleusCharge = cForm.nucleusCharge;
+
+		/* Copy ligand groups */
+		size_t jdx;
+		for (jdx = 0; jdx < cForm.ligandGroups->size(); jdx++) {
+			const auto lgGrp = cForm.ligandGroups->at(jdx);
+
+			InLFVec *dupLigands = createInLFVec(lgGrp.ligands->size());
+			if (dupLigands == nullptr)
+				break;
+
+			size_t kdx;
+			for (kdx = 0; kdx < lgGrp.ligands->size(); kdx++) {
+				const auto &lf = lgGrp.ligands->at(kdx);
+				InLigandForm dupLf;
+
+				dupLf.ligandName = createFixedString(lf.ligandName->c_str());
+				if (dupLf.ligandName == nullptr)
+					break;
+
+				dupLf.pBs = lf.pBs->duplicate();
+				if (dupLf.pBs == nullptr) {
+					dupLf.ligandName->destroy();
+
+					break;
+				}
+
+				dupLf.mobilities = lf.mobilities->duplicate();
+				if (dupLf.mobilities == nullptr) {
+					dupLf.pBs->destroy();
+					dupLf.ligandName->destroy();
+
+					break;
+				}
+
+				if (dupLigands->push_back(dupLf) != RetCode::OK) {
+					releaseLigandForm(dupLf);
+
+					break;
+				}
+			}
+			if (kdx < lgGrp.ligands->size()) { /* Not all ligand forms were duplicated successfully */
+				releaseLigandsVec(dupLigands);
+
+				break;
+			}
+
+			if (dupLgVec->push_back({ dupLigands }) != RetCode::OK) {
+				releaseLigandsVec(dupLigands);
+
+				break;
+			}
+		}
+		if (jdx < cForm.ligandGroups->size()) { /* Not all ligand groups were duplicated successfully */
+			releaseLigandGroupsVec(dupLgVec);
+
+			goto err_out;
+		}
+
+		dupCForm.ligandGroups = dupLgVec;
+
+		if (dupCfVec->push_back(dupCForm) != RetCode::OK) {
+			releaseLigandGroupsVec(dupLgVec);
+
+			goto err_out;
+		}
+	}
+
+	return dupCfVec;
+
+err_out:
+	releaseComplexForms(dupCfVec);
+
+	return nullptr;
+}
+
+/*!
  * Generates all complex forms for one ligand group of a given Nucleus
  *
  * @param[in] baseIF Ionic form acting as the Nucleus
@@ -1058,6 +1185,84 @@ RetCode ECHMET_CC initializeCalculatedProperties(CalculatedProperties &calcProps
 	}
 }
 
+RetCode ECHMET_CC duplicateInConstituent(InConstituent &dst, const InConstituent &src) noexcept
+{
+	FixedString *name;
+	RealVec *pKas;
+	RealVec *mobilities;
+	InCFVec *complexForms = nullptr;
+
+	name = createFixedString(src.name->c_str());
+	if (name == nullptr)
+		return RetCode::E_NO_MEMORY;
+
+	pKas = src.pKas->duplicate();
+	if (pKas == nullptr) {
+		name->destroy();
+
+		return RetCode::E_NO_MEMORY;
+	}
+
+	mobilities = src.mobilities->duplicate();
+	if (mobilities == nullptr) {
+		name->destroy();
+		pKas->destroy();
+
+		return RetCode::E_NO_MEMORY;
+	}
+
+	if (src.complexForms != nullptr) {
+		complexForms = duplicateComplexForms(src.complexForms);
+
+		if (complexForms == nullptr) {
+			name->destroy();
+			pKas->destroy();
+			mobilities->destroy();
+
+			return RetCode::E_NO_MEMORY;
+		}
+	}
+
+	dst.ctype = src.ctype;
+	dst.name = name;
+	dst.chargeLow = src.chargeLow;
+	dst.chargeHigh = src.chargeHigh;
+	dst.pKas = pKas;
+	dst.mobilities = mobilities;
+	dst.complexForms = complexForms;
+	dst.viscosityCoefficient = src.viscosityCoefficient;
+
+	return RetCode::OK;
+}
+
+InConstituentVec * ECHMET_CC duplicateInConstituentVec(const InConstituentVec *src) noexcept
+{
+	InConstituentVec *dupVec = createInConstituentVec(src->size());
+
+	if (dupVec == nullptr)
+		return nullptr;
+
+	for (size_t idx = 0; idx < src->size(); idx++) {
+		const auto &inC = src->at(idx);
+
+		InConstituent dupC;
+		if (duplicateInConstituent(dupC, inC) != RetCode::OK) {
+			releaseInputData(dupVec);
+
+			return nullptr;
+		}
+
+		if (dupVec->push_back(dupC) != RetCode::OK) {
+			releaseInConstituent(dupC);
+			releaseInputData(dupVec);
+
+			return nullptr;
+		}
+	}
+
+	return dupVec;
+}
+
 RetCode ECHMET_CC makeAnalyticalConcentrationsVec(RealVec *&acVec, const ChemicalSystem &chemSystem) noexcept
 {
 	acVec = createECHMETVec<ECHMETReal, false>(0);
@@ -1196,42 +1401,47 @@ void ECHMET_CC releaseCalculatedProperties(CalculatedProperties &calcProps) noex
 	calcProps.ionicConcentrations->destroy();
 }
 
+void ECHMET_CC releaseInConstituent(const InConstituent &inC) noexcept
+{
+	inC.name->destroy();
+	inC.pKas->destroy();
+	inC.mobilities->destroy();
+
+	InCFVec *cForms = inC.complexForms;
+	if (cForms == nullptr)
+		return;
+
+	for (size_t jdx = 0; jdx < cForms->size(); jdx++) {
+		const InLGVec *lgGroups = cForms->at(jdx).ligandGroups;
+		if (lgGroups == nullptr)
+			return;
+
+		for (size_t kdx = 0; kdx < lgGroups->size(); kdx++) {
+			const InLigandGroup &lgGrp = lgGroups->at(kdx);
+
+			for (size_t ldx = 0; ldx < lgGrp.ligands->size(); ldx++) {
+				const InLigandForm &iLF = lgGrp.ligands->at(ldx);
+
+				iLF.ligandName->destroy();
+				iLF.pBs->destroy();
+				iLF.mobilities->destroy();
+			}
+
+			lgGrp.ligands->destroy();
+		}
+
+		lgGroups->destroy();
+	}
+
+	cForms->destroy();
+}
+
 void ECHMET_CC releaseInputData(const InConstituentVec *inVec) noexcept
 {
 	for (size_t idx = 0; idx < inVec->size(); idx++) {
 		const InConstituent &inC = inVec->at(idx);
 
-		inC.name->destroy();
-		inC.pKas->destroy();
-		inC.mobilities->destroy();
-
-		InCFVec *cForms = inC.complexForms;
-		if (cForms == nullptr)
-			continue;
-
-		for (size_t jdx = 0; jdx < cForms->size(); jdx++) {
-			const InLGVec *lgGroups = cForms->at(jdx).ligandGroups;
-			if (lgGroups == nullptr)
-				continue;
-
-			for (size_t kdx = 0; kdx < lgGroups->size(); kdx++) {
-				const InLigandGroup &lgGrp = lgGroups->at(kdx);
-
-				for (size_t ldx = 0; ldx < lgGrp.ligands->size(); ldx++) {
-					const InLigandForm &iLF = lgGrp.ligands->at(ldx);
-
-					iLF.ligandName->destroy();
-					iLF.pBs->destroy();
-					iLF.mobilities->destroy();
-				}
-
-				lgGrp.ligands->destroy();
-			}
-
-			lgGroups->destroy();
-		}
-
-		cForms->destroy();
+		releaseInConstituent(inC);
 	}
 
 	inVec->destroy();

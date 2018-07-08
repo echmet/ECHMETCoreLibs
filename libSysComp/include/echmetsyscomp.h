@@ -251,6 +251,26 @@ ECHMET_API InLFVec * ECHMET_CC createInLFVec(const size_t reserve) ECHMET_NOEXCE
 ECHMET_API InLGVec * ECHMET_CC createInLGVec(const size_t reserve) ECHMET_NOEXCEPT;
 
 /*!
+ * Deep-copies \p InConstituent object
+ *
+ * @param[out] dst \p InConstituent object
+ * @param[in] src \p InConstituent object to be duplicated
+ *
+ * @retval OK Duplication successful
+ * @retval E_NO_MEMORY No memory to duplicate \p InConstituent
+ */
+ECHMET_API RetCode ECHMET_CC duplicateInConstituent(InConstituent &dst, const InConstituent &src) ECHMET_NOEXCEPT;
+
+/*!
+ * Deep-copies \p InConsituentVec object
+ *
+ * @param[in] src \p InConstituentVec object to be copied
+ *
+ * @return Pointer to the duplicated vector, \p NULL on failure
+ */
+ECHMET_API InConstituentVec * ECHMET_CC duplicateInConstituentVec(const InConstituentVec *src) ECHMET_NOEXCEPT;
+
+/*!
  * Initialize \p CalculatedProperties object
  *
  * @param[in,out] calcProps \p CalculatedPropertes to be initialized
@@ -304,6 +324,13 @@ ECHMET_API void ECHMET_CC releaseChemicalSystem(ChemicalSystem &chemSystem) ECHM
  * @param[in] calcProps \p CalculatedProperties to be released
  */
 ECHMET_API void ECHMET_CC releaseCalculatedProperties(CalculatedProperties &calcProps) ECHMET_NOEXCEPT;
+
+/*!
+ * Convenience function to release \p InConstituent object
+ *
+ * @param[in] inC \p InConstituent object to be released
+ */
+ECHMET_API void ECHMET_CC releaseInConstituent(const InConstituent &inC) ECHMET_NOEXCEPT;
 
 /*!
  * Convenience function that releases all resources claimed
