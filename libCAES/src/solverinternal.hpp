@@ -668,7 +668,7 @@ RetCode SolverInternal<CAESReal, ISet>::solve(const SolverVector<CAESReal> *anal
 
 		ECHMET_DEBUG_CODE(std::cerr << m_pCx << "\n");
 
-		ECHMET_DEBUG_CODE(fprintf(stderr, "Solver finished: Ionic strength = %g [mol/dm3], delta IS = %g\n", CAESRealToDouble(ionicStrength), CAESRealToDouble(VMath::abs(ionicStrength - prevIonicStrength))));
+		ECHMET_DEBUG_CODE(fprintf(stderr, "Solver finished: Ionic strength = %g [mol/dm3]\n", CAESRealToDouble(ionicStrength)));
 
 
 	} while (ionicStrengthUnstable);
