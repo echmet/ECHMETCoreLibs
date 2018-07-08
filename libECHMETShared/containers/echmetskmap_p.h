@@ -35,7 +35,7 @@ public:
 		delete this;
 	}
 
-	virtual int32_t ECHMET_CC distance(const SKMapIterator<T> *other) const noexcept
+	virtual int32_t ECHMET_CC distance(const SKMapIterator<T> *other) const noexcept override
 	{
 		const SKMapIteratorImpl<T> *otherImpl = dynamic_cast<const SKMapIteratorImpl<T> *>(other);
 
