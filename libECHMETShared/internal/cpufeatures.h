@@ -55,6 +55,7 @@ private:
 	std::string fetch_cpu_name();
 
 	static void initialize();
+	static SupportedSIMD fetch_supported_SIMD();
 
 	SupportedSIMD m_supportedSIMD;
 	std::string m_cpu_name;
