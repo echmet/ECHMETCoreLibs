@@ -53,7 +53,7 @@ RetCode calculateEffectiveMobilitiesInternal(const ComputationContext *ctx, cons
 
 
 DEF_DISPATCHER(calculatepH, IPReal,
-	       return calculatepHWorker(corrections, calcProps),
+	       (void)ctxImpl; return calculatepHWorker(corrections, calcProps),
 	       return calculatepHWorker<IPReal>(ctxImpl->ionicConcentrations, calcProps, corrections),
 	       const ComputationContextImpl<IPReal> *ctxImpl, const NonidealityCorrections corrections, SysComp::CalculatedProperties &calcProps);
 
