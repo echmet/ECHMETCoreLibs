@@ -103,6 +103,8 @@ CPUFeatures::CPUFeatures()
 	    : );
 #elif defined(ECHMET_COMPILER_MSVC)
 	__cpuidex(regs.block, cpuid_mode, 0);
+#else
+	m_supportedSIMD = SupportedSIMD();
 #endif // ECHMET_COMPILER_
 
 	const bool cpu_has_sse2 = is_bit_set(regs.r.feature_flags_edx, SSE2_FEATURE_BIT_EDX);
@@ -123,6 +125,8 @@ CPUFeatures::CPUFeatures()
 	    : );
 #elif defined(ECHMET_COMPILER_MSVC)
 	__cpuidex(regs.block, cpuid_mode, cpuid_mode_ecx);
+#else
+	m_supportedSIMD = SupportedSIMD();
 #endif // ECHMET_COMPILER_
 
 
@@ -154,6 +158,8 @@ CPUFeatures::CPUFeatures()
 		const bool os_avx512_aware = is_bit_set(xcr0, AVX512_OPMASK_BIT) &
 					     is_bit_set(xcr0, AVX512_HI256_BIT) &
 					     is_bit_set(xcr0, AVX512_ZMM_HI256_BIT);
+	#else
+		m_supportedSIMD = SupportedSIMD();
 	#endif // ECHMET_COMPILER_
 
 		m_supportedSIMD = SupportedSIMD(
@@ -228,6 +234,8 @@ std::string CPUFeatures::fetch_cpu_name()
 	    : "ebx", "ecx", "edx");
 #elif defined(ECHMET_COMPILER_MSVC)
 	__cpuidex(regs.block, cpuid_mode, 0);
+#else
+	return "";
 #endif // ECHMET_COMPILER_
 	if (regs.ret < 0x80000004)
 		return "";
