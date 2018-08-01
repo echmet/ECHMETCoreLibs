@@ -25,6 +25,10 @@ void SolverInternal<double, InstructionSet::FMA3>::VectorizedDelogifier<Instruct
 	for (; idx < N; idx++)
 		dst[idx] = m_vecMath.exp10m_single(src[idx]);
 }
+#ifdef ECHMET_COMPILER_MSVC
+template
+void SolverInternal<double, InstructionSet::FMA3>::VectorizedDelogifier<InstructionSet::FMA3>::operator()(double *ECHMET_RESTRICT_PTR dst, const double *ECHMET_RESTRICT_PTR src);
+#endif // ECHMET_COMPILER_MSVC
 
 template <> template <>
 void SolverInternal<double, InstructionSet::FMA3>::VectorizedLogifier<InstructionSet::FMA3>::operator()(double *ECHMET_RESTRICT_PTR dst, const double *ECHMET_RESTRICT_PTR src)
@@ -41,6 +45,10 @@ void SolverInternal<double, InstructionSet::FMA3>::VectorizedLogifier<Instructio
 	for (; idx < N; idx++)
 		dst[idx] = m_vecMath.mlog10_single(src[idx]);
 }
+#ifdef ECHMET_COMPILER_MSVC
+template
+void SolverInternal<double, InstructionSet::FMA3>::VectorizedLogifier<InstructionSet::FMA3>::operator()(double *ECHMET_RESTRICT_PTR dst, const double *ECHMET_RESTRICT_PTR src);
+#endif // ECHMET_COMPILER_MSVC
 
 } // namespace CAES
 } // namespace ECHMET
