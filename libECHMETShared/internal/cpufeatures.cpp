@@ -178,6 +178,19 @@ CPUFeatures::SupportedSIMD CPUFeatures::fetch_supported_SIMD()
 	uint32_t cpuid_mode;
 	const uint32_t xgetbv_mode = 0x0;
 
+	/* Check if CPUID supports EAX = 1 mode */
+	cpuid_mode = 0x0;
+	#if defined(ECHMET_COMPILER_GCC_LIKE) || defined(ECHMET_COMPILER_MINGW) || defined(ECHMET_COMPILER_MSYS)
+	asm("cpuid;"
+	    : "=a"(regs.r.feature_flags_eax), "=b"(regs.r.feature_flags_ebx), "=c"(regs.r.feature_flags_ecx), "=d"(regs.r.feature_flags_edx)
+	    : "a"(cpuid_mode)
+	    : );
+#elif defined(ECHMET_COMPILER_MSVC)
+	__cpuidex(regs.block, cpuid_mode, 0);
+#endif // ECHMET_COMPILER_
+	if (regs.r.feature_flags_eax < 1)
+		return SupportedSIMD(); /* No EAX = 1 mode for CPUID */
+
 	/* Get info from CPUID */
 	cpuid_mode = 0x1; /* Check support of older instruction sets */
 #if defined(ECHMET_COMPILER_GCC_LIKE) || defined(ECHMET_COMPILER_MINGW) || defined(ECHMET_COMPILER_MSYS)

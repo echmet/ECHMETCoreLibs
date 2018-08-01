@@ -41,7 +41,7 @@ private:
 	static const uint8_t SSE42_FEATURE_BIT_ECX = 20;
 	static const uint8_t AVX_FEATURE_BIT_ECX = 28;
 	static const uint8_t FMA3_FEATURE_BIT_ECX = 12;
-	static const uint8_t XSAVE_FEATURE_BIT_ECX = 26;
+	static const uint8_t XSAVE_FEATURE_BIT_ECX = 27;
 	static const uint8_t AVX2_FEATURE_BIT_EBX = 5;
 	static const uint8_t AVX512_FEATURE_BIT_EBX = 16;
 
