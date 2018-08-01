@@ -107,7 +107,7 @@ std::string CPUFeatures::fetch_cpu_name()
 {
 	const size_t SZ = sizeof(uint32_t);
 
-#if defined(ECHMET_COMPILER_GCC_LIKE) || defined(ECHMET_COMPILER_MINGW) || defined(ECHMET_COMPILER_MSYS) || defined(ECHMET_COMPILER_MSVC)
+#if defined(ECHMET_COMPILER_GCC_LIKE) || defined(ECHMET_COMPILER_MINGW) || defined(ECHMET_COMPILER_MSYS)
 	auto fetch_string_part = [](char *str, uint32_t opcode) {
 #else
 	auto fetch_string_part = [SZ](char *str, uint32_t opcode) {

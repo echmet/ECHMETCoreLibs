@@ -6,6 +6,10 @@ option(ECHMET_USE_HIGH_PRECISION "Use arbitrary precision data type instead of I
 option(ECHMET_HACKS_ENABLED "Enable ad-hoc hacks - do not switch this on" OFF)
 option(MANUAL_HIPREC_LIBS_PATH "Use manually specified paths to GMP and MPFR libraries on UNIX" OFF)
 
+if (WIN32)
+    option(ECHMET_FORCE_WINXP "Define target Windows version to Windows XP")
+endif ()
+
 if (CMAKE_BUILD_TYPE MATCHES Debug)
     add_definitions("-DECHMET_DEBUG_OUTPUT")
 else()
@@ -24,14 +28,23 @@ add_definitions("-DECHMET_DLL_BUILD -DUSE_ECHMET_CONTAINERS")
 
 if (WIN32)
     set("ECHMET_PLATFORM_WIN32" "1")
-	
-    set(ECHMET_HIPREC_LIBS
-        ${GMP_LIBRARY_BIN}
-        ${MPFR_LIBRARY_BIN})
+	if (ECHMET_FORCE_WINXP)
+        add_definitions("-D_WIN32_WINNT=0x0501")
+	endif ()
+
+	if (MSVC)
+        set(ECHMET_HIPREC_LIBS
+            "${LIBGMP_DIR}/bin/libgmp-10.lib"
+            "${LIBMPFR_DIR}/bin/libmpfr-4.lib")
+	else ()
+        set(ECHMET_HIPREC_LIBS
+            "${LIBGMP_DIR}/bin/libgmp-10.dll"
+            "${LIBMPFR_DIR}/bin/libmpfr-4.dll")
+	endif ()
     set(ECHMET_HIPREC_INCLUDE_DIR
-        ${GMP_INCLUDE_DIR}
-        ${MPFR_INCLUDE_DIR})
-		
+        "${LIBGMP_DIR}/include"
+        "${LIBMPFR_DIR}/include")
+
     include_directories(SYSTEM ${ECHMET_HIPREC_INCLUDE_DIR})
 
     if (MINGW)
@@ -71,12 +84,12 @@ elseif (UNIX)
 
     if (MANUAL_HIPREC_LIBS_PATH)
         set(ECHMET_HIPREC_LIBS
-            ${GMP_LIBRARY_BIN}
-            ${MPFR_LIBRARY_BIN})
+            "${LIBGMP_DIR}/bin/libgmp.so"
+            "${LIBMPFR_DIR}/bin/libmpfr.so")
         set(ECHMET_HIPREC_INCLUDE_DIR
-            ${GMP_INCLUDE_DIR}
-            ${MPFR_INCLUDE_DIR})
-    
+            "${LIBGMP_DIR}/include"
+            "${LIBMPFR_DIR}/include")
+
         include_directories(SYSTEM ${ECHMET_HIPREC_INCLUDE_DIR})
     else ()
         set(ECHMET_HIPREC_LIBS
