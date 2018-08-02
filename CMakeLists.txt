@@ -32,20 +32,25 @@ if (WIN32)
         add_definitions("-D_WIN32_WINNT=0x0501")
 	endif ()
 
-	if (MSVC)
-        set(ECHMET_HIPREC_LIBS
-            "${LIBGMP_DIR}/bin/libgmp-10.lib"
-            "${LIBMPFR_DIR}/bin/libmpfr-4.lib")
-	else ()
-        set(ECHMET_HIPREC_LIBS
-            "${LIBGMP_DIR}/bin/libgmp-10.dll"
-            "${LIBMPFR_DIR}/bin/libmpfr-4.dll")
-	endif ()
+	link_directories(${LINK_DIRECTORIES}
+	                 "${LIBGMP_DIR}/bin/"
+                     "${LIBMPFR_DIR}/bin/")
+
     set(ECHMET_HIPREC_INCLUDE_DIR
         "${LIBGMP_DIR}/include"
         "${LIBMPFR_DIR}/include")
 
     include_directories(SYSTEM ${ECHMET_HIPREC_INCLUDE_DIR})
+
+    if (MSVC)
+        set(ECHMET_HIPREC_LIBS
+            libgmp-10
+            libmpfr-4)
+	else ()
+	    set(ECHMET_HIPREC_LIBS
+            gmp-10
+            mpfr-4)
+    endif ()
 
     if (MINGW)
         if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9.2)
@@ -83,22 +88,23 @@ elseif (UNIX)
     endif ()
 
     if (MANUAL_HIPREC_LIBS_PATH)
-        set(ECHMET_HIPREC_LIBS
-            "${LIBGMP_DIR}/bin/libgmp.so"
-            "${LIBMPFR_DIR}/bin/libmpfr.so")
+	    link_directories(${LINK_DIRECTORIES}
+	                     "${LIBGMP_DIR}/bin/"
+                         "${LIBMPFR_DIR}/bin/")
         set(ECHMET_HIPREC_INCLUDE_DIR
             "${LIBGMP_DIR}/include"
             "${LIBMPFR_DIR}/include")
 
         include_directories(SYSTEM ${ECHMET_HIPREC_INCLUDE_DIR})
-    else ()
-        set(ECHMET_HIPREC_LIBS
-            gmp
-            mpfr)
     endif ()
+
+    set(ECHMET_HIPREC_LIBS
+       gmp
+       mpfr)
 else()
     message(FATAL_ERROR "Platform not recognized or not supported")
 endif()
+
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 CONFIGURE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/libECHMETShared/echmetcorelibs_config.h.in" "${CMAKE_CURRENT_BINARY_DIR}/echmetcorelibs_config.h")
