@@ -99,8 +99,8 @@ elseif (UNIX)
     endif ()
 
     set(ECHMET_HIPREC_LIBS
-       gmp
-       mpfr)
+        gmp
+        mpfr)
 else()
     message(FATAL_ERROR "Platform not recognized or not supported")
 endif()
