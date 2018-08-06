@@ -203,6 +203,49 @@ RetCode calculatepHResponse(ECHMETReal &bufferCapacity, const ECHMETReal &H, con
 	return RetCode::OK;
 }
 
+static
+RetCode prepareDerivatorContextInternal(RealVec *&derivatives, Solver *&solver, const SysComp::ChemicalSystem &chemSystem, const NonidealityCorrections corrections,
+					const bool freeCache) noexcept
+{
+	const size_t N = chemSystem.ionicForms->size();
+
+	SolverContext *solverCtx;
+	RetCode tRet = createSolverContextInternal<mpfr::mpreal>(solverCtx, chemSystem);
+	if (tRet != RetCode::OK)
+		return tRet;
+
+	try {
+		const Solver::Options opts = Solver::defaultOptions();
+		solver = new SolverImpl<mpfr::mpreal>(static_cast<SolverContextImpl<mpfr::mpreal> *>(solverCtx), opts, corrections);
+	} catch (std::bad_alloc &) {
+		solverCtx->destroy();
+
+		return RetCode::E_NO_MEMORY;
+	}
+
+	derivatives = createRealVec(N);
+	if (derivatives == nullptr) {
+		solver->destroy();
+		solverCtx->destroy();
+
+		return RetCode::E_NO_MEMORY;
+	}
+
+	tRet = static_cast<VecImpl<ECHMETReal, false> *>(derivatives)->resize(N);
+	if (tRet != RetCode::OK) {
+		derivatives->destroy();
+		solver->destroy();
+		solverCtx->destroy();
+
+		return tRet;
+	}
+
+	if (freeCache)
+		mpfr_free_cache();
+
+	return RetCode::OK;
+}
+
 RetCode ECHMET_CC calculateBufferCapacity(ECHMETReal &bufferCapacity, const NonidealityCorrections corrections, const SysComp::ChemicalSystem &chemSystem, const SysComp::CalculatedProperties &calcProps,
 					  const RealVec *analyticalConcentrations) noexcept
 {
@@ -232,14 +275,15 @@ RetCode ECHMET_CC calculateBufferCapacity(ECHMETReal &bufferCapacity, const Noni
 RetCode ECHMET_CC calculateFirstConcentrationDerivatives(RealVec *&derivatives, ECHMETReal &conductivityDerivative, const ECHMETReal &H, const NonidealityCorrections corrections, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const SysComp::Constituent *perturbedConstituent, const ECHMETReal &inIonicStrength) noexcept
 {
 	Solver *solver;
-	RetCode tRet = prepareDerivatorContext(derivatives, solver, chemSystem, corrections);
+	RetCode tRet = prepareDerivatorContextInternal(derivatives, solver, chemSystem, corrections, false);
 	if (tRet != RetCode::OK)
 		return tRet;
 
 	tRet = calculateFirstConcentrationDerivatives_prepared(derivatives, conductivityDerivative, solver, H, corrections, chemSystem, analyticalConcentrations, perturbedConstituent, inIonicStrength);
 
-	solver->context()->destroy();
+	auto ctx = solver->context();
 	solver->destroy();
+	ctx->destroy();
 
 	return tRet;
 }
@@ -346,14 +390,15 @@ RetCode ECHMET_CC calculateFirstConcentrationDerivatives_prepared(RealVec *deriv
 RetCode ECHMET_CC calculateCrossConcentrationDerivatives(RealVec *&derivatives, const ECHMETReal &H, const NonidealityCorrections corrections, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const SysComp::Constituent *perturbedConstituentJ, const SysComp::Constituent *perturbedConstituentK, const ECHMETReal &inIonicStrength) noexcept
 {
 	Solver *solver;
-	RetCode tRet = prepareDerivatorContext(derivatives, solver, chemSystem, corrections);
+	RetCode tRet = prepareDerivatorContextInternal(derivatives, solver, chemSystem, corrections, false);
 	if (tRet != RetCode::OK)
 		return tRet;
 
 	tRet = calculateCrossConcentrationDerivatives_prepared(derivatives, solver, H, chemSystem, analyticalConcentrations, perturbedConstituentJ, perturbedConstituentK, inIonicStrength);
 
-	solver->context()->destroy();
+	auto ctx = solver->context();
 	solver->destroy();
+	ctx->destroy();
 
 	return tRet;
 }
@@ -486,42 +531,7 @@ RetCode calculateMixedConcentrationDerivatives(RealVec *derivatives, Solver *sol
 
 RetCode ECHMET_CC prepareDerivatorContext(RealVec *&derivatives, Solver *&solver, const SysComp::ChemicalSystem &chemSystem, const NonidealityCorrections corrections) noexcept
 {
-	const size_t N = chemSystem.ionicForms->size();
-
-	SolverContext *solverCtx;
-	RetCode tRet = createSolverContextInternal<mpfr::mpreal>(solverCtx, chemSystem);
-	if (tRet != RetCode::OK)
-		return tRet;
-
-	try {
-		const Solver::Options opts = Solver::defaultOptions();
-		solver = new SolverImpl<mpfr::mpreal>(static_cast<SolverContextImpl<mpfr::mpreal> *>(solverCtx), opts, corrections);
-	} catch (std::bad_alloc &) {
-		solverCtx->destroy();
-
-		return RetCode::E_NO_MEMORY;
-	}
-
-	derivatives = createRealVec(N);
-	if (derivatives == nullptr) {
-		solver->destroy();
-		solverCtx->destroy();
-
-		return RetCode::E_NO_MEMORY;
-	}
-
-	tRet = static_cast<VecImpl<ECHMETReal, false> *>(derivatives)->resize(N);
-	if (tRet != RetCode::OK) {
-		derivatives->destroy();
-		solver->destroy();
-		solverCtx->destroy();
-
-		return tRet;
-	}
-
-	mpfr_free_cache();
-
-	return RetCode::OK;
+	return prepareDerivatorContextInternal(derivatives, solver, chemSystem, corrections, true);
 }
 
 DDSContext::~DDSContext() noexcept {}
