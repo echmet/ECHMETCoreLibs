@@ -236,7 +236,7 @@ public:
 
 	virtual bool ECHMET_CC contains(const char *key) const noexcept override
 	{
-		const std::string &stlKey(key);
+		const std::string stlKey(key);
 
 		typename std::map<std::string, T>::const_iterator it = m_map.find(stlKey);
 
