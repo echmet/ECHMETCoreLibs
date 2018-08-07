@@ -45,11 +45,11 @@ if (WIN32)
     if (MSVC)
         set(ECHMET_HIPREC_LIBS
             libgmp-10
-            libmpfr-4)
+            libmpfr-6)
 	else ()
 	    set(ECHMET_HIPREC_LIBS
             gmp-10
-            mpfr-4)
+            mpfr-6)
     endif ()
 
     if (MINGW)
