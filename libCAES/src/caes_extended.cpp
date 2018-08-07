@@ -24,7 +24,12 @@ template<typename TN, typename TH>
 static
 TN firstDerivativeCalculator2O(const TN &low, const TN &high, const TH &H)
 {
+#ifdef ECHMET_PLATFORM_WIN32
+	const TH TWO{2.0};
+#else
 	thread_local static const TH TWO{2.0};
+#endif // ECHMET_PLATFORM_WIN32
+
 	const TN t = (high - low) / (TWO * H);
 
 	return t;
