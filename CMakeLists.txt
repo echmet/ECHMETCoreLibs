@@ -5,6 +5,7 @@ project(ECHMET_CORE_LIBS)
 option(ECHMET_USE_HIGH_PRECISION "Use arbitrary precision data type instead of IEEE754 double everywhere" OFF)
 option(ECHMET_HACKS_ENABLED "Enable ad-hoc hacks - do not switch this on" OFF)
 option(MANUAL_HIPREC_LIBS_PATH "Use manually specified paths to GMP and MPFR libraries on UNIX" OFF)
+option(ENABLE_DIAGNOSTIC_OUTPUT "Enables diagnostic text output. This output is enabled automatically in debug builds" OFF)
 
 if (WIN32)
     option(ECHMET_FORCE_WINXP "Define target Windows version to Windows XP")
@@ -22,6 +23,10 @@ endif()
 
 if (ECHMET_HACKS_ENABLED)
     add_definitions("-DECHMET_HACKS_MD")
+endif()
+
+if (ENABLE_DIAGNOSTIC_OUTPUT)
+    add_definitions("-DECHMET_DEBUG_OUTPUT")
 endif()
 
 add_definitions("-DECHMET_DLL_BUILD -DUSE_ECHMET_CONTAINERS")

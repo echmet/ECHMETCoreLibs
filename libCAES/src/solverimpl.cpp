@@ -3,9 +3,9 @@
 #define ECHMET_IMPORT_INTERNAL
 #include <echmetelems.h>
 
-#ifndef NDEBUG
+#ifdef ECHMET_DEBUG_CODE
 #include <cstdio>
-#endif // NDEBUG
+#endif // ECHMET_DEBUG_CODE
 
 namespace ECHMET {
 namespace CAES {
