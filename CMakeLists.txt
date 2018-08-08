@@ -89,8 +89,8 @@ elseif (UNIX)
 
     if (MANUAL_HIPREC_LIBS_PATH)
 	    link_directories(${LINK_DIRECTORIES}
-	                     "${LIBGMP_DIR}/bin/"
-                         "${LIBMPFR_DIR}/bin/")
+	                     "${LIBGMP_DIR}/lib/"
+                         "${LIBMPFR_DIR}/lib/")
         set(ECHMET_HIPREC_INCLUDE_DIR
             "${LIBGMP_DIR}/include"
             "${LIBMPFR_DIR}/include")
