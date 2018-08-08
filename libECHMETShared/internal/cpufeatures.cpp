@@ -8,6 +8,13 @@
 	#include <immintrin.h>
 #endif // ECHMET_COMPILER_MSVC
 
+#ifdef ECHMET_DEBUG_OUTPUT
+	#include <cstdio>
+#endif // ECHMET_DEBUG_OUTPUT
+
+#define ECHMET_IMPORT_INTERNAL
+#include <echmetelems.h>
+
 namespace ECHMET {
 
 std::mutex CPUFeatures::s_init_lock;
@@ -161,6 +168,8 @@ std::string CPUFeatures::fetch_cpu_name()
 		str += 4 * SZ;
 	}
 
+	ECHMET_DEBUG_CODE(fprintf(stderr, "CPU name string: %s\n", name_array));
+
 	return name_array;
 }
 
@@ -188,8 +197,10 @@ CPUFeatures::SupportedSIMD CPUFeatures::fetch_supported_SIMD()
 #elif defined(ECHMET_COMPILER_MSVC)
 	__cpuidex(regs.block, cpuid_mode, 0);
 #endif // ECHMET_COMPILER_
-	if (regs.r.feature_flags_eax < 1)
+	if (regs.r.feature_flags_eax < 1) {
+		ECHMET_DEBUG_CODE(fprintf(stderr, "CPU cannot be queried for its capabilities. Assuming no extended instruction sets\n"));
 		return SupportedSIMD(); /* No EAX = 1 mode for CPUID */
+	}
 
 	/* Get info from CPUID */
 	cpuid_mode = 0x1; /* Check support of older instruction sets */
@@ -211,6 +222,26 @@ CPUFeatures::SupportedSIMD CPUFeatures::fetch_supported_SIMD()
 	const bool cpu_has_fma = is_bit_set(regs.r.feature_flags_ecx, FMA3_FEATURE_BIT_ECX);
 	const bool cpu_has_xsave = is_bit_set(regs.r.feature_flags_ecx, XSAVE_FEATURE_BIT_ECX);
 
+	ECHMET_DEBUG_CODE(
+		fprintf(stderr, "CPUID base SIMD flags:\n"
+				"SSE2: %d\n"
+				"SSE3: %d\n"
+				"SSSE3: %d\n"
+				"SSE41: %d\n"
+				"SSE42: %d\n"
+				"AVX: %d\n"
+				"FMA3: %d\n"
+				"XSAVE %d\n",
+				cpu_has_sse2,
+				cpu_has_sse3,
+				cpu_has_ssse3,
+				cpu_has_sse41,
+				cpu_has_sse42,
+				cpu_has_avx,
+				cpu_has_fma,
+				cpu_has_xsave)
+	);
+
 	cpuid_mode = 0x7; /* Check support of AVX2 and AVX512 */
 	const uint32_t cpuid_mode_ecx = 0x0;
 #if defined(ECHMET_COMPILER_GCC_LIKE) || defined(ECHMET_COMPILER_MINGW) || defined(ECHMET_COMPILER_MSYS)
@@ -226,11 +257,19 @@ CPUFeatures::SupportedSIMD CPUFeatures::fetch_supported_SIMD()
 	const bool cpu_has_avx2 = is_bit_set(regs.r.feature_flags_ebx, AVX2_FEATURE_BIT_EBX);
 	const bool cpu_has_avx512 = is_bit_set(regs.r.feature_flags_ebx, AVX512_FEATURE_BIT_EBX);
 
+	ECHMET_DEBUG_CODE(
+		fprintf(stderr, "CPUID advanced SIMD flags:\n"
+				"AVX2: %d\n"
+				"AVX512: %d\n",
+				cpu_has_avx2, cpu_has_avx512)
+	);
+
 	/* xgetbv instruction is not available so OS level support cannot be checked.
 	 * Fall back to safe defaults */
-	if (!cpu_has_xsave)
+	if (!cpu_has_xsave) {
+		ECHMET_DEBUG_CODE(fprintf(stderr, "No XSAVE flag, OS support cannot be queried. Assuming no extended instruction sets"));
 		return SupportedSIMD();
-	else {
+	} else {
 		/* Check what level of support was enabled by OS through XCR0 register */
 	#if defined(ECHMET_COMPILER_GCC_LIKE) || defined(ECHMET_COMPILER_MINGW) || defined(ECHMET_COMPILER_MSYS)
 		asm("xgetbv;"
@@ -250,6 +289,16 @@ CPUFeatures::SupportedSIMD CPUFeatures::fetch_supported_SIMD()
 					     is_bit_set(xcr0, AVX512_HI256_BIT) &
 					     is_bit_set(xcr0, AVX512_ZMM_HI256_BIT);
 	#endif // ECHMET_COMPILER_
+
+		ECHMET_DEBUG_CODE(
+			fprintf(stderr, "OS SIMD awareness:\n"
+					"XMM: %d\n"
+					"YMM: %d\n"
+					"512REGS: %d\n",
+					os_xmm_aware,
+					os_avx_aware,
+					os_avx512_aware)
+		);
 
 		return SupportedSIMD(cpu_has_sse2 & os_xmm_aware,
 				     cpu_has_sse3 & os_xmm_aware,

@@ -33,12 +33,12 @@ add_definitions("-DECHMET_DLL_BUILD -DUSE_ECHMET_CONTAINERS")
 
 if (WIN32)
     set("ECHMET_PLATFORM_WIN32" "1")
-	if (ECHMET_FORCE_WINXP)
+    if (ECHMET_FORCE_WINXP)
         add_definitions("-D_WIN32_WINNT=0x0501")
-	endif ()
+    endif ()
 
-	link_directories(${LINK_DIRECTORIES}
-	                 "${LIBGMP_DIR}/bin/"
+    link_directories(${LINK_DIRECTORIES}
+                     "${LIBGMP_DIR}/bin/"
                      "${LIBMPFR_DIR}/bin/")
 
     set(ECHMET_HIPREC_INCLUDE_DIR
