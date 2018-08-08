@@ -49,11 +49,11 @@ Custom install path can be set with `-DCMAKE_INSTALL_PREFIX=<path>` parameter.
 
 If you do not have a system-wide installation of the Eigen library, you may specify a custom path with additional `-DEIGEN_INCLUDE_DIR=<path>` CMake parameter.
 
-Similarly, if you do not have a system-wide installation of the GMP and MPFR libraries, you may specify custom paths with the following sequence of parameters: `-DMANUAL_HIPREC_LIBS_PATH=ON -DGMP_LIBRARY_BIN=<path_to_libgmp.so> -DMPFR_LIBRARY_BIN=<path_to_libmpfr.so> -DGMP_INCLUDE_DIR=<path_to_gmp.h> -DMPFR_INCLUDE_DIR=<path_to_mpfr.h>`.
+Similarly, if you do not have a system-wide installation of the GMP and MPFR libraries, you may specify custom paths with the following sequence of parameters: `-DMANUAL_HIPREC_LIBS_PATH=ON -DLIBGMP_DIR=<path_to_GMP_installation> -DLIBMPFR_DIR=<path_to_MPFR_installation>`.
 
 ### Windows
 
-To be added, you are on your own for now...
+CMake can be used to configure the project for building. [MinGW](https://sourceforge.net/projects/mingw-w64) and MSVC 2015 can be used to build the project on Windows for both x86 and x86_64 architectures. `LIBGMP_DIR` and `LIBMPFR_DIR` must be set to point to GMP and MPFR libraries installations. These libraries must be obtained separately. Once the project files are generated, ECHMETCoreLibs can be built following a standard procedure for your compiler of choice.
 
 Examples
 ---
