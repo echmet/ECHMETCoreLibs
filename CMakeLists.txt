@@ -87,7 +87,7 @@ elseif (UNIX)
             message(FATAL_ERROR "Clang 3.4 or newer is required to build ECHMETCoreLibs")
         endif ()
 
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -std=c++14 -Wall -Wextra -pedantic -Wno-unused-function -fvisibility=hidden -g -O3")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -std=c++14 -Wall -Wextra -pedantic -Wno-unused-function -fvisibility=hidden -g -O3 -msse2")
         add_definitions("-DECHMET_COMPILER_GCC_LIKE ")
         set(DEFAULT_SYMVER_LINK "-Wl,--default-symver")
     endif ()
