@@ -21,11 +21,11 @@ ECHMET::NonidealityCorrections makeCorrections(const bool correctForDH, const bo
 	ECHMET::NonidealityCorrections corrs;
 
 	if (correctForDH)
-		ECHMET::nonidealityCorrectionSet(corrs, ECHMET::NonidealityCorrectionsItems::CORR_DEBYE_HUCKEL);
+		ECHMET::nonidealityCorrectionSet(corrs, ECHMET::CORR_DEBYE_HUCKEL);
 	if (correctForOF)
-		ECHMET::nonidealityCorrectionSet(corrs, ECHMET::NonidealityCorrectionsItems::CORR_ONSAGER_FUOSS);
+		ECHMET::nonidealityCorrectionSet(corrs, ECHMET::CORR_ONSAGER_FUOSS);
 	if (correctForVS)
-		ECHMET::nonidealityCorrectionSet(corrs, ECHMET::NonidealityCorrectionsItems::CORR_VISCOSITY);
+		ECHMET::nonidealityCorrectionSet(corrs, ECHMET::CORR_VISCOSITY);
 
 	return corrs;
 }
@@ -41,13 +41,13 @@ void printEquilibrium(const ECHMET::SysComp::ChemicalSystem &chemSystem, const E
 		std::cout << "\t";
 
 		switch (iF->ifType) {
-		case ECHMET::SysComp::IonicFormType::H:
+		case ECHMET::SysComp::H:
 			std::cout << "[H+]";
 			break;
-		case ECHMET::SysComp::IonicFormType::OH:
+		case ECHMET::SysComp::OH:
 			std::cout << "[OH-]";
 			break;
-		case ECHMET::SysComp::IonicFormType::CONSTITUENT:
+		case ECHMET::SysComp::CONSTITUENT:
 			std::cout << "[" << iF->name->c_str() << "]";
 			break;
 		}
@@ -101,12 +101,12 @@ int launch(int argc, char **argv)
 	ECHMET::NonidealityCorrections corrs = makeCorrections(correctForDH, correctForOF, correctForVS);
 
 	tRet = ECHMET::SysComp::makeComposition(chemSystem, calcProps, inputDesc.BGEComposition);
-	if (tRet != ECHMET::RetCode::OK) {
+	if (tRet != ECHMET::OK) {
 		std::cerr << "Cannot make composition " <<  ECHMET::errorToString(tRet) << std::endl;
 		goto out;
 	}
 	acVec = ECHMET::createRealVec(chemSystem.constituents->size());
-	if (acVec == nullptr) {
+	if (acVec == ECHMET_NULLPTR) {
 		std::cerr << "Cannot make analytical concentrations vector..." << std::endl;
 		goto out_1;
 	}
@@ -115,25 +115,25 @@ int launch(int argc, char **argv)
 	applyConcentrations(acVec, inputDesc.BGEConcentrations, chemSystem);
 
 	tRet = ECHMET::CAES::createSolverContext(solverCtx, chemSystem);
-	if (tRet != ECHMET::RetCode::OK) {
+	if (tRet != ECHMET::OK) {
 		std::cerr << "Cannot create solver context " << ECHMET::errorToString(tRet) << std::endl;
 		goto out_1;
 	}
 
 	solver = createSolver(solverCtx, ECHMET::CAES::Solver::defaultOptions(), corrs);
-	if (solver == nullptr) {
+	if (solver == ECHMET_NULLPTR) {
 		std::cerr << "Cannot create solver...";
 		goto out_2;
 	}
 
 	tRet = solver->estimateDistributionSafe(acVec, calcProps);
-	if (tRet != ECHMET::RetCode::OK) {
+	if (tRet != ECHMET::OK) {
 		std::cerr << "Cannot estimate distribution " << ECHMET::errorToString(tRet);
 		goto out_3;
 	}
 
-	tRet = solver->solve(acVec, calcProps, 5000, nullptr);
-	if (tRet != ECHMET::RetCode::OK) {
+	tRet = solver->solve(acVec, calcProps, 5000, ECHMET_NULLPTR);
+	if (tRet != ECHMET::OK) {
 		std::cerr << "Cannot solve system " << ECHMET::errorToString(tRet) << std::endl;
 		goto out_3;
 	}
@@ -141,7 +141,7 @@ int launch(int argc, char **argv)
 	printEquilibrium(chemSystem, calcProps);
 
 	tRet = ECHMET::CAES::calculateBufferCapacity(bufferCap, corrs, chemSystem, calcProps, acVec);
-	if (tRet != ECHMET::RetCode::OK) {
+	if (tRet != ECHMET::OK) {
 		std::cerr << "Cannot calculate buffer capacity " << ECHMET::errorToString(tRet) << "\n";
 		goto out_3;
 	}

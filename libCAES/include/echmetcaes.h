@@ -2,7 +2,12 @@
 #define ECHMET_CAES_CAES_H
 
 #include <cstddef>
+
+#ifdef ECHMET_HAVE_CPP11
 #include <cstdint>
+#else
+#include <stdint.h>
+#endif // ECHMET_HAVE_CPP11
 
 #define ECHMET_IMPORT_INTERNAL
 #include <echmetsyscomp.h>
