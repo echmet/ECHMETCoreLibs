@@ -581,14 +581,22 @@ namespace EnumOps {
 template <typename T>
 T operator|(const T &lhs, const T &rhs)
 {
+#ifdef ECHMET_HAVE_CPP11
 	typedef typename std::underlying_type<T>::type Type;
+#else
+	typedef int32_t Type;
+#endif // ECHMET_HAVE_CPP11
 	return static_cast<T>(static_cast<Type>(lhs) | static_cast<Type>(rhs));
 }
 
 template <typename T>
 T operator|=(T &lhs, const T &rhs)
 {
+#ifdef ECHMET_HAVE_CPP11
 	typedef typename std::underlying_type<T>::type Type;
+#else
+	typedef int32_t Type;
+#endif // ECHMET_HAVE_CPP11
 
 	Type n = static_cast<Type>(lhs) | static_cast<Type>(rhs);
 	lhs = static_cast<T>(n);
