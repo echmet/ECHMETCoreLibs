@@ -120,13 +120,13 @@ int launch(int argc, char **argv)
 		goto out_1;
 	}
 
-	solver = createSolver(solverCtx, corrs, ECHMET::CAES::Solver::defaultOptions());
+	solver = createSolver(solverCtx, ECHMET::CAES::Solver::defaultOptions(), corrs);
 	if (solver == nullptr) {
 		std::cerr << "Cannot create solver...";
 		goto out_2;
 	}
 
-	tRet = ECHMET::CAES::estimateDistribution(solver, acVec, calcProps);
+	tRet = solver->estimateDistributionSafe(acVec, calcProps);
 	if (tRet != ECHMET::RetCode::OK) {
 		std::cerr << "Cannot estimate distribution " << ECHMET::errorToString(tRet);
 		goto out_3;
