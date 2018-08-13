@@ -13,10 +13,13 @@ if (WIN32)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem ${EIGEN_INCLUDE_DIR} -Wno-unused-function")
     elseif (MSYS)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem ${EIGEN_INCLUDE_DIR} -Wno-unused-function")
-    endif()
+    else ()
+        include_directories(${INCLUDE_DIRECTORIES}
+                            "${EIGEN_INCLUDE_DIR}")
+    endif ()
 elseif (UNIX)
     if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" OR
-	${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
+        ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem ${EIGEN_INCLUDE_DIR} -Wno-unused-function")
     endif()
 endif()
@@ -67,8 +70,8 @@ endif()
 include_directories(${INCLUDE_DIRECTORIES}
                     "${CMAKE_CURRENT_SOURCE_DIR}/include"
                     "${CMAKE_CURRENT_SOURCE_DIR}/../libECHMETShared/internal"
-		    "${CMAKE_CURRENT_SOURCE_DIR}/../libIonProps/include"
-		    "${EIGEN_INCLUDE_DIR}")
+                    "${CMAKE_CURRENT_SOURCE_DIR}/../libIonProps/include")
+
 
 set(CAES_LINK_LIBS
     ECHMETShared
