@@ -52,9 +52,9 @@ void correctIonicMobilities(typename ComputationContextImpl<IPReal>::OnsagerFuos
 
 	const size_t N = ions.size();
 	IPReal gammaTotal = 2000.0 * ionicStrength;
-	typename ComputationContextImpl<IPReal>::Matrix &R = *onsFuoPack->R;		/* R vectors for all constituents calculated up to sixth level */
-	typename ComputationContextImpl<IPReal>::Matrix &H = *onsFuoPack->H;		/* H matrix */
-	std::vector<IPReal> &mu_I = *onsFuoPack->mu_I;					/* mu_I = gamma_I / gammaTotal */
+	typename ComputationContextImpl<IPReal>::Matrix &R = onsFuoPack->R;		/* R vectors for all constituents calculated up to sixth level */
+	typename ComputationContextImpl<IPReal>::Matrix &H = onsFuoPack->H;		/* H matrix */
+	std::vector<IPReal> &mu_I = onsFuoPack->mu_I;					/* mu_I = gamma_I / gammaTotal */
 
 	/* Calculate all mu_Is */
 	for (size_t idx = 0; idx < N; idx++) {
@@ -473,7 +473,7 @@ RetCode correctMobilitiesWorker(typename ComputationContextImpl<ECHMETReal>::Ons
 }
 
 /*!
- * Templated nternal implentation of cumulative mobility corrections.
+ * Templated internal implentation of cumulative mobility corrections.
  *
  * @param[in] icConcs Vector of ionic concentrations. Values must be ordered in the order used by
  *		      \p ionicConcentrations vector in \p SysComp::CalculatedProperties

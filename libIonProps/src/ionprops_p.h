@@ -132,39 +132,32 @@ public:
 	class OnsagerFuossPack {
 	public:
 		OnsagerFuossPack() :
-			R{nullptr},
-			H{nullptr},
-			mu_I{nullptr},
 			m_releaseOnFinalize{false}
 		{}
 
-		OnsagerFuossPack(Matrix * const R, Matrix * const H, std::vector<IPReal> * const mu_I, const bool releaseOnFinalize) :
-			R{R},
-			H{H},
-			mu_I{mu_I},
+		OnsagerFuossPack(const size_t N, const bool releaseOnFinalize) :
 			m_releaseOnFinalize{releaseOnFinalize}
-		{}
+		{
+			R = Matrix(N, 6);
+			H = Matrix(N, N);
+			mu_I = std::vector<IPReal>(N);
+		}
 
 		void finalize()
 		{
-			if (m_releaseOnFinalize) {
-				delete R;
-				delete H;
-				delete mu_I;
-
+			if (m_releaseOnFinalize)
 				delete this;
-			}
 		}
 
-		Matrix * const R;
-		Matrix * const H;
-		std::vector<IPReal> * const mu_I;
+		Matrix R;
+		Matrix H;
+		std::vector<IPReal> mu_I;
 
-		OnsagerFuossPack & operator=(const OnsagerFuossPack &other)
+		OnsagerFuossPack & operator=(OnsagerFuossPack &&other) noexcept
 		{
-			const_cast<Matrix *&>(R) = other.R;
-			const_cast<Matrix *&>(H) = other.H;
-			const_cast<std::vector<IPReal> *&>(mu_I) = other.mu_I;
+			const_cast<Matrix&>(R) = std::move(other.R);
+			const_cast<Matrix&>(H) = std::move(other.H);
+			const_cast<std::vector<IPReal>&>(mu_I) = std::move(other.mu_I);
 			const_cast<bool&>(m_releaseOnFinalize) = other.m_releaseOnFinalize;
 
 			return *this;
@@ -207,13 +200,6 @@ public:
 		prepareOnsagerFuossPack();
 	}
 
-	~ComputationContextImpl()
-	{
-		delete m_onsFuoPack.R;
-		delete m_onsFuoPack.H;
-		delete m_onsFuoPack.mu_I;
-	}
-
 	virtual void ECHMET_CC destroy() const noexcept override
 	{
 		delete this;
@@ -226,12 +212,7 @@ public:
 		else {
 			const size_t N = ions.size();
 
-			Matrix *R = new Matrix(N, 6);
-			R->setZero();
-			Matrix *H = new Matrix(N, N);
-			std::vector<IPReal> *mu_I = new std::vector<IPReal>(N);
-
-			return new OnsagerFuossPack{ R, H, mu_I, true };
+			return new OnsagerFuossPack(N, true);
 		}
 	}
 
@@ -248,11 +229,7 @@ private:
 
 		const size_t N = ions.size();
 
-		Matrix *R = new Matrix(N, 6);
-		Matrix *H = new Matrix(N, N);
-		std::vector<IPReal> *mu_I = new std::vector<IPReal>(N);
-
-		m_onsFuoPack = OnsagerFuossPack(R, H, mu_I, false);
+		m_onsFuoPack = OnsagerFuossPack(N, false);
 	}
 
 	const bool m_isThreadUnsafe;
