@@ -10,6 +10,22 @@ namespace ECHMET {
 namespace IonProps {
 
 template <typename IPReal>
+class OFPackReleaser {
+public:
+	OFPackReleaser(typename ComputationContextImpl<IPReal>::OnsagerFuossPack *pack) :
+		m_pack(pack)
+	{}
+
+	~OFPackReleaser()
+	{
+		m_pack->finalize();
+	}
+
+private:
+	typename ComputationContextImpl<IPReal>::OnsagerFuossPack *m_pack;
+};
+
+template <typename IPReal>
 class StdVectorRetriever {
 public:
 	static const IPReal & get(const std::vector<IPReal> &icConcs, const size_t idx)
@@ -453,6 +469,8 @@ RetCode correctMobilitiesWorker(typename ComputationContextImpl<ECHMETReal>::Ons
 				SysComp::CalculatedProperties &calcProps, const RealVec *analyticalConcentrations,
 				const NonidealityCorrections corrections) noexcept
 {
+	OFPackReleaser<ECHMETReal> ofpRel(onsFuoPack);
+
 	try {
 		if (nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_VISCOSITY)) {
 			if (analyticalConcentrations == nullptr)
@@ -461,13 +479,9 @@ RetCode correctMobilitiesWorker(typename ComputationContextImpl<ECHMETReal>::Ons
 		}
 		if (nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_ONSAGER_FUOSS))
 			correctIonicMobilities<ECHMETReal, RealVec *, RealVecRetriever>(onsFuoPack, ions, calcProps.ionicConcentrations, calcProps.ionicStrength, calcProps);
-
-		onsFuoPack->finalize();
 	} catch (std::bad_alloc &) {
-		onsFuoPack->finalize();
 		return RetCode::E_NO_MEMORY;
 	} catch (std::length_error &) {
-		onsFuoPack->finalize();
 		return RetCode::E_DATA_TOO_LARGE;
 	}
 
@@ -496,6 +510,7 @@ RetCode correctMobilitiesWorker(const std::vector<IPReal> &icConcs, typename Com
 				const SysComp::ChemicalSystem &chemSystem, SysComp::CalculatedProperties &calcProps, const RealVec *analyticalConcentrations,
 			        const NonidealityCorrections corrections) noexcept
 {
+	OFPackReleaser<IPReal> ofpRel(onsFuoPack);
 
 	try {
 		if (nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_VISCOSITY)) {
@@ -505,13 +520,9 @@ RetCode correctMobilitiesWorker(const std::vector<IPReal> &icConcs, typename Com
 		}
 		if (nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_ONSAGER_FUOSS))
 			correctIonicMobilities<IPReal, std::vector<IPReal>, StdVectorRetriever>(onsFuoPack, ions, icConcs, calcProps.ionicStrength, calcProps);
-
-		onsFuoPack->finalize();
 	} catch (std::bad_alloc &) {
-		onsFuoPack->finalize();
 		return RetCode::E_NO_MEMORY;
 	} catch (std::length_error &) {
-		onsFuoPack->finalize();
 		return RetCode::E_DATA_TOO_LARGE;
 	}
 
