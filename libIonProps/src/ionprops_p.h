@@ -9,6 +9,8 @@
 #include <echmetmodule.h>
 #include <internal/mpreal.h>
 
+#include <iostream>
+
 namespace ECHMET {
 namespace IonProps {
 

@@ -459,13 +459,15 @@ RetCode correctMobilitiesWorker(typename ComputationContextImpl<ECHMETReal>::Ons
 				return RetCode::E_INVALID_ARGUMENT;
 			correctIonicMobilitiesViscosity<ECHMETReal>(chemSystem, calcProps, analyticalConcentrations);
 		}
-		if (nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_ONSAGER_FUOSS)) {
+		if (nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_ONSAGER_FUOSS))
 			correctIonicMobilities<ECHMETReal, RealVec *, RealVecRetriever>(onsFuoPack, ions, calcProps.ionicConcentrations, calcProps.ionicStrength, calcProps);
-			onsFuoPack->finalize();
-		}
+
+		onsFuoPack->finalize();
 	} catch (std::bad_alloc &) {
+		onsFuoPack->finalize();
 		return RetCode::E_NO_MEMORY;
 	} catch (std::length_error &) {
+		onsFuoPack->finalize();
 		return RetCode::E_DATA_TOO_LARGE;
 	}
 
@@ -501,13 +503,15 @@ RetCode correctMobilitiesWorker(const std::vector<IPReal> &icConcs, typename Com
 				return RetCode::E_INVALID_ARGUMENT;
 			correctIonicMobilitiesViscosity<IPReal>(chemSystem, calcProps, analyticalConcentrations);
 		}
-		if (nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_ONSAGER_FUOSS)) {
+		if (nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_ONSAGER_FUOSS))
 			correctIonicMobilities<IPReal, std::vector<IPReal>, StdVectorRetriever>(onsFuoPack, ions, icConcs, calcProps.ionicStrength, calcProps);
-			onsFuoPack->finalize();
-		}
+
+		onsFuoPack->finalize();
 	} catch (std::bad_alloc &) {
+		onsFuoPack->finalize();
 		return RetCode::E_NO_MEMORY;
 	} catch (std::length_error &) {
+		onsFuoPack->finalize();
 		return RetCode::E_DATA_TOO_LARGE;
 	}
 
