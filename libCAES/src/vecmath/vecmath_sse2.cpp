@@ -13,7 +13,6 @@ namespace CAES {
 
 typedef typename VecMath<InstructionSet::SSE2>::VD VD;
 
-const uint64_t VecMath<InstructionSet::SSE2>::ZERO_BLOCK[VDType<InstructionSet::SSE2>::ALIGNMENT_BYTES / sizeof(double)] = MK_VD2(0);
 const VD VecMath<InstructionSet::SSE2>::INFS = MK_VD2(VecMathCommon::DBL_INF);
 const VD VecMath<InstructionSet::SSE2>::MINUS_INFS = MK_VD2(VecMathCommon::DBL_INF);
 const VD VecMath<InstructionSet::SSE2>::MINUS_ONE = MK_VD2(-1.0);
@@ -64,15 +63,14 @@ typename VecMath<InstructionSet::SSE2>::TD VecMath<InstructionSet::SSE2>::exp10m
 	x = _mm_mul_pd(x, M128D(MINUS_ONE));
 
 	/* Over and underflow checks */
-	uint64_t ECHMET_ALIGNED_BEF_16 CHECKS[2] ECHMET_ALIGNED_AFT_16;
 	__m128d tmp = _mm_cmpgt_pd(x, M128D(MAXL10));
-	_mm_store_pd((double *)CHECKS, tmp);
-	if (std::memcmp(CHECKS, ZERO_BLOCK, 2 * sizeof(uint64_t)))
+	int cmp = _mm_movemask_pd(tmp);
+	if (cmp)
 		return M128D(INFS);
 
 	tmp = _mm_cmplt_pd(x, M128D(MINUS_MAXL10));
-	_mm_store_pd((double *)CHECKS, tmp);
-	if (std::memcmp(CHECKS, ZERO_BLOCK, 2 * sizeof(uint64_t)))
+	cmp = _mm_movemask_pd(tmp);
+	if (cmp)
 		return M128D(MINUS_INFS);
 
 	/* px = floor(LOG210 * x + 0.5) */

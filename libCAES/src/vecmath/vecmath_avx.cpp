@@ -13,7 +13,6 @@ namespace CAES {
 
 typedef typename VecMath<InstructionSet::AVX>::VD VD;
 
-const uint64_t VecMath<InstructionSet::AVX>::ZERO_BLOCK[VDType<InstructionSet::AVX>::ALIGNMENT_BYTES / sizeof(double)] = MK_VD4(0);
 const VD VecMath<InstructionSet::AVX>::INFS = MK_VD4(VecMathCommon::DBL_INF);
 const VD VecMath<InstructionSet::AVX>::MINUS_INFS = MK_VD4(VecMathCommon::DBL_INF);
 const VD VecMath<InstructionSet::AVX>::MINUS_ONE = MK_VD4(-1.0);
@@ -69,10 +68,9 @@ typename VecMath<InstructionSet::AVX>::TD VecMath<InstructionSet::AVX>::exp10m(T
 	x = _mm256_mul_pd(x, M256D(MINUS_ONE));
 
 	/* Over and underflow checks */
-	uint64_t ECHMET_ALIGNED_BEF_32 CHECKS[4] ECHMET_ALIGNED_AFT_32;
 	__m256d tmp = _mm256_cmp_pd(x, M256D(MAXL10), _CMP_GT_OS);
-	_mm256_store_pd((double *)CHECKS, tmp);
-	if (std::memcmp(CHECKS, ZERO_BLOCK, 4 * sizeof(uint64_t))) {
+	int cmp = _mm256_movemask_pd(tmp);
+	if (cmp) {
 	#if defined(ECHMET_PLATFORM_WIN32) && defined(__x86_64__)
 		_mm256_store_pd(outx, M256D(INFS));
 		return;
@@ -82,8 +80,8 @@ typename VecMath<InstructionSet::AVX>::TD VecMath<InstructionSet::AVX>::exp10m(T
 	}
 
 	tmp = _mm256_cmp_pd(x, M256D(MINUS_MAXL10), _CMP_LT_OS);
-	_mm256_store_pd((double *)CHECKS, tmp);
-	if (std::memcmp(CHECKS, ZERO_BLOCK, 4 * sizeof(uint64_t))) {
+	cmp = _mm256_movemask_pd(tmp);
+	if (cmp) {
 	#if defined(ECHMET_PLATFORM_WIN32) && defined(__x86_64__)
 		_mm256_store_pd(outx, M256D(MINUS_INFS));
 		return;
