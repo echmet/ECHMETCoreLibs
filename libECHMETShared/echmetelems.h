@@ -9,12 +9,12 @@
 #endif // ECHMET_USE_HIGH_PRECISION
 
 
-#if __cplusplus >= 201103L
+#ifdef ECHMET_HAVE_CPP_11
 	#define _STRINGIFY_TYPENAME(theType) #theType
 	#ifdef ECHMET_USE_HIGH_PRECISION
 		#define IS_POD(theType) static_assert(true, "");
 	#else
-		#define IS_POD(theType) static_assert(std::is_pod<theType>::value, "Type " _STRINGIFY_TYPENAME(theType) " is not a POD type");
+		#define IS_POD(theType) static_assert(std::is_trivial<theType>::value && std::is_standard_layout<theType>::value, "Type " _STRINGIFY_TYPENAME(theType) " is not a POD type");
 	#endif // ECHMET_USE_HIGH_PRECISION
 
 	#ifdef ECHMET_DEBUG_OUTPUT
@@ -36,7 +36,7 @@
 	#ifndef SIZE_MAX
 	#define SIZE_MAX -1
 	#endif // SIZE_MAX
-#endif // C++11
+#endif // ECHMET_HAVE_CPP_11
 
 
 /*!
