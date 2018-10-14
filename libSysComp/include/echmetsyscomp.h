@@ -215,6 +215,16 @@ IS_POD(CalculatedProperties)
 extern "C" {
 
 /*!
+ * Compares two \p InConstituent s
+ *
+ * @param [in] first First \p InConstituent to compare
+ * @param [in] second Second \p InConstituent to compare
+ *
+ * @return True if the constituents are identical, false otherwise
+ */
+ECHMET_API bool ECHMET_CC compareInConstituents(const InConstituent &first, const InConstituent &second) ECHMET_NOEXCEPT;
+
+/*!
  * Returns an \p ECHMETVec of \p InComplexForm s
  *
  * @param[in] reserve Number of items to reserve memory for.

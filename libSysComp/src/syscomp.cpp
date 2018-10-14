@@ -1120,7 +1120,115 @@ void releaseIonicFormVec(const IonicFormVec *vec) noexcept
 	}
 }
 
+class Comparator {
+private:
+	template <typename T>
+	class HasSpecialization {
+	public:
+		static const bool value{false};
+	};
+
+	template <typename T>
+	class HasSpecialization<Vec<T> *> {
+	public:
+		static const bool value{true};
+	};
+
+	template <typename T>
+	constexpr static bool IsPtr()
+	{
+		return std::is_pointer<T>::value;
+	}
+
+	template <typename T>
+	constexpr static bool HasSpec()
+	{
+		return HasSpecialization<T>::value;
+	}
+public:
+	template <typename T>
+	static bool call(const T &first,
+			 const typename std::enable_if<!IsPtr<T>(), T>::type &second)
+	{
+		return first == second;
+	}
+
+	template <typename T>
+	static bool call(const T &first,
+			 const typename std::enable_if<IsPtr<T>() && !HasSpec<T>(), T>::type &second)
+	{
+		return *first == *second;
+	}
+
+	template <typename T>
+	static bool call(const Vec<T> *first, const Vec<T> *second)
+	{
+		if (first->size() != second->size()) return false;
+
+		for (size_t idx = 0; idx < first->size(); idx++) {
+			if (first->at(idx) != second->at(idx))
+				return false;
+		}
+
+		return true;
+	}
+};
+
+template <typename T, typename U>
+static
+bool compare(const T &first, const T &second, U T::* m)
+{
+	return Comparator::call(first.*m, second.*m);
+}
+
 /* Public interface functions */
+
+bool ECHMET_CC compareInConstituents(const InConstituent &first, const InConstituent &second) noexcept
+{
+	auto mismatch = [&first, &second](auto &&m) {
+		return !compare(first, second, m);
+	};
+
+	if (mismatch(&InConstituent::ctype)) return false;
+	if (mismatch(&InConstituent::name)) return false;
+	if (mismatch(&InConstituent::chargeLow)) return false;
+	if (mismatch(&InConstituent::chargeHigh)) return false;
+	if (mismatch(&InConstituent::viscosityCoefficient)) return false;
+
+	if (mismatch(&InConstituent::pKas)) return false;
+	if (mismatch(&InConstituent::mobilities)) return false;
+
+	if (first.ctype == ConstituentType::LIGAND) return true;
+
+	/* OK, now we have to check the whole complexation tree */
+	if (first.complexForms->size() != second.complexForms->size()) return false;
+	for (size_t idx = 0; idx < first.complexForms->size(); idx++) {
+		const auto f = first.complexForms->at(idx);
+		const auto s = second.complexForms->at(idx);
+
+		if (f.nucleusCharge != s.nucleusCharge) return false;
+
+		if (f.ligandGroups->size() != s.ligandGroups->size()) return false;
+		for (size_t jdx = 0; jdx < f.ligandGroups->size(); jdx++) {
+			const auto lf = f.ligandGroups->at(jdx);
+			const auto ls = s.ligandGroups->at(jdx);
+
+			if (lf.ligands->size() != lf.ligands->size()) return false;
+			for (size_t kdx = 0; kdx < lf.ligands->size(); kdx++) {
+				const auto lff = lf.ligands->at(kdx);
+				const auto lfs = ls.ligands->at(kdx);
+
+				if (!compare(lff, lfs, &InLigandForm::ligandName)) return false;
+				if (!compare(lff, lfs, &InLigandForm::charge)) return false;
+				if (!compare(lff, lfs, &InLigandForm::maxCount)) return false;
+				if (!compare(lff, lfs, &InLigandForm::pBs)) return false;
+				if (!compare(lff, lfs, &InLigandForm::mobilities)) return false;
+			}
+		}
+	}
+
+	return true;
+}
 
 InCFVec * ECHMET_CC createInCFVec(const size_t reserve) noexcept
 {
