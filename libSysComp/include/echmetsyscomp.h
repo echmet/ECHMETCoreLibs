@@ -222,7 +222,7 @@ extern "C" {
  *
  * @return True if the constituents are identical, false otherwise
  */
-ECHMET_API bool ECHMET_CC compareInConstituents(const InConstituent &first, const InConstituent &second) ECHMET_NOEXCEPT;
+ECHMET_API bool ECHMET_CC compareInConstituents(const InConstituent &first, const InConstituent &second, const bool compareComplexations = true) ECHMET_NOEXCEPT;
 
 /*!
  * Returns an \p ECHMETVec of \p InComplexForm s

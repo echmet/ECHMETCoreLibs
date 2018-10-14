@@ -1183,7 +1183,7 @@ bool compare(const T &first, const T &second, U T::* m)
 
 /* Public interface functions */
 
-bool ECHMET_CC compareInConstituents(const InConstituent &first, const InConstituent &second) noexcept
+bool ECHMET_CC compareInConstituents(const InConstituent &first, const InConstituent &second, const bool compareComplexations) noexcept
 {
 	auto mismatch = [&first, &second](auto &&m) {
 		return !compare(first, second, m);
@@ -1199,6 +1199,8 @@ bool ECHMET_CC compareInConstituents(const InConstituent &first, const InConstit
 	if (mismatch(&InConstituent::mobilities)) return false;
 
 	if (first.ctype == ConstituentType::LIGAND) return true;
+
+	if (!compareComplexations) return true;
 
 	/* OK, now we have to check the whole complexation tree */
 	if (first.complexForms->size() != second.complexForms->size()) return false;

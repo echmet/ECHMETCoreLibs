@@ -512,6 +512,7 @@ protected:
 };
 
 typedef Vec<ECHMETReal> RealVec;
+typedef Vec<FixedString *> StringVec;
 
 ECHMET_ST_ENUM(NonidealityCorrectionsItems) {
 	CORR_DEBYE_HUCKEL = 0x1,	/* Debye-Hückel correction of stablity constants. Requires ionic strength
