@@ -1220,14 +1220,25 @@ bool ECHMET_CC compareInConstituents(const InConstituent &first, const InConstit
 				const auto lff = lf.ligands->at(kdx);
 				const auto lfs = ls.ligands->at(kdx);
 
-				if (!compare(lff, lfs, &InLigandForm::ligandName)) return false;
-				if (!compare(lff, lfs, &InLigandForm::charge)) return false;
-				if (!compare(lff, lfs, &InLigandForm::maxCount)) return false;
-				if (!compare(lff, lfs, &InLigandForm::pBs)) return false;
-				if (!compare(lff, lfs, &InLigandForm::mobilities)) return false;
+				if (!compareInLigandForms(lff, lfs)) return false;
 			}
 		}
 	}
+
+	return true;
+}
+
+bool ECHMET_CC compareInLigandForms(const InLigandForm &first, const InLigandForm &second) noexcept
+{
+	auto mismatch = [&first, &second](auto &&m) {
+		return !compare(first, second, m);
+	};
+
+	if (mismatch(&InLigandForm::ligandName)) return false;
+	if (mismatch(&InLigandForm::charge)) return false;
+	if (mismatch(&InLigandForm::maxCount)) return false;
+	if (mismatch(&InLigandForm::pBs)) return false;
+	if (mismatch(&InLigandForm::mobilities)) return false;
 
 	return true;
 }

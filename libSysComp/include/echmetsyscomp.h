@@ -225,6 +225,20 @@ extern "C" {
 ECHMET_API bool ECHMET_CC compareInConstituents(const InConstituent &first, const InConstituent &second, const bool compareComplexations = true) ECHMET_NOEXCEPT;
 
 /*!
+ * Compares two \p InLigandForm s
+ *
+ * Comparison is done on all members of the \p InLigandForm class.
+ * Two instances of this class are considered equal only if all
+ * members of the class including their content are equal.
+ *
+ * @parma[in] first First \p InLigandForm to compare
+ * @param[in] second Second \p InLigandForm to compare
+ *
+ * @return True if the forms are identical, false otherwise
+ */
+ECHMET_API bool ECHMET_CC compareInLigandForms(const InLigandForm &first, const InLigandForm &second) ECHMET_NOEXCEPT;
+
+/*!
  * Returns an \p ECHMETVec of \p InComplexForm s
  *
  * @param[in] reserve Number of items to reserve memory for.
