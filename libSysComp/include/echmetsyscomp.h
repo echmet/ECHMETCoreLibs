@@ -215,17 +215,27 @@ IS_POD(CalculatedProperties)
 extern "C" {
 
 /*!
- * Compares two \p InConstituent s
+ * \brief Compares two \p InConstituent s
  *
- * @param [in] first First \p InConstituent to compare
- * @param [in] second Second \p InConstituent to compare
+ * Comparison is done on all members of the \p InConstituent class.
+ * Two instances of this class are considered equal only if all
+ * members of the class including their content are equal.
+ *
+ * If comparison of complexations is enabled for nuclei complexations
+ * are considered equal only if they are laid out in the exactly same order
+ * in both constituents.
+ *
+ * @param[in] first First \p InConstituent to compare
+ * @param[in] second Second \p InConstituent to compare
+ * @param[in] compareComplexations If true, even the complexation part of constituents is compared.
+ *                                 This applies only to constituents of \p NUCLEUS type.
  *
  * @return True if the constituents are identical, false otherwise
  */
 ECHMET_API bool ECHMET_CC compareInConstituents(const InConstituent &first, const InConstituent &second, const bool compareComplexations = true) ECHMET_NOEXCEPT;
 
 /*!
- * Compares two \p InLigandForm s
+ * \brief Compares two \p InLigandForm s
  *
  * Comparison is done on all members of the \p InLigandForm class.
  * Two instances of this class are considered equal only if all
