@@ -156,9 +156,13 @@ RetCode ECHMET_CC SolverImpl<CAESReal>::estimateDistributionSafe(const RealVec *
 /*!
  * Calculates the initial estimation of concentration of all species in the system.
  *
- * @param[in] ctx Solver context.
- * @param[in,out] ionicConcentrations Vector of concentrations of all ionic forms.
- *                The vector shall have the expected size.
+ * @param[in] cHInitial Pre-estimated value of concentration of H<sub>3</sub>O<sup>+</sup> ions.
+ *                      This is used only in fast estimate.
+ * @param[in] analyticalConcentrations Vector of analytical concentrations of constituents.
+ * @param[in, out] estimatedConcentrations Output vector of estimated ionic concentrations of all species.
+ *                                         The vector will be resized appropriately by this function.
+ * @param[in, out] ionicStrength Estimated value of ionic strength.
+ * @param[in] useFastEstimate When <tt>true</tt>, fast estimate will be performed.
  *
  * @retval RetCode::OK Success.
  * @retval RetCode::E_INVALID_ARGUMENT Unexpected size of the concentration vectors.
@@ -169,6 +173,9 @@ template <typename CAESReal>
 RetCode SolverImpl<CAESReal>::estimateDistributionInternal(const CAESReal &cHInitial, const RealVec *analyticalConcentrations, SolverVector<CAESReal> &estimatedConcentrations,
 							   CAESReal &ionicStrength, const bool useFastEstimate) noexcept
 {
+	if (analyticalConcentrations->size() != m_ctx->analyticalConcentrationCount)
+		return RetCode::E_INVALID_ARGUMENT;
+
 	estimatedConcentrations.resize(m_ctx->concentrationCount);
 
 	try {
