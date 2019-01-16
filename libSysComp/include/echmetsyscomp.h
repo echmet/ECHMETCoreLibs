@@ -241,7 +241,7 @@ ECHMET_API bool ECHMET_CC compareInConstituents(const InConstituent &first, cons
  * Two instances of this class are considered equal only if all
  * members of the class including their content are equal.
  *
- * @parma[in] first First \p InLigandForm to compare
+ * @param[in] first First \p InLigandForm to compare
  * @param[in] second Second \p InLigandForm to compare
  *
  * @return True if the forms are identical, false otherwise
