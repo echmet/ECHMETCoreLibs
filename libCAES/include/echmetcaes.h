@@ -92,13 +92,12 @@ public:
 	 * of the \p cH concentration. The function might return \p RetCode::OK even if the calculated
 	 * distribution is incorrect. Use this carefully.
 	 *
-	 * @param[in] solver SolverContext to utilize.
+	 * @param[in] cHInitial Initial estimate of H<sub>3</sub>O<sup>+</sup> ions.
 	 * @param[in] analyticalConcentrations Vector of analytical concentrations of all compounds in the system.
 	 * @param{in,out] calcProps \p CalculatedProperties object associated with the system that is being solved.
 	 *
 	 * @retval RetCode::OK Success
-	 * @retval RetCode::E_INVALID_ARGUMENT Unexpected size of concentration vectors or the \p solver
-	 *         pointer is not castable to internal solver implementation.
+	 * @retval RetCode::E_INVALID_ARGUMENT Unexpected size of concentrations vector.
 	 * @retval RetCode::E_NO_MEMORY Not enough memory to estimate distribution.
 	 * @retval RetCode::E_FAST_ESTIMATE_FAILURE Fast estimation failed to find a solution.
 	 */
@@ -109,13 +108,11 @@ public:
 	 * This is a safe estimation function that is guaranteed to converge for any range of pH
 	 * between -3 to \p inf
 	 *
-	 * @param[in] solver SolverContext to utilize.
 	 * @param[in] analyticalConcentrations Vector of analytical concentrations of all compounds in the system.
-	 * @param{in,out] calcProps \p CalculatedProperties object associated with the system that is being solved.
+	 * @param[in,out] calcProps \p CalculatedProperties object associated with the system that is being solved.
 	 *
 	 * @retval RetCode::OK Success
-	 * @retval RetCode::E_INVALID_ARGUMENT Unexpected size of concentration vectors or the \p solver
-	 *         pointer is not castable to internal solver implementation.
+	 * @retval RetCode::E_INVALID_ARGUMENT Unexpected size of concentrations vector.
 	 * @retval RetCode::E_NO_MEMORY Not enough memory to estimate distribution.
 	 */
 	virtual RetCode ECHMET_CC estimateDistributionSafe(const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) ECHMET_NOEXCEPT = 0;
