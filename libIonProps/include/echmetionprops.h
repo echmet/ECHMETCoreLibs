@@ -100,7 +100,7 @@ ECHMET_API ECHMETReal ECHMET_CC calculatepH_direct(const ECHMETReal &cH, const E
 /*!
  * Corrects limit electrophoretic mobilities for ionic atmosphere effect
  * using Onsager-Fuoss law.
- * <b>Note: If this correction is required, this function shall be called prior to
+ * <b>Note:</b> If this correction is required, this function shall be called prior to
  * calling \p calculateConductivity() or \p calculateEffectiveMobilities(). Reversing
  * the calling order will result in the conductivity or effective mobilities being
  * calculated with ionic mobilities that do not include the Onsager-Fuoss correction.
