@@ -10,11 +10,11 @@
 
 
 #ifdef ECHMET_HAVE_CPP_11
-	#define _STRINGIFY_TYPENAME(theType) #theType
+	#define M_STRINGIFY_TYPENAME(theType) #theType
 	#ifdef ECHMET_USE_HIGH_PRECISION
 		#define IS_POD(theType) static_assert(true, "");
 	#else
-		#define IS_POD(theType) static_assert(std::is_trivial<theType>::value && std::is_standard_layout<theType>::value, "Type " _STRINGIFY_TYPENAME(theType) " is not a POD type");
+		#define IS_POD(theType) static_assert(std::is_trivial<theType>::value && std::is_standard_layout<theType>::value, "Type " M_STRINGIFY_TYPENAME(theType) " is not a POD type");
 	#endif // ECHMET_USE_HIGH_PRECISION
 
 	#ifdef ECHMET_DEBUG_OUTPUT
