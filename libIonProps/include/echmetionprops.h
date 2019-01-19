@@ -79,7 +79,7 @@ ECHMET_API RetCode ECHMET_CC calculateEffectiveMobilities(const ComputationConte
  * Calculates pH of the system.
  *
  * @param[in] ctx Computation context for the given chemical system.
- * @param[in] corrs Corrective effects to account for (Only Debye-Hückel is relevant in this case).
+ * @param[in] corrections Ionic effects to account for (Only Debye-Hückel is relevant in this case).
  * @param[in] calcProps Calculated properties solved by \p CAES.
  *
  * @return pH value.

@@ -94,7 +94,7 @@ public:
 	 *
 	 * @param[in] cHInitial Initial estimate of H<sub>3</sub>O<sup>+</sup> ions.
 	 * @param[in] analyticalConcentrations Vector of analytical concentrations of all compounds in the system.
-	 * @param{in,out] calcProps \p CalculatedProperties object associated with the system that is being solved.
+	 * @param[in,out] calcProps \p CalculatedProperties object associated with the system that is being solved.
 	 *
 	 * @retval RetCode::OK Success
 	 * @retval RetCode::E_INVALID_ARGUMENT Unexpected size of concentrations vector.
