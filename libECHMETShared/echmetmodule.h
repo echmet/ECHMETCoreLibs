@@ -153,7 +153,7 @@
  * in the resulting binary as long as the following conditions are met:
  *
  *  - The binary is being built in DLL mode and ECHMET_DLL_BUILD is defined
- *  - Export is overridden by ECHMET_IMPORT_INTERNAL
+ *  - Export is not overridden by ECHMET_IMPORT_INTERNAL
  *
  * If these conditions are not met, the symbol is marked for import (on Windows + MSVC)
  * or not marked at all (on UNIX or Windows + GCC).
