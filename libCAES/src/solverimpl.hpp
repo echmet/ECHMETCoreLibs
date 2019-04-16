@@ -4,6 +4,7 @@
 #include "caes_p.h"
 #include "solverinternal.h"
 #include "estimator_helpers.hpp"
+#include <functional>
 
 #if defined(ECHMET_COMPILER_GCC_LIKE) || defined(ECHMET_COMPILER_MINGW) || defined(ECHMET_COMPILER_MSYS)
 	#include <x86intrin.h>
@@ -72,6 +73,7 @@ SolverImpl<CAESReal>::SolverImpl(SolverContextImpl<CAESReal> *ctx, const Options
 			m_internalUnsafe = makeSolverInternal(ctx);
 			m_anCVecUnsafe = new SolverVector<CAESReal>(ctx->analyticalConcentrationCount);
 			m_estimatedConcentrationsUnsafe = AlignedAllocator<CAESReal, 32>::alloc(ctx->concentrationCount);
+			m_estimatedCVecUnsafe.resize(ctx->concentrationCount);
 		} catch (const std::bad_alloc &) {
 			delete m_internalUnsafe;
 			delete m_anCVecUnsafe;
@@ -107,6 +109,12 @@ SolverContext * ECHMET_CC SolverImpl<CAESReal>::context() ECHMET_NOEXCEPT
 }
 
 template <typename CAESReal>
+SolverContextImpl<CAESReal> * SolverImpl<CAESReal>::contextInternal() ECHMET_NOEXCEPT
+{
+	return m_ctx;
+}
+
+template <typename CAESReal>
 void ECHMET_CC SolverImpl<CAESReal>::destroy() const ECHMET_NOEXCEPT
 {
 	delete this;
@@ -119,38 +127,47 @@ void SolverImpl<CAESReal>::defaultActivityCoefficients(std::vector<CAESReal> &ac
 }
 
 template <typename CAESReal>
+RetCode SolverImpl<CAESReal>::estimateDistributionCommon(const ECHMETReal &cHInitial, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps,
+							 const bool useFastEstimate) noexcept
+{
+	const auto process = [&](SolverVector<CAESReal> &estC) {
+		CAESReal ionicStrength;
+
+		const auto tRet = estimateDistributionInternal(cHInitial, analyticalConcentrations,
+							       estC,
+							       ionicStrength, useFastEstimate);
+		if (tRet != RetCode::OK)
+			return tRet;
+
+		for (int idx = 0; idx < estC.size(); idx++)
+			(*calcProps.ionicConcentrations)[idx] = CAESRealToECHMETReal(estC(idx));
+		calcProps.ionicStrength = CAESRealToECHMETReal(ionicStrength);
+
+		return RetCode::OK;
+	};
+
+	if (m_options & Solver::Options::DISABLE_THREAD_SAFETY)
+		return process(m_estimatedCVecUnsafe);
+	else {
+		SolverVector<CAESReal> cVec{};
+		cVec.resize(m_ctx->concentrationCount);
+
+		return process(cVec);
+	}
+}
+
+template <typename CAESReal>
 RetCode ECHMET_CC SolverImpl<CAESReal>::estimateDistributionFast(const ECHMETReal &cHInitial, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept
 {
-	CAESReal ionicStrength;
-	SolverVector<CAESReal> estC{};
-
-	RetCode tRet = estimateDistributionInternal(cHInitial, analyticalConcentrations, estC, ionicStrength, true);
-	if (tRet != RetCode::OK)
-		return tRet;
-
-	for (int idx = 0; idx < estC.size(); idx++)
-		(*calcProps.ionicConcentrations)[idx] = CAESRealToECHMETReal(estC(idx));
-	calcProps.ionicStrength = CAESRealToECHMETReal(ionicStrength);
-
-	return RetCode::OK;
+	return estimateDistributionCommon(cHInitial, analyticalConcentrations, calcProps, true);
 }
 
 template <typename CAESReal>
 RetCode ECHMET_CC SolverImpl<CAESReal>::estimateDistributionSafe(const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept
 {
 	const ECHMETReal dummy = 0.0;	/* Unused */
-	CAESReal ionicStrength;
-	SolverVector<CAESReal> estC{};
 
-	RetCode tRet = estimateDistributionInternal(dummy, analyticalConcentrations, estC, ionicStrength, false);
-	if (tRet != RetCode::OK)
-		return tRet;
-
-	for (int idx = 0; idx < estC.size(); idx++)
-		(*calcProps.ionicConcentrations)[idx] = CAESRealToECHMETReal(estC(idx));
-	calcProps.ionicStrength = CAESRealToECHMETReal(ionicStrength);
-
-	return RetCode::OK;
+	return estimateDistributionCommon(dummy, analyticalConcentrations, calcProps, false);
 }
 
 /*!
@@ -176,7 +193,7 @@ RetCode SolverImpl<CAESReal>::estimateDistributionInternal(const CAESReal &cHIni
 	if (analyticalConcentrations->size() != m_ctx->analyticalConcentrationCount)
 		return RetCode::E_INVALID_ARGUMENT;
 
-	estimatedConcentrations.resize(m_ctx->concentrationCount);
+	assert(estimatedConcentrations.size() == m_ctx->concentrationCount);
 
 	try {
 		const auto results = [&]() {
@@ -384,7 +401,6 @@ std::pair<SolverVector<CAESReal>, CAESReal> SolverImpl<CAESReal>::estimatepHSafe
 template <typename CAESReal>
 void SolverImpl<CAESReal>::initializeEstimators()
 {
-	/* The +2 is for H+ and OH- */
 	m_estimatedIonicConcentrations.resize(m_TECount);
 	m_dEstimatedIonicConcentrationsdH.resize(m_TECount);
 	m_activityCoefficients.resize(m_ctx->chargesSquared.size());
@@ -527,6 +543,7 @@ RetCode SolverImpl<CAESReal>::setContextInternal(SolverContextImpl<CAESReal> *ct
 			m_internalUnsafe = makeSolverInternal(ctx);
 			m_anCVecUnsafe = new SolverVector<CAESReal>(ctx->analyticalConcentrationCount);
 			m_estimatedConcentrationsUnsafe = AlignedAllocator<CAESReal, 32>::alloc(ctx->concentrationCount);
+			m_estimatedCVecUnsafe.resize(ctx->concentrationCount);
 		} catch (const std::bad_alloc &) {
 			delete m_anCVecUnsafe;
 			delete m_internalUnsafe;

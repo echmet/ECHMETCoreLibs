@@ -32,6 +32,7 @@ public:
 	explicit SolverImpl(SolverContextImpl<CAESReal> *ctx, const Options options, const NonidealityCorrections corrections);
 	virtual ~SolverImpl() noexcept override;
 	virtual SolverContext * ECHMET_CC context() noexcept override;
+	SolverContextImpl<CAESReal> * contextInternal() noexcept;
 	virtual void ECHMET_CC destroy() const noexcept override;
 	virtual RetCode ECHMET_CC estimateDistributionFast(const ECHMETReal &cHInitial, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept override;
 	virtual RetCode ECHMET_CC estimateDistributionSafe(const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept override;
@@ -46,6 +47,8 @@ public:
 
 private:
 	void defaultActivityCoefficients(std::vector<CAESReal> &activityCoefficients) const;
+	RetCode estimateDistributionCommon(const ECHMETReal &cHInitial, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps,
+					   const bool useFastEstimate) noexcept;
 	template <bool ThreadSafe>
 	std::pair<SolverVector<CAESReal>, CAESReal> estimatepHFast(const CAESReal &cHInitial, const RealVec *analyticalConcentrations,
 								   SolverVector<CAESReal> &icConcs, SolverVector<CAESReal> &dIcConcsdH,
@@ -67,6 +70,8 @@ private:
 	SolverInternalBase<CAESReal> *m_internalUnsafe;		/*!< Internal solver used by thread-unsafe variant of the solver */
 	SolverVector<CAESReal> *m_anCVecUnsafe;			/*!< Vector of analytical concentrations used by thread-unsafe variant of the solver */
 	CAESReal *m_estimatedConcentrationsUnsafe;		/*!< Aligned array of estimated concentrations used by thread-unsafe variant of the solver */
+	SolverVector<CAESReal> m_estimatedCVecUnsafe;		/*!< Vector of estimated concentrations used by thread-unsafe variant of pH estimator */
+
 	const bool m_correctDebyeHuckel;			/*!< Correct with Debye-Hückel */
 
 	const InstructionSet m_instructionSet;			/*!< Highest available CPU SIMD instruction set */
