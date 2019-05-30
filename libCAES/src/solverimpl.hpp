@@ -29,7 +29,7 @@ FreeMPFRCacheSwitch<V> freeMPFRCache()
 }
 
 template <typename CAESReal, InstructionSet ISet>
-void SolverImpl<CAESReal, ISet>::releaseSolverInternal(SolverInternalBase<CAESReal> *internal, FreeMPFRCacheSwitch<true>) noexcept
+void SolverImpl<CAESReal, ISet>::releaseSolverInternal(SolverInternal<CAESReal, ISet> *internal, FreeMPFRCacheSwitch<true>) noexcept
 {
 	if (!(m_options & Solver::Options::DISABLE_THREAD_SAFETY)) {
 		delete internal;
@@ -38,7 +38,7 @@ void SolverImpl<CAESReal, ISet>::releaseSolverInternal(SolverInternalBase<CAESRe
 }
 
 template <typename CAESReal, InstructionSet ISet>
-void SolverImpl<CAESReal, ISet>::releaseSolverInternal(SolverInternalBase<CAESReal> *internal, FreeMPFRCacheSwitch<false>) noexcept
+void SolverImpl<CAESReal, ISet>::releaseSolverInternal(SolverInternal<CAESReal, ISet> *internal, FreeMPFRCacheSwitch<false>) noexcept
 {
 	if (!(m_options & Solver::Options::DISABLE_THREAD_SAFETY))
 		delete internal;
@@ -58,8 +58,7 @@ SolverImpl<CAESReal, ISet>::SolverImpl(SolverContextImpl<CAESReal> *ctx, const O
 	m_internalUnsafe(nullptr),
 	m_anCVecUnsafe(nullptr),
 	m_estimatedConcentrationsUnsafe(nullptr),
-	m_correctDebyeHuckel(nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_DEBYE_HUCKEL)),
-	m_instructionSet(detectInstructionSet())
+	m_correctDebyeHuckel(nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_DEBYE_HUCKEL))
 {
 
 	initializeTotalEquilibria(ctx);
@@ -453,18 +452,9 @@ void SolverImpl<CAESReal, ISet>::initializeTotalEquilibria(const SolverContextIm
  * @retval Pointer to \p SolverInternal object
  */
 template <typename CAESReal, InstructionSet ISet>
-SolverInternalBase<CAESReal> * SolverImpl<CAESReal, ISet>::makeSolverInternal(const SolverContextImpl<CAESReal> *ctx) const
+SolverInternal<CAESReal, ISet> * SolverImpl<CAESReal, ISet>::makeSolverInternal(const SolverContextImpl<CAESReal> *ctx) const
 {
-	switch (m_instructionSet) {
-	case InstructionSet::SSE2:
-		return new SolverInternal<CAESReal, InstructionSet::SSE2>(ctx);
-	case InstructionSet::AVX:
-		return new SolverInternal<CAESReal, InstructionSet::AVX>(ctx);
-	case InstructionSet::FMA3:
-		return new SolverInternal<CAESReal, InstructionSet::FMA3>(ctx);
-	default:
-		return new SolverInternal<CAESReal, InstructionSet::GENERIC>(ctx);
-	}
+	return new SolverInternal<CAESReal, ISet>(ctx);
 }
 
 /*!
@@ -599,7 +589,7 @@ template <typename CAESReal, InstructionSet ISet>
 RetCode ECHMET_CC SolverImpl<CAESReal, ISet>::solve(const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps,
 						    const size_t iterations, SolverIterations *iterationsNeeded) ECHMET_NOEXCEPT
 {
-	SolverInternalBase<CAESReal> *internal = nullptr;
+	SolverInternal<CAESReal, ISet> *internal = nullptr;
 	SolverVector<CAESReal> *anCVec = nullptr;
 	CAESReal *estimatedConcentrations = nullptr;
 
@@ -688,7 +678,7 @@ template <typename CAESReal, InstructionSet ISet>
 RetCode SolverImpl<CAESReal, ISet>::solveRaw(SolverVector<CAESReal> &concentrations, CAESReal &ionicStrength, const SolverVector<CAESReal> *anCVec,
 					     const SolverVector<CAESReal> &estimatedConcentrations, const size_t iterations, SolverIterations *iterationsNeeded) noexcept
 {
-	SolverInternalBase<CAESReal> *internal = nullptr;
+	SolverInternal<CAESReal, ISet> *internal = nullptr;
 	CAESReal *estimatedConcentrationsInternal = nullptr;
 
 	const auto releaseResources = [&]() {

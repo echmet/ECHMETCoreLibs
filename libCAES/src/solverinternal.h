@@ -9,31 +9,18 @@
 namespace ECHMET {
 namespace CAES {
 
-template <typename CAESReal>
-class SolverInternalBase {
-public:
-	virtual ~SolverInternalBase() {};
-	virtual const SolverContext * context() const noexcept = 0;
-	virtual SolverIterations iterations() const noexcept = 0;
-	virtual RetCode solve(const SolverVector<CAESReal> *analyticalConcentrations, const CAESReal *estimatedConcentrations,
-			      const bool isCorrection, const size_t iterations, const CAESReal &ionicStrength) noexcept = 0;
-	virtual SolverVector<CAESReal> rawConcentrations() const = 0;
-	virtual CAESReal rawIonicStrength() const = 0;
-	virtual void resultsToOutput(SysComp::CalculatedProperties &calcProps) noexcept = 0;
-};
-
 template <typename CAESReal, InstructionSet ISet>
-class SolverInternal : public SolverInternalBase<CAESReal>, public NewtonRaphson<CAESReal, ISet> {
+class SolverInternal : public NewtonRaphson<CAESReal, ISet> {
 public:
 	explicit SolverInternal(const SolverContextImpl<CAESReal> *ctx);
 	~SolverInternal();
-	const SolverContext * context() const noexcept override;
-	SolverIterations iterations() const noexcept override;
+	const SolverContext * context() const noexcept;
+	SolverIterations iterations() const noexcept;
 	RetCode solve(const SolverVector<CAESReal> *analyticalConcentrations, const CAESReal *estimatedConcentrations,
-		      const bool isCorrection, const size_t iterations, const CAESReal &ionicStrength) noexcept override;
-	SolverVector<CAESReal> rawConcentrations() const override;
-	CAESReal rawIonicStrength() const override;
-	void resultsToOutput(SysComp::CalculatedProperties &calcProps) noexcept override;
+		      const bool isCorrection, const size_t iterations, const CAESReal &ionicStrength) noexcept;
+	SolverVector<CAESReal> rawConcentrations() const;
+	CAESReal rawIonicStrength() const;
+	void resultsToOutput(SysComp::CalculatedProperties &calcProps) noexcept;
 
 private:
 	class NumericErrorException : public std::exception {

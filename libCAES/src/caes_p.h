@@ -20,8 +20,8 @@ class SolverContextImpl;
 template <bool>
 class FreeMPFRCacheSwitch {};
 
-template <typename CAESReal>
-class SolverInternalBase;
+template <typename CAESReal, InstructionSet ISet>
+class SolverInternal;
 
 /*!
  * Equilibria solver object implementation
@@ -56,25 +56,23 @@ private:
 	template <bool ThreadSafe>
 	std::pair<SolverVector<CAESReal>, CAESReal> estimatepHSafe(const RealVec *analyticalConcentrations, SolverVector<CAESReal> &icConcs, std::vector<CAESReal> &activityCoefficients);
 	void initializeEstimators();
-	SolverInternalBase<CAESReal> * makeSolverInternal(const SolverContextImpl<CAESReal> *ctx) const;
+	SolverInternal<CAESReal, ISet> * makeSolverInternal(const SolverContextImpl<CAESReal> *ctx) const;
 	void initializeTotalEquilibria(const SolverContextImpl<CAESReal> *ctx);
 	void releaseTotalEquilibria();
-	void releaseSolverInternal(SolverInternalBase<CAESReal> *internal, FreeMPFRCacheSwitch<true>) noexcept;
-	void releaseSolverInternal(SolverInternalBase<CAESReal> *internal, FreeMPFRCacheSwitch<false>) noexcept;
+	void releaseSolverInternal(SolverInternal<CAESReal, ISet> *internal, FreeMPFRCacheSwitch<true>) noexcept;
+	void releaseSolverInternal(SolverInternal<CAESReal, ISet> *internal, FreeMPFRCacheSwitch<false>) noexcept;
 	RetCode setContextInternal(SolverContextImpl<CAESReal> *ctx) noexcept;
 
 	SolverContextImpl<CAESReal> *m_ctx;			/*!< Associated solver context */
 
 	Solver::Options m_options;
 
-	SolverInternalBase<CAESReal> *m_internalUnsafe;		/*!< Internal solver used by thread-unsafe variant of the solver */
+	SolverInternal<CAESReal, ISet> *m_internalUnsafe;	/*!< Internal solver used by thread-unsafe variant of the solver */
 	SolverVector<CAESReal> *m_anCVecUnsafe;			/*!< Vector of analytical concentrations used by thread-unsafe variant of the solver */
 	CAESReal *m_estimatedConcentrationsUnsafe;		/*!< Aligned array of estimated concentrations used by thread-unsafe variant of the solver */
 	SolverVector<CAESReal> m_estimatedCVecUnsafe;		/*!< Vector of estimated concentrations used by thread-unsafe variant of pH estimator */
 
 	const bool m_correctDebyeHuckel;			/*!< Correct with Debye-Hückel */
-
-	const InstructionSet m_instructionSet;			/*!< Highest available CPU SIMD instruction set */
 
 	size_t m_TECount;					/*!< Number of ionic concentrations that can be estimated from G-polynomial */
 	std::vector<TotalEquilibriumBase *> m_totalEquilibria;
