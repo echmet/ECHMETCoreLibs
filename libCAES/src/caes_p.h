@@ -26,7 +26,7 @@ class SolverInternalBase;
 /*!
  * Equilibria solver object implementation
  */
-template <typename CAESReal>
+template <typename CAESReal, InstructionSet ISet>
 class SolverImpl : public Solver {
 public:
 	explicit SolverImpl(SolverContextImpl<CAESReal> *ctx, const Options options, const NonidealityCorrections corrections);
@@ -98,6 +98,8 @@ Solver * createSolverInternal(SolverContext *ctx, const Solver::Options options,
 template <typename CAESReal>
 static
 RetCode createSolverContextInternal(SolverContext *&ctx, const SysComp::ChemicalSystem &chemSystem) noexcept;
+
+InstructionSet detectInstructionSet() noexcept;
 
 template <typename CAESReal>
 static

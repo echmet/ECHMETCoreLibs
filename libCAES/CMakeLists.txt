@@ -28,7 +28,6 @@ set(libCAES_SRCS
     src/caes.cpp
     src/caes_extended.cpp
     src/solvercontextimpl.cpp
-    src/solverimpl.cpp
     src/solverinternal_sse2.cpp
     src/solverinternal_avx.cpp
     src/solverinternal_fma3.cpp

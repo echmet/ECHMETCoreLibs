@@ -21,8 +21,6 @@ public:
 	using std::exception::exception;
 };
 
-InstructionSet detectInstructionSet();
-
 template <typename CAESReal, bool V = std::is_same<CAESReal, mpfr::mpreal>::value>
 static
 FreeMPFRCacheSwitch<V> freeMPFRCache()
@@ -30,8 +28,8 @@ FreeMPFRCacheSwitch<V> freeMPFRCache()
 	return FreeMPFRCacheSwitch<V>{};
 }
 
-template <typename CAESReal>
-void SolverImpl<CAESReal>::releaseSolverInternal(SolverInternalBase<CAESReal> *internal, FreeMPFRCacheSwitch<true>) noexcept
+template <typename CAESReal, InstructionSet ISet>
+void SolverImpl<CAESReal, ISet>::releaseSolverInternal(SolverInternalBase<CAESReal> *internal, FreeMPFRCacheSwitch<true>) noexcept
 {
 	if (!(m_options & Solver::Options::DISABLE_THREAD_SAFETY)) {
 		delete internal;
@@ -39,8 +37,8 @@ void SolverImpl<CAESReal>::releaseSolverInternal(SolverInternalBase<CAESReal> *i
 	}
 }
 
-template <typename CAESReal>
-void SolverImpl<CAESReal>::releaseSolverInternal(SolverInternalBase<CAESReal> *internal, FreeMPFRCacheSwitch<false>) noexcept
+template <typename CAESReal, InstructionSet ISet>
+void SolverImpl<CAESReal, ISet>::releaseSolverInternal(SolverInternalBase<CAESReal> *internal, FreeMPFRCacheSwitch<false>) noexcept
 {
 	if (!(m_options & Solver::Options::DISABLE_THREAD_SAFETY))
 		delete internal;
@@ -53,8 +51,8 @@ void SolverImpl<CAESReal>::releaseSolverInternal(SolverInternalBase<CAESReal> *i
  *            shall remain valid throughout the entire lifetime of the \p Solver .
  * @param[in] options Solver options.
  */
-template <typename CAESReal>
-SolverImpl<CAESReal>::SolverImpl(SolverContextImpl<CAESReal> *ctx, const Options options, const NonidealityCorrections corrections) :
+template <typename CAESReal, InstructionSet ISet>
+SolverImpl<CAESReal, ISet>::SolverImpl(SolverContextImpl<CAESReal> *ctx, const Options options, const NonidealityCorrections corrections) :
 	m_ctx(ctx),
 	m_options(options),
 	m_internalUnsafe(nullptr),
@@ -87,8 +85,8 @@ SolverImpl<CAESReal>::SolverImpl(SolverContextImpl<CAESReal> *ctx, const Options
 /*!
  * Solver d-tor.
  */
-template <typename CAESReal>
-SolverImpl<CAESReal>::~SolverImpl() ECHMET_NOEXCEPT
+template <typename CAESReal, InstructionSet ISet>
+SolverImpl<CAESReal, ISet>::~SolverImpl() ECHMET_NOEXCEPT
 {
 	delete m_internalUnsafe;
 	delete m_anCVecUnsafe;
@@ -102,33 +100,34 @@ SolverImpl<CAESReal>::~SolverImpl() ECHMET_NOEXCEPT
  *
  * @return Pointer to \p SolverContext object.
  */
-template <typename CAESReal>
-SolverContext * ECHMET_CC SolverImpl<CAESReal>::context() ECHMET_NOEXCEPT
+template <typename CAESReal, InstructionSet ISet>
+SolverContext * ECHMET_CC SolverImpl<CAESReal, ISet>::context() ECHMET_NOEXCEPT
 {
 	return m_ctx;
 }
 
-template <typename CAESReal>
-SolverContextImpl<CAESReal> * SolverImpl<CAESReal>::contextInternal() ECHMET_NOEXCEPT
+template <typename CAESReal, InstructionSet ISet>
+SolverContextImpl<CAESReal> * SolverImpl<CAESReal, ISet>::contextInternal() ECHMET_NOEXCEPT
 {
 	return m_ctx;
 }
 
-template <typename CAESReal>
-void ECHMET_CC SolverImpl<CAESReal>::destroy() const ECHMET_NOEXCEPT
+template <typename CAESReal, InstructionSet ISet>
+void ECHMET_CC SolverImpl<CAESReal, ISet>::destroy() const ECHMET_NOEXCEPT
 {
 	delete this;
 }
 
-template <typename CAESReal>
-void SolverImpl<CAESReal>::defaultActivityCoefficients(std::vector<CAESReal> &activityCoefficients) const
+template <typename CAESReal, InstructionSet ISet>
+void SolverImpl<CAESReal, ISet>::defaultActivityCoefficients(std::vector<CAESReal> &activityCoefficients) const
 {
 	std::fill(activityCoefficients.begin(), activityCoefficients.end(), 1.0);
 }
 
-template <typename CAESReal>
-RetCode SolverImpl<CAESReal>::estimateDistributionCommon(const ECHMETReal &cHInitial, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps,
-							 const bool useFastEstimate) noexcept
+template <typename CAESReal, InstructionSet ISet>
+RetCode SolverImpl<CAESReal, ISet>::estimateDistributionCommon(const ECHMETReal &cHInitial, const RealVec *analyticalConcentrations,
+							       SysComp::CalculatedProperties &calcProps,
+							       const bool useFastEstimate) noexcept
 {
 	const auto process = [&](SolverVector<CAESReal> &estC) {
 		CAESReal ionicStrength;
@@ -156,14 +155,14 @@ RetCode SolverImpl<CAESReal>::estimateDistributionCommon(const ECHMETReal &cHIni
 	}
 }
 
-template <typename CAESReal>
-RetCode ECHMET_CC SolverImpl<CAESReal>::estimateDistributionFast(const ECHMETReal &cHInitial, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept
+template <typename CAESReal, InstructionSet ISet>
+RetCode ECHMET_CC SolverImpl<CAESReal, ISet>::estimateDistributionFast(const ECHMETReal &cHInitial, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept
 {
 	return estimateDistributionCommon(cHInitial, analyticalConcentrations, calcProps, true);
 }
 
-template <typename CAESReal>
-RetCode ECHMET_CC SolverImpl<CAESReal>::estimateDistributionSafe(const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept
+template <typename CAESReal, InstructionSet ISet>
+RetCode ECHMET_CC SolverImpl<CAESReal, ISet>::estimateDistributionSafe(const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept
 {
 	const ECHMETReal dummy = 0.0;	/* Unused */
 
@@ -186,9 +185,10 @@ RetCode ECHMET_CC SolverImpl<CAESReal>::estimateDistributionSafe(const RealVec *
  * @retval RetCode::E_NO_MEMORY Not enough memory to estimate distribution.
  * @retval RetCode::E_FAST_ESTIMATE_FAILURE Fast estimation failed to find a solution.
  */
-template <typename CAESReal>
-RetCode SolverImpl<CAESReal>::estimateDistributionInternal(const CAESReal &cHInitial, const RealVec *analyticalConcentrations, SolverVector<CAESReal> &estimatedConcentrations,
-							   CAESReal &ionicStrength, const bool useFastEstimate) noexcept
+template <typename CAESReal, InstructionSet ISet>
+RetCode SolverImpl<CAESReal, ISet>::estimateDistributionInternal(const CAESReal &cHInitial, const RealVec *analyticalConcentrations,
+								 SolverVector<CAESReal> &estimatedConcentrations,
+								 CAESReal &ionicStrength, const bool useFastEstimate) noexcept
 {
 	if (analyticalConcentrations->size() != m_ctx->analyticalConcentrationCount)
 		return RetCode::E_INVALID_ARGUMENT;
@@ -255,10 +255,10 @@ RetCode SolverImpl<CAESReal>::estimateDistributionInternal(const CAESReal &cHIni
  *
  * @return Vector of concentrations of all ionic forms including \p H+ and \p OH-
  */
-template <typename CAESReal> template <bool ThreadSafe>
-std::pair<SolverVector<CAESReal>, CAESReal> SolverImpl<CAESReal>::estimatepHFast(const CAESReal &cHInitial, const RealVec *analyticalConcentrations,
-										 SolverVector<CAESReal> &icConcs, SolverVector<CAESReal> &dIcConcsdH,
-										 std::vector<CAESReal> &activityCoefficients)
+template <typename CAESReal, InstructionSet ISet> template <bool ThreadSafe>
+std::pair<SolverVector<CAESReal>, CAESReal> SolverImpl<CAESReal, ISet>::estimatepHFast(const CAESReal &cHInitial, const RealVec *analyticalConcentrations,
+										       SolverVector<CAESReal> &icConcs, SolverVector<CAESReal> &dIcConcsdH,
+										       std::vector<CAESReal> &activityCoefficients)
 {
 	const CAESReal KW_298 = CAESReal(PhChConsts::KW_298) * 1e6;
 	const CAESReal threshold = electroneturalityPrecision<CAESReal>();
@@ -335,8 +335,9 @@ std::pair<SolverVector<CAESReal>, CAESReal> SolverImpl<CAESReal>::estimatepHFast
  *
  * @return Vector of concentrations of all ionic forms including \p H+ and \p OH-
  */
-template <typename CAESReal> template <bool ThreadSafe>
-std::pair<SolverVector<CAESReal>, CAESReal> SolverImpl<CAESReal>::estimatepHSafe(const RealVec *analyticalConcentrations, SolverVector<CAESReal> &icConcs, std::vector<CAESReal> &activityCoefficients)
+template <typename CAESReal, InstructionSet ISet> template <bool ThreadSafe>
+std::pair<SolverVector<CAESReal>, CAESReal> SolverImpl<CAESReal, ISet>::estimatepHSafe(const RealVec *analyticalConcentrations, SolverVector<CAESReal> &icConcs,
+										       std::vector<CAESReal> &activityCoefficients)
 {
 	const CAESReal KW_298 = CAESReal(PhChConsts::KW_298) * 1e6;
 	const CAESReal threshold = electroneturalityPrecision<CAESReal>();
@@ -398,8 +399,8 @@ std::pair<SolverVector<CAESReal>, CAESReal> SolverImpl<CAESReal>::estimatepHSafe
 	return { icConcs, ionicStrength };
 }
 
-template <typename CAESReal>
-void SolverImpl<CAESReal>::initializeEstimators()
+template <typename CAESReal, InstructionSet ISet>
+void SolverImpl<CAESReal, ISet>::initializeEstimators()
 {
 	m_estimatedIonicConcentrations.resize(m_TECount);
 	m_dEstimatedIonicConcentrationsdH.resize(m_TECount);
@@ -412,8 +413,8 @@ void SolverImpl<CAESReal>::initializeEstimators()
  *
  * @param[in] ctx SovlerContextImpl to use
  */
-template <typename CAESReal>
-void SolverImpl<CAESReal>::initializeTotalEquilibria(const SolverContextImpl<CAESReal> *ctx)
+template <typename CAESReal, InstructionSet ISet>
+void SolverImpl<CAESReal, ISet>::initializeTotalEquilibria(const SolverContextImpl<CAESReal> *ctx)
 {
 	auto countTEForms = [](const auto &TEVec, const auto &caster) {
 		size_t TECount = 0;
@@ -451,8 +452,8 @@ void SolverImpl<CAESReal>::initializeTotalEquilibria(const SolverContextImpl<CAE
  *
  * @retval Pointer to \p SolverInternal object
  */
-template <typename CAESReal>
-SolverInternalBase<CAESReal> * SolverImpl<CAESReal>::makeSolverInternal(const SolverContextImpl<CAESReal> *ctx) const
+template <typename CAESReal, InstructionSet ISet>
+SolverInternalBase<CAESReal> * SolverImpl<CAESReal, ISet>::makeSolverInternal(const SolverContextImpl<CAESReal> *ctx) const
 {
 	switch (m_instructionSet) {
 	case InstructionSet::SSE2:
@@ -471,14 +472,14 @@ SolverInternalBase<CAESReal> * SolverImpl<CAESReal>::makeSolverInternal(const So
  *
  * @return Solver options.
  */
-template <typename CAESReal>
-typename SolverImpl<CAESReal>::Options ECHMET_CC SolverImpl<CAESReal>::options() const noexcept
+template <typename CAESReal, InstructionSet ISet>
+typename SolverImpl<CAESReal, ISet>::Options ECHMET_CC SolverImpl<CAESReal, ISet>::options() const noexcept
 {
 	return m_options;
 }
 
-template <typename CAESReal>
-void SolverImpl<CAESReal>::releaseTotalEquilibria()
+template <typename CAESReal, InstructionSet ISet>
+void SolverImpl<CAESReal, ISet>::releaseTotalEquilibria()
 {
 	for (auto teb : m_totalEquilibria)
 		delete teb;
@@ -499,8 +500,8 @@ void SolverImpl<CAESReal>::releaseTotalEquilibria()
  *				If this error code is returned the sovler must be assumed to be in
  *				an inconsistent state.
  */
-template <typename CAESReal>
-RetCode ECHMET_CC SolverImpl<CAESReal>::setContext(SolverContext *ctx) ECHMET_NOEXCEPT
+template <typename CAESReal, InstructionSet ISet>
+RetCode ECHMET_CC SolverImpl<CAESReal, ISet>::setContext(SolverContext *ctx) ECHMET_NOEXCEPT
 {
 	SolverContextImpl<CAESReal> *ctxImpl = dynamic_cast<SolverContextImpl<CAESReal> *>(ctx);
 	if (ctxImpl == nullptr)
@@ -518,8 +519,8 @@ RetCode ECHMET_CC SolverImpl<CAESReal>::setContext(SolverContext *ctx) ECHMET_NO
  * @retval RetCode::OK Success.
  * @retval RetCode::E_NO_MEMORY Not enough memory to allocate internal resources.
  */
-template <typename CAESReal>
-RetCode SolverImpl<CAESReal>::setContextInternal(SolverContextImpl<CAESReal> *ctx) noexcept
+template <typename CAESReal, InstructionSet ISet>
+RetCode SolverImpl<CAESReal, ISet>::setContextInternal(SolverContextImpl<CAESReal> *ctx) noexcept
 {
 	releaseTotalEquilibria();
 
@@ -565,8 +566,8 @@ RetCode SolverImpl<CAESReal>::setContextInternal(SolverContextImpl<CAESReal> *ct
  * @retval RetCode::OK Success.
  * @retval RetCode::E_INVALID_ARGUMENT Nonsensical option value was passed as the argument.
  */
-template <typename CAESReal>
-RetCode ECHMET_CC SolverImpl<CAESReal>::setOptions(const Options options) noexcept
+template <typename CAESReal, InstructionSet ISet>
+RetCode ECHMET_CC SolverImpl<CAESReal, ISet>::setOptions(const Options options) noexcept
 {
 	/* Changing thread-safetiness is not allowed */
 	if ((m_options & Options::DISABLE_THREAD_SAFETY) != (options & Options::DISABLE_THREAD_SAFETY))
@@ -594,8 +595,9 @@ RetCode ECHMET_CC SolverImpl<CAESReal>::setOptions(const Options options) noexce
  * @retval RetCode::E_IS_NO_CONVERGENCE Solver failed to find a solution within the given number of iterations.
  * @retval RetCode::E_INVALID_ARGUMENT Vector of analytical concentrations has invalid size or initial value of ionic strength is invalid.
  */
-template <typename CAESReal>
-RetCode ECHMET_CC SolverImpl<CAESReal>::solve(const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps, const size_t iterations, SolverIterations *iterationsNeeded) ECHMET_NOEXCEPT
+template <typename CAESReal, InstructionSet ISet>
+RetCode ECHMET_CC SolverImpl<CAESReal, ISet>::solve(const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps,
+						    const size_t iterations, SolverIterations *iterationsNeeded) ECHMET_NOEXCEPT
 {
 	SolverInternalBase<CAESReal> *internal = nullptr;
 	SolverVector<CAESReal> *anCVec = nullptr;
@@ -682,8 +684,9 @@ RetCode ECHMET_CC SolverImpl<CAESReal>::solve(const RealVec *analyticalConcentra
  * @retval RetCode::E_IS_NO_CONVERGENCE Solver failed to find a solution within the given number of iterations.
  * @retval RetCode::E_INVALID_ARGUMENT Initial value of ionic strength is invalid.
  */
-template <typename CAESReal>
-RetCode SolverImpl<CAESReal>::solveRaw(SolverVector<CAESReal> &concentrations, CAESReal &ionicStrength, const SolverVector<CAESReal> *anCVec, const SolverVector<CAESReal> &estimatedConcentrations, const size_t iterations, SolverIterations *iterationsNeeded) noexcept
+template <typename CAESReal, InstructionSet ISet>
+RetCode SolverImpl<CAESReal, ISet>::solveRaw(SolverVector<CAESReal> &concentrations, CAESReal &ionicStrength, const SolverVector<CAESReal> *anCVec,
+					     const SolverVector<CAESReal> &estimatedConcentrations, const size_t iterations, SolverIterations *iterationsNeeded) noexcept
 {
 	SolverInternalBase<CAESReal> *internal = nullptr;
 	CAESReal *estimatedConcentrationsInternal = nullptr;

@@ -1,5 +1,12 @@
 #include "caes_p.h"
 
+#define ECHMET_IMPORT_INTERNAL
+#include <echmetelems.h>
+
+#ifdef ECHMET_DEBUG_OUTPUT
+#include <cstdio>
+#endif // ECHMET_DEBUG_OUTPUT
+
 namespace ECHMET {
 namespace CAES {
 
@@ -23,6 +30,28 @@ Solver * ECHMET_CC createSolver(SolverContext *ctx, const Solver::Options option
 RetCode ECHMET_CC createSolverContext(SolverContext *&ctx, const SysComp::ChemicalSystem &chemSystem) noexcept
 {
 	return createSolverContextInternal<ECHMETReal>(ctx, chemSystem);
+}
+
+InstructionSet detectInstructionSet() noexcept
+{
+	const CPUSIMD simd = cpuSupportedSIMD();
+
+	if (simd.FMA3) {
+		ECHMET_DEBUG_CODE(fprintf(stderr, "Using FMA3-optimized solver\n"));
+		return InstructionSet::FMA3;
+	}
+	if (simd.AVX) {
+		ECHMET_DEBUG_CODE(fprintf(stderr, "Using AVX-optimized solver\n"));
+		return InstructionSet::AVX;
+	}
+	if (simd.SSE2) {
+		ECHMET_DEBUG_CODE(fprintf(stderr, "Using SSE2-optimized solver\n"));
+		return InstructionSet::SSE2;
+	}
+
+	ECHMET_DEBUG_CODE(fprintf(stderr, "Using generic solver\n"));
+
+	return InstructionSet::GENERIC;
 }
 
 SolverContext::~SolverContext() noexcept {}

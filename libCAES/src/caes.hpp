@@ -449,7 +449,18 @@ Solver * createSolverInternal(SolverContext *ctx, const Solver::Options options,
 	if (ctxImpl == nullptr)
 		return nullptr;
 
-	return new (std::nothrow) SolverImpl<CAESReal>(ctxImpl, options, corrections);
+	switch (detectInstructionSet()) {
+	case InstructionSet::GENERIC:
+		return new (std::nothrow) SolverImpl<CAESReal, InstructionSet::GENERIC>(ctxImpl, options, corrections);
+	case InstructionSet::SSE2:
+		return new (std::nothrow) SolverImpl<CAESReal, InstructionSet::SSE2>(ctxImpl, options, corrections);
+	case InstructionSet::AVX:
+		return new (std::nothrow) SolverImpl<CAESReal, InstructionSet::AVX>(ctxImpl, options, corrections);
+	case InstructionSet::FMA3:
+		return new (std::nothrow) SolverImpl<CAESReal, InstructionSet::FMA3>(ctxImpl, options, corrections);
+	}
+
+	return nullptr;
 }
 
 /*!
