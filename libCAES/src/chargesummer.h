@@ -15,7 +15,8 @@ public:
 
 	ChargeSummer(const size_t N, const std::vector<TotalEquilibriumBase *> &totalEquilibria) :
 		m_N{N},
-		m_step{VDType<ISet>::ALIGNMENT_BYTES}
+		m_blockSize{VDType<ISet>::ALIGNMENT_BYTES / sizeof(CAESReal)},
+		m_NBlock{N - (N % m_blockSize)}
 	{
 		m_chargesArray = AlignedAllocator<int, VDType<ISet>::ALIGNMENT_BYTES>::alloc(m_N);
 
@@ -60,7 +61,8 @@ public:
 
 private:
 	const size_t m_N;
-	const size_t m_step;
+	const size_t m_blockSize;
+	const size_t m_NBlock;
 
 	int *m_chargesArray;
 };
