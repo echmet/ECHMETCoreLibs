@@ -37,25 +37,26 @@ public:
 		AlignedAllocator<int, VDType<ISet>::ALIGNMENT_BYTES>::free(m_chargesArray);
 	}
 
-	CAESReal calc(const MappedVector &icConcs) noexcept
+	CAESReal calc(const CAESReal *const ECHMET_RESTRICT_PTR icConcs) noexcept
 	{
 		CAESReal z{0};
 
 		for (size_t idx = 0; idx < m_N; idx++)
-			z += m_chargesArray[idx] * icConcs(idx);
+			z += m_chargesArray[idx] * icConcs[idx];
 
 		return z;
 	}
 
-	void calcWithdZ(const MappedVector &icConcs, const MappedVector &dIcConcsdH,
+	void calcWithdZ(const CAESReal *const ECHMET_RESTRICT_PTR icConcs,
+			const CAESReal *const ECHMET_RESTRICT_PTR dIcConcsdH,
 			CAESReal &z, CAESReal &dZ) noexcept
 	{
 		z = CAESReal{0};
 		dZ = CAESReal{0};
 
 		for (size_t idx = 0; idx < m_N; idx++) {
-			z += m_chargesArray[idx] * icConcs(idx);
-			dZ += m_chargesArray[idx] * dIcConcsdH(idx);
+			z += m_chargesArray[idx] * icConcs[idx];
+			dZ += m_chargesArray[idx] * dIcConcsdH[idx];
 		}
 	}
 

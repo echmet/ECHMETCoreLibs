@@ -28,8 +28,8 @@ void calculateActivityCoefficients(const CAESReal &ionicStrength, std::vector<CA
 template <typename CAESReal, InstructionSet ISet, bool ThreadSafe>
 static
 void calculateDistributionWithDerivative(const CAESReal &v,
-					 typename MMTypes<CAESReal, ISet>::Vector &distribution,
-					 typename MMTypes<CAESReal, ISet>::Vector &dDistdV,
+					 CAESReal *const distribution,
+					 CAESReal *const dDistdV,
 					 std::vector<TotalEquilibriumBase *> &totalEquilibria, const RealVec *analyticalConcentrations, const std::vector<CAESReal> &activityCoefficients)
 {
 	size_t rowCounter = 2;
@@ -51,11 +51,11 @@ void calculateDistributionWithDerivative(const CAESReal &v,
 
 			/* Distribution */
 			const CAESReal fC = T / X;
-			distribution(rowCounter) = c * fC;
+			distribution[rowCounter] = c * fC;
 
 			/* dDistdV */
 			const CAESReal fD = (dT * X - T * dX) / (X * X);
-			dDistdV(rowCounter) = c * fD;
+			dDistdV[rowCounter] = c * fD;
 
 			rowCounter++;
 		}
@@ -72,7 +72,7 @@ void calculateDistributionWithDerivative(const CAESReal &v,
 template <typename CAESReal, InstructionSet ISet, bool ThreadSafe>
 static
 void calculateDistribution(const CAESReal &v,
-			   typename MMTypes<CAESReal, ISet>::Vector &distribution,
+			   CAESReal *distribution,
 			   std::vector<TotalEquilibriumBase *> &totalEquilibria, const RealVec *analyticalConcentrations,
 			   const std::vector<CAESReal> &activityCoefficients)
 {
@@ -87,7 +87,7 @@ void calculateDistribution(const CAESReal &v,
 		for (const CAESReal &T : Ts) {
 			const CAESReal fC = c * T / X;
 
-			distribution(rowCounter) = fC;
+			distribution[rowCounter] = fC;
 
 			rowCounter++;
 		}

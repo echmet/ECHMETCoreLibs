@@ -297,17 +297,20 @@ std::pair<SolverVector<CAESReal>, CAESReal> SolverImpl<CAESReal, ISet>::estimate
 		CAESReal z;
 		CAESReal dZ;
 
+		CAESReal *const icConcsRaw = icConcs.data();
+		CAESReal *const dIcConcsdHRaw = dIcConcsdH.data();
+
 		while (true) {
-			calculateDistributionWithDerivative<CAESReal, ISet, ThreadSafe>(cH, icConcs, dIcConcsdH, m_totalEquilibria, analyticalConcentrations, activityCoefficients);
+			calculateDistributionWithDerivative<CAESReal, ISet, ThreadSafe>(cH, icConcsRaw, dIcConcsdHRaw, m_totalEquilibria, analyticalConcentrations, activityCoefficients);
 
 			cOH = KW_298 / (cH * activityOneSquared);
 
-			icConcs(0) = cH;
-			icConcs(1) = cOH;
-			dIcConcsdH(0) = 1.0;
-			dIcConcsdH(1) = cOH * cOH;
+			icConcsRaw[0] = cH;
+			icConcsRaw[1] = cOH;
+			dIcConcsdHRaw[0] = 1.0;
+			dIcConcsdHRaw[1] = cOH * cOH;
 
-			chargeSummer.calcWithdZ(icConcs, dIcConcsdH, z, dZ);
+			chargeSummer.calcWithdZ(icConcsRaw, dIcConcsdHRaw, z, dZ);
 
 			cHNew = cH - z / dZ;
 
@@ -379,17 +382,18 @@ std::pair<SolverVector<CAESReal>, CAESReal> SolverImpl<CAESReal, ISet>::estimate
 		size_t ctr = 0;
 		maxChargeActivityCoeff = activityCoefficients.back();
 
+		CAESReal *const icConcsRaw = icConcs.data();
 		CAESReal cOH;
 
 		while (true) {
-			calculateDistribution<CAESReal, ISet, ThreadSafe>(cH, icConcs, m_totalEquilibria, analyticalConcentrations, activityCoefficients);
+			calculateDistribution<CAESReal, ISet, ThreadSafe>(cH, icConcsRaw, m_totalEquilibria, analyticalConcentrations, activityCoefficients);
 
 			cOH = KW_298 / (cH * activityOneSquared);
 
-			icConcs(0) = cH;
-			icConcs(1) = cOH;
+			icConcsRaw[0] = cH;
+			icConcsRaw[1] = cOH;
 
-			const CAESReal z = chargeSummer.calc(icConcs);
+			const CAESReal z = chargeSummer.calc(icConcsRaw);
 
 			//fprintf(stderr, "cH %g, z %g, dZ %g, cHNew, %g\n", CAESRealToDouble(cH), CAESRealToDouble(z), CAESRealToDouble(dZ), CAESRealToDouble(cHNew));
 
