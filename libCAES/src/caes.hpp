@@ -455,9 +455,9 @@ Solver * createSolverInternal(SolverContext *ctx, const Solver::Options options,
 	case InstructionSet::SSE2:
 		return new (std::nothrow) SolverImpl<CAESReal, InstructionSet::SSE2>(ctxImpl, options, corrections);
 	case InstructionSet::AVX:
-		return new (std::nothrow) SolverImpl<CAESReal, InstructionSet::AVX>(ctxImpl, options, corrections);
+		return new (std::nothrow) SolverImpl<CAESReal, InstructionSet::AVX /* FIXME */>(ctxImpl, options, corrections);
 	case InstructionSet::FMA3:
-		return new (std::nothrow) SolverImpl<CAESReal, InstructionSet::FMA3>(ctxImpl, options, corrections);
+		return new (std::nothrow) SolverImpl<CAESReal, InstructionSet::AVX /* FIXME */>(ctxImpl, options, corrections);
 	}
 
 	return nullptr;
