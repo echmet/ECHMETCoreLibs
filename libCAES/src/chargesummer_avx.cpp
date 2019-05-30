@@ -24,7 +24,7 @@ double ChargeSummer<double, InstructionSet::AVX, false>::calc(const double *cons
 	}
 
 	_mm256_store_pd(vz, zVec);
-	z = vz[0] + vz[1];
+	z = vz[0] + vz[1] + vz[2] + vz[3];
 
 	for (; idx < m_N; idx++)
 		z += m_chargesArray[idx] * icConcs[idx];
@@ -49,7 +49,7 @@ double ChargeSummer<double, InstructionSet::AVX, true>::calc(const double *const
 	}
 
 	_mm256_store_pd(vz, zVec);
-	z = vz[0] + vz[1];
+	z = vz[0] + vz[1] + vz[2] + vz[3];
 
 	for (; idx < m_N; idx++)
 		z += m_chargesArray[idx] * icConcs[idx];
@@ -83,8 +83,8 @@ void ChargeSummer<double, InstructionSet::AVX, false>::calcWithdZ(const double *
 	_mm256_store_pd(vz, zVec);
 	_mm256_store_pd(vdZ, dZVec);
 
-	z = vz[0] + vz[1];
-	dZ = vdZ[0] + vdZ[1];
+	z = vz[0] + vz[1] + vz[2] + vz[3];
+	dZ = vdZ[0] + vdZ[1] + vdZ[2] + vdZ[3];
 
 	for (; idx < m_N; idx++) {
 		z += m_chargesArray[idx] * icConcs[idx];
@@ -94,8 +94,8 @@ void ChargeSummer<double, InstructionSet::AVX, false>::calcWithdZ(const double *
 
 template <>
 void ChargeSummer<double, InstructionSet::AVX, true>::calcWithdZ(const double *const ECHMET_RESTRICT_PTR icConcs,
-								  const double *const ECHMET_RESTRICT_PTR dIcConcsdH,
-								  double &z, double &dZ) noexcept
+								 const double *const ECHMET_RESTRICT_PTR dIcConcsdH,
+								 double &z, double &dZ) noexcept
 {
 	VD vz;
 	VD vdZ;
@@ -118,8 +118,8 @@ void ChargeSummer<double, InstructionSet::AVX, true>::calcWithdZ(const double *c
 	_mm256_store_pd(vz, zVec);
 	_mm256_store_pd(vdZ, dZVec);
 
-	z = vz[0] + vz[1];
-	dZ = vdZ[0] + vdZ[1];
+	z = vz[0] + vz[1] + vz[2] + vz[3];
+	dZ = vdZ[0] + vdZ[1] + vdZ[2] + vdZ[3];
 
 	for (; idx < m_N; idx++) {
 		z += m_chargesArray[idx] * icConcs[idx];
