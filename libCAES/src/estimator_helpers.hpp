@@ -1,6 +1,8 @@
 #ifndef ECHMET_CAES_ESTIMATOR_HELPERS_HPP
 #define ECHMET_CAES_ESTIMATOR_HELPERS_HPP
 
+#include "mappedmatrix.h"
+
 namespace ECHMET {
 namespace CAES {
 
@@ -23,9 +25,12 @@ void calculateActivityCoefficients(const CAESReal &ionicStrength, std::vector<CA
  * @param[in,out] dDistdV Resulting vector of concentration derivatives. The vector has to be resized by the caller to accomodate all individual concentrations.
  * @param[in] totalEquilibria Vector of objects that descibe the given equilibria.
  */
-template <typename CAESReal, bool ThreadSafe>
+template <typename CAESReal, InstructionSet ISet, bool ThreadSafe>
 static
-void calculateDistributionWithDerivative(const CAESReal &v, SolverVector<CAESReal> &distribution, SolverVector<CAESReal> &dDistdV, std::vector<TotalEquilibriumBase *> &totalEquilibria, const RealVec *analyticalConcentrations, const std::vector<CAESReal> &activityCoefficients)
+void calculateDistributionWithDerivative(const CAESReal &v,
+					 typename MMTypes<CAESReal, ISet>::Vector &distribution,
+					 typename MMTypes<CAESReal, ISet>::Vector &dDistdV,
+					 std::vector<TotalEquilibriumBase *> &totalEquilibria, const RealVec *analyticalConcentrations, const std::vector<CAESReal> &activityCoefficients)
 {
 	size_t rowCounter = 2;
 
@@ -64,9 +69,11 @@ void calculateDistributionWithDerivative(const CAESReal &v, SolverVector<CAESRea
  * @param[in,out] distribution Resulting vector of concentrations. The vector has to be resized by the caller to accomodate all individual concentrations.
  * @param[in] totalEquilibria Vector of objects that descibe the given equilibria.
  */
-template <typename CAESReal, bool ThreadSafe>
+template <typename CAESReal, InstructionSet ISet, bool ThreadSafe>
 static
-void calculateDistribution(const CAESReal &v, SolverVector<CAESReal> &distribution, std::vector<TotalEquilibriumBase *> &totalEquilibria, const RealVec *analyticalConcentrations,
+void calculateDistribution(const CAESReal &v,
+			   typename MMTypes<CAESReal, ISet>::Vector &distribution,
+			   std::vector<TotalEquilibriumBase *> &totalEquilibria, const RealVec *analyticalConcentrations,
 			   const std::vector<CAESReal> &activityCoefficients)
 {
 	size_t rowCounter = 2;
@@ -87,9 +94,9 @@ void calculateDistribution(const CAESReal &v, SolverVector<CAESReal> &distributi
 	}
 }
 
-template <typename CAESReal, bool ThreadSafe>
+template <typename CAESReal, InstructionSet ISet, bool ThreadSafe>
 static
-CAESReal calculateIonicStrength(const SolverVector<CAESReal> &icConcs, std::vector<TotalEquilibriumBase *> &totalEquilibria, const std::vector<int> &chargesSquared)
+CAESReal calculateIonicStrength(const typename MMTypes<CAESReal, ISet>::Vector &icConcs, std::vector<TotalEquilibriumBase *> &totalEquilibria, const std::vector<int> &chargesSquared)
 {
 	CAESReal ionicStrength = 0.0;
 	size_t rowCounter = 2;
@@ -106,6 +113,7 @@ CAESReal calculateIonicStrength(const SolverVector<CAESReal> &icConcs, std::vect
 	return 0.0005 * ionicStrength; /* Scale to mol/dm3 */
 }
 
+/*
 template <typename CAESReal, bool ThreadSafe>
 static
 CAESReal calcTotalCharge(const SolverVector<CAESReal> &icConcs, const std::vector<TotalEquilibriumBase *> &totalEquilibria)
@@ -122,6 +130,7 @@ CAESReal calcTotalCharge(const SolverVector<CAESReal> &icConcs, const std::vecto
 
 	return z;
 }
+*/
 
 /*!
  * Calculates initial estimate of concentration of all complex forms.

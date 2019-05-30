@@ -58,9 +58,13 @@ SolverImpl<CAESReal, ISet>::SolverImpl(SolverContextImpl<CAESReal> *ctx, const O
 	m_internalUnsafe(nullptr),
 	m_anCVecUnsafe(nullptr),
 	m_estimatedConcentrationsUnsafe(nullptr),
-	m_correctDebyeHuckel(nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_DEBYE_HUCKEL))
+	m_correctDebyeHuckel(nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_DEBYE_HUCKEL)),
+	m_estimatedICUnsafeRaw(nullptr, &SolverImpl<CAESReal, ISet>::releaseRawArray),
+	m_dEstimatedICdHRaw(nullptr, &SolverImpl<CAESReal, ISet>::releaseRawArray),
+	m_estimatedIonicConcentrations(nullptr, &SolverImpl<CAESReal, ISet>::releaseMappedVector),
+	m_dEstimatedIonicConcentrationsdH(nullptr, &SolverImpl<CAESReal, ISet>::releaseMappedVector),
+	m_chargeSummerUnsafe(nullptr)
 {
-
 	initializeTotalEquilibria(ctx);
 
 	if (m_options & Solver::Options::DISABLE_THREAD_SAFETY) {
@@ -74,6 +78,7 @@ SolverImpl<CAESReal, ISet>::SolverImpl(SolverContextImpl<CAESReal> *ctx, const O
 		} catch (const std::bad_alloc &) {
 			delete m_internalUnsafe;
 			delete m_anCVecUnsafe;
+			delete m_chargeSummerUnsafe;
 			releaseTotalEquilibria();
 
 			throw;
@@ -89,6 +94,7 @@ SolverImpl<CAESReal, ISet>::~SolverImpl() ECHMET_NOEXCEPT
 {
 	delete m_internalUnsafe;
 	delete m_anCVecUnsafe;
+	delete m_chargeSummerUnsafe;
 
 	releaseTotalEquilibria();
 	AlignedAllocator<CAESReal, 32>::free(m_estimatedConcentrationsUnsafe);
@@ -199,25 +205,35 @@ RetCode SolverImpl<CAESReal, ISet>::estimateDistributionInternal(const CAESReal 
 			if (useFastEstimate) {
 				if (m_options & Solver::Options::DISABLE_THREAD_SAFETY) {
 					return estimatepHFast<false>(cHInitial, analyticalConcentrations,
-								     m_estimatedIonicConcentrations, m_dEstimatedIonicConcentrationsdH,
-								     m_activityCoefficients);
+								     *m_estimatedIonicConcentrations, *m_dEstimatedIonicConcentrationsdH,
+								     m_activityCoefficients,
+								     *m_chargeSummerUnsafe);
 				} else {
 					std::vector<CAESReal> activityCoefficients;
-					SolverVector<CAESReal> icConcs(m_TECount);
-					SolverVector<CAESReal> dIcConcsdH(m_TECount);
+
+					auto icConcsRaw = makeRawArray(m_TECount);
+					auto dIcConcsdHRaw = makeRawArray(m_TECount);
+
+					auto icConcs = makeMappedVector(icConcsRaw.get(), m_TECount);
+					auto dIcConcsdH = makeMappedVector(dIcConcsdHRaw.get(), m_TECount);
+					ChargeSummer<CAESReal, ISet, true> chargeSummer{m_TECount, m_totalEquilibria};
 
 					activityCoefficients.resize(m_ctx->chargesSquared.size());
-					return estimatepHFast<true>(cHInitial, analyticalConcentrations, icConcs, dIcConcsdH, activityCoefficients);
+					return estimatepHFast<true>(cHInitial, analyticalConcentrations, *icConcs, *dIcConcsdH, activityCoefficients, chargeSummer);
 				}
 			} else {
 				if (m_options & Solver::Options::DISABLE_THREAD_SAFETY)
-					return estimatepHSafe<false>(analyticalConcentrations, m_estimatedIonicConcentrations, m_activityCoefficients);
+					return estimatepHSafe<false>(analyticalConcentrations, *m_estimatedIonicConcentrations, m_activityCoefficients, *m_chargeSummerUnsafe);
 				else {
 					std::vector<CAESReal> activityCoefficients;
-					SolverVector<CAESReal> icConcs(m_TECount);
+
+					auto icConcsRaw = makeRawArray(m_TECount);
+					auto icConcs = makeMappedVector(icConcsRaw.get(), m_TECount);
+
+					ChargeSummer<CAESReal, ISet, true> chargeSummer{m_TECount, m_totalEquilibria};
 
 					activityCoefficients.resize(m_ctx->chargesSquared.size());
-					return estimatepHSafe<true>(analyticalConcentrations, icConcs, activityCoefficients);
+					return estimatepHSafe<true>(analyticalConcentrations, *icConcs, activityCoefficients, chargeSummer);
 				}
 			}
 		}();
@@ -256,8 +272,9 @@ RetCode SolverImpl<CAESReal, ISet>::estimateDistributionInternal(const CAESReal 
  */
 template <typename CAESReal, InstructionSet ISet> template <bool ThreadSafe>
 std::pair<SolverVector<CAESReal>, CAESReal> SolverImpl<CAESReal, ISet>::estimatepHFast(const CAESReal &cHInitial, const RealVec *analyticalConcentrations,
-										       SolverVector<CAESReal> &icConcs, SolverVector<CAESReal> &dIcConcsdH,
-										       std::vector<CAESReal> &activityCoefficients)
+										       MappedVector &icConcs, MappedVector &dIcConcsdH,
+										       std::vector<CAESReal> &activityCoefficients,
+										       ChargeSummer<CAESReal, ISet, ThreadSafe> &chargeSummer)
 {
 	const CAESReal KW_298 = CAESReal(PhChConsts::KW_298) * 1e6;
 	const CAESReal threshold = electroneturalityPrecision<CAESReal>();
@@ -277,17 +294,20 @@ std::pair<SolverVector<CAESReal>, CAESReal> SolverImpl<CAESReal, ISet>::estimate
 		size_t ctr = 0;
 		maxChargeActivityCoeff = activityCoefficients.back();
 		CAESReal cOH;
+		CAESReal z;
+		CAESReal dZ;
 
 		while (true) {
-			calculateDistributionWithDerivative<CAESReal, ThreadSafe>(cH, icConcs, dIcConcsdH, m_totalEquilibria, analyticalConcentrations, activityCoefficients);
-
-			CAESReal z = calcTotalCharge<CAESReal, ThreadSafe>(icConcs, m_totalEquilibria);
-			CAESReal dZ = calcTotalCharge<CAESReal, ThreadSafe>(dIcConcsdH, m_totalEquilibria);
+			calculateDistributionWithDerivative<CAESReal, ISet, ThreadSafe>(cH, icConcs, dIcConcsdH, m_totalEquilibria, analyticalConcentrations, activityCoefficients);
 
 			cOH = KW_298 / (cH * activityOneSquared);
 
-			z += cH - cOH;
-			dZ += 1.0 + cOH * cOH;
+			icConcs(0) = cH;
+			icConcs(1) = cOH;
+			dIcConcsdH(0) = 1.0;
+			dIcConcsdH(1) = cOH * cOH;
+
+			chargeSummer.calcWithdZ(icConcs, dIcConcsdH, z, dZ);
 
 			cHNew = cH - z / dZ;
 
@@ -311,10 +331,11 @@ std::pair<SolverVector<CAESReal>, CAESReal> SolverImpl<CAESReal, ISet>::estimate
 
 		ECHMET_DEBUG_CODE(fprintf(stderr, "cH = %g\n", CAESRealToDouble(cH)));
 
+		// TODO: Simplify this!
 		icConcs(0) = cHNew;
 		icConcs(1) = cOH;
 
-		ionicStrength = calculateIonicStrength<CAESReal, ThreadSafe>(icConcs, m_totalEquilibria, m_ctx->chargesSquared);
+		ionicStrength = calculateIonicStrength<CAESReal, ISet, ThreadSafe>(icConcs, m_totalEquilibria, m_ctx->chargesSquared);
 		if (m_correctDebyeHuckel) {
 			calculateActivityCoefficients(ionicStrength, activityCoefficients, m_ctx->chargesSquared);
 			ionicStrengthUnstable = !hasIonicStrengthConverged(maxChargeActivityCoeff, activityCoefficients.back());
@@ -335,8 +356,9 @@ std::pair<SolverVector<CAESReal>, CAESReal> SolverImpl<CAESReal, ISet>::estimate
  * @return Vector of concentrations of all ionic forms including \p H+ and \p OH-
  */
 template <typename CAESReal, InstructionSet ISet> template <bool ThreadSafe>
-std::pair<SolverVector<CAESReal>, CAESReal> SolverImpl<CAESReal, ISet>::estimatepHSafe(const RealVec *analyticalConcentrations, SolverVector<CAESReal> &icConcs,
-										       std::vector<CAESReal> &activityCoefficients)
+std::pair<SolverVector<CAESReal>, CAESReal> SolverImpl<CAESReal, ISet>::estimatepHSafe(const RealVec *analyticalConcentrations, MappedVector &icConcs,
+										       std::vector<CAESReal> &activityCoefficients,
+										       ChargeSummer<CAESReal, ISet, ThreadSafe> &chargeSummer)
 {
 	const CAESReal KW_298 = CAESReal(PhChConsts::KW_298) * 1e6;
 	const CAESReal threshold = electroneturalityPrecision<CAESReal>();
@@ -360,12 +382,15 @@ std::pair<SolverVector<CAESReal>, CAESReal> SolverImpl<CAESReal, ISet>::estimate
 		CAESReal cOH;
 
 		while (true) {
-			calculateDistribution<CAESReal, ThreadSafe>(cH, icConcs, m_totalEquilibria, analyticalConcentrations, activityCoefficients);
-
-			CAESReal z = calcTotalCharge<CAESReal, ThreadSafe>(icConcs, m_totalEquilibria);
+			calculateDistribution<CAESReal, ISet, ThreadSafe>(cH, icConcs, m_totalEquilibria, analyticalConcentrations, activityCoefficients);
 
 			cOH = KW_298 / (cH * activityOneSquared);
-			z += cH - cOH;
+
+			icConcs(0) = cH;
+			icConcs(1) = cOH;
+
+			const CAESReal z = chargeSummer.calc(icConcs);
+
 			//fprintf(stderr, "cH %g, z %g, dZ %g, cHNew, %g\n", CAESRealToDouble(cH), CAESRealToDouble(z), CAESRealToDouble(dZ), CAESRealToDouble(cHNew));
 
 			if (VMath::abs(z) < threshold)
@@ -384,10 +409,11 @@ std::pair<SolverVector<CAESReal>, CAESReal> SolverImpl<CAESReal, ISet>::estimate
 			cH = (rightWall - leftWall) / 2.0 + leftWall;
 		}
 
+		// TODO: Simplify this
 		icConcs(0) = cH;
 		icConcs(1) = cOH;
 
-		ionicStrength = calculateIonicStrength<CAESReal, ThreadSafe>(icConcs, m_totalEquilibria, m_ctx->chargesSquared);
+		ionicStrength = calculateIonicStrength<CAESReal, ISet, ThreadSafe>(icConcs, m_totalEquilibria, m_ctx->chargesSquared);
 		if (m_correctDebyeHuckel) {
 			calculateActivityCoefficients(ionicStrength, activityCoefficients, m_ctx->chargesSquared);
 			ionicStrengthUnstable = !hasIonicStrengthConverged(maxChargeActivityCoeff, activityCoefficients.back());
@@ -401,8 +427,12 @@ std::pair<SolverVector<CAESReal>, CAESReal> SolverImpl<CAESReal, ISet>::estimate
 template <typename CAESReal, InstructionSet ISet>
 void SolverImpl<CAESReal, ISet>::initializeEstimators()
 {
-	m_estimatedIonicConcentrations.resize(m_TECount);
-	m_dEstimatedIonicConcentrationsdH.resize(m_TECount);
+	m_estimatedICUnsafeRaw = makeRawArray(m_TECount);
+	m_dEstimatedICdHRaw = makeRawArray(m_TECount);
+	m_chargeSummerUnsafe = new ChargeSummer<CAESReal, ISet, false>{m_TECount, m_totalEquilibria};
+
+	m_estimatedIonicConcentrations = makeMappedVector(m_estimatedICUnsafeRaw.get(), m_TECount);
+	m_dEstimatedIonicConcentrationsdH = makeMappedVector(m_dEstimatedICdHRaw.get(), m_TECount);
 	m_activityCoefficients.resize(m_ctx->chargesSquared.size());
 	defaultActivityCoefficients(m_activityCoefficients);
 }

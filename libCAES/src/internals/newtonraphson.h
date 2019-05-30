@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <internal/echmetmath_internal.h>
 
-#include "../types.h"
+#include "../mappedmatrix.h"
 #include "../vecmath/vecmath.h"
 
 namespace ECHMET {
@@ -39,34 +39,6 @@ mpfr::mpreal getDefaultFPrecision()
 }
 
 template <typename NRReal, InstructionSet ISet>
-class NRTypes {
-public:
-	typedef Eigen::Map<SolverMatrix<NRReal>, Eigen::AlignmentType::Unaligned> Matrix;
-	typedef Eigen::Map<SolverVector<NRReal>, Eigen::AlignmentType::Unaligned> Vector;
-};
-
-template <>
-class NRTypes<double, InstructionSet::SSE2> {
-public:
-	typedef Eigen::Map<SolverMatrix<double>, Eigen::AlignmentType::Aligned16> Matrix;
-	typedef Eigen::Map<SolverVector<double>, Eigen::AlignmentType::Aligned16> Vector;
-};
-
-template <>
-class NRTypes<double, InstructionSet::AVX> {
-public:
-	typedef Eigen::Map<SolverMatrix<double>, Eigen::AlignmentType::Aligned32> Matrix;
-	typedef Eigen::Map<SolverVector<double>, Eigen::AlignmentType::Aligned32> Vector;
-};
-
-template <>
-class NRTypes<double, InstructionSet::FMA3> {
-public:
-	typedef Eigen::Map<SolverMatrix<double>, Eigen::AlignmentType::Aligned32> Matrix;
-	typedef Eigen::Map<SolverVector<double>, Eigen::AlignmentType::Aligned32> Vector;
-};
-
-template <typename NRReal, InstructionSet ISet>
 class NewtonRaphson {
 public:
 	enum class Status {
@@ -79,8 +51,8 @@ public:
 		ABORTED
 	};
 
-	typedef typename NRTypes<NRReal, ISet>::Matrix TM;
-	typedef typename NRTypes<NRReal, ISet>::Vector TX;
+	typedef typename MMTypes<NRReal, ISet>::Matrix TM;
+	typedef typename MMTypes<NRReal, ISet>::Vector TX;
 
 	size_t maxIterations;
 	NRReal const xPrecision;
