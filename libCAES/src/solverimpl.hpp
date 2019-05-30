@@ -61,8 +61,8 @@ SolverImpl<CAESReal, ISet>::SolverImpl(SolverContextImpl<CAESReal> *ctx, const O
 	m_correctDebyeHuckel(nonidealityCorrectionIsSet(corrections, NonidealityCorrectionsItems::CORR_DEBYE_HUCKEL)),
 	m_estimatedICUnsafeRaw(nullptr, &SolverImpl<CAESReal, ISet>::releaseRawArray),
 	m_dEstimatedICdHRaw(nullptr, &SolverImpl<CAESReal, ISet>::releaseRawArray),
-	m_estimatedIonicConcentrations(nullptr, &SolverImpl<CAESReal, ISet>::releaseMappedVector),
-	m_dEstimatedIonicConcentrationsdH(nullptr, &SolverImpl<CAESReal, ISet>::releaseMappedVector),
+	m_estimatedIonicConcentrations(nullptr),
+	m_dEstimatedIonicConcentrationsdH(nullptr),
 	m_chargeSummerUnsafe(nullptr)
 {
 	initializeTotalEquilibria(ctx);

@@ -50,15 +50,10 @@ public:
 
 private:
 	using MappedVector = typename MMTypes<CAESReal, ISet>::Vector;
-	static
-	void releaseMappedVector(MappedVector *v) noexcept
-	{
-		delete v;
-	}
-	using MappedVectorPtr = std::unique_ptr<MappedVector, decltype(&SolverImpl<CAESReal, ISet>::releaseMappedVector)>;
+	using MappedVectorPtr = std::unique_ptr<MappedVector>;
 	MappedVectorPtr makeMappedVector(CAESReal *raw, int size)
 	{
-		return MappedVectorPtr{new MappedVector{raw, size}, &SolverImpl<CAESReal, ISet>::releaseMappedVector};
+		return MappedVectorPtr{new MappedVector{raw, size}};
 	}
 
 	static
