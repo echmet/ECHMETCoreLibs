@@ -30,11 +30,10 @@ static
 void calculateDistributionWithDerivative(const CAESReal &v,
 					 CAESReal *const distribution,
 					 CAESReal *const dDistdV,
-					 std::vector<TotalEquilibriumBase *> &totalEquilibria, const RealVec *analyticalConcentrations, const std::vector<CAESReal> &activityCoefficients)
+					 std::vector<TotalEquilibriumBase *> &totalEquilibria, const ECHMETReal *acRaw,
+					 const std::vector<CAESReal> &activityCoefficients)
 {
 	size_t rowCounter = 2;
-
-	const ECHMETReal *acRaw = &analyticalConcentrations->elem(0);
 
 	for (TotalEquilibriumBase *teb : totalEquilibria) {
 		auto *te = static_cast<TotalEquilibrium<CAESReal, ThreadSafe> *>(teb);
@@ -75,7 +74,7 @@ template <typename CAESReal, InstructionSet ISet, bool ThreadSafe>
 static
 void calculateDistribution(const CAESReal &v,
 			   CAESReal *distribution,
-			   std::vector<TotalEquilibriumBase *> &totalEquilibria, const RealVec *analyticalConcentrations,
+			   std::vector<TotalEquilibriumBase *> &totalEquilibria, const ECHMETReal *acRaw,
 			   const std::vector<CAESReal> &activityCoefficients)
 {
 	size_t rowCounter = 2;
@@ -85,7 +84,7 @@ void calculateDistribution(const CAESReal &v,
 		CAESReal X = 0.0;
 		const std::vector<CAESReal> & Ts = te->Ts(v, activityCoefficients, X);
 
-		const CAESReal &c = analyticalConcentrations->elem(te->concentrationIndex);
+		const ECHMETReal c = acRaw[te->concentrationIndex];
 		for (const CAESReal &T : Ts) {
 			const CAESReal fC = c * T / X;
 

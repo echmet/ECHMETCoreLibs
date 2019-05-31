@@ -286,6 +286,8 @@ std::pair<SolverVector<CAESReal>, CAESReal> SolverImpl<CAESReal, ISet>::estimate
 	CAESReal maxChargeActivityCoeff;
 	bool ionicStrengthUnstable;
 
+	const ECHMETReal *acRaw = analyticalConcentrations->size() > 0 ? &analyticalConcentrations->elem(0) : nullptr;
+
 	if (m_correctDebyeHuckel || ThreadSafe)
 		defaultActivityCoefficients(activityCoefficients);
 
@@ -300,8 +302,9 @@ std::pair<SolverVector<CAESReal>, CAESReal> SolverImpl<CAESReal, ISet>::estimate
 		CAESReal *const icConcsRaw = icConcs.data();
 		CAESReal *const dIcConcsdHRaw = dIcConcsdH.data();
 
+
 		while (true) {
-			calculateDistributionWithDerivative<CAESReal, ISet, ThreadSafe>(cH, icConcsRaw, dIcConcsdHRaw, m_totalEquilibria, analyticalConcentrations, activityCoefficients);
+			calculateDistributionWithDerivative<CAESReal, ISet, ThreadSafe>(cH, icConcsRaw, dIcConcsdHRaw, m_totalEquilibria, acRaw, activityCoefficients);
 
 			cOH = KW_298 / (cH * activityOneSquared);
 
@@ -371,6 +374,8 @@ std::pair<SolverVector<CAESReal>, CAESReal> SolverImpl<CAESReal, ISet>::estimate
 	CAESReal maxChargeActivityCoeff;
 	bool ionicStrengthUnstable;
 
+	const ECHMETReal *acRaw = analyticalConcentrations->size() > 0 ? &analyticalConcentrations->elem(0) : nullptr;
+
 	if (m_correctDebyeHuckel || ThreadSafe)
 		defaultActivityCoefficients(activityCoefficients);
 
@@ -386,7 +391,7 @@ std::pair<SolverVector<CAESReal>, CAESReal> SolverImpl<CAESReal, ISet>::estimate
 		CAESReal cOH;
 
 		while (true) {
-			calculateDistribution<CAESReal, ISet, ThreadSafe>(cH, icConcsRaw, m_totalEquilibria, analyticalConcentrations, activityCoefficients);
+			calculateDistribution<CAESReal, ISet, ThreadSafe>(cH, icConcsRaw, m_totalEquilibria, acRaw, activityCoefficients);
 
 			cOH = KW_298 / (cH * activityOneSquared);
 
