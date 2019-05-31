@@ -49,13 +49,6 @@ public:
 			 const size_t iterations, SolverIterations *iterationsNeeded = nullptr) noexcept;
 
 private:
-	using MappedVector = typename MMTypes<CAESReal, ISet>::Vector;
-	using MappedVectorPtr = std::unique_ptr<MappedVector>;
-	MappedVectorPtr makeMappedVector(CAESReal *raw, int size)
-	{
-		return MappedVectorPtr{new MappedVector{raw, size}};
-	}
-
 	static
 	void releaseRawArray(CAESReal *v) noexcept
 	{
@@ -71,14 +64,14 @@ private:
 	RetCode estimateDistributionCommon(const ECHMETReal &cHInitial, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps,
 					   const bool useFastEstimate) noexcept;
 	template <bool ThreadSafe>
-	std::pair<SolverVector<CAESReal>, CAESReal> estimatepHFast(const CAESReal &cHInitial, const RealVec *analyticalConcentrations,
-								   MappedVector &icConcs, MappedVector &dIcConcsdH,
-								   std::vector<CAESReal> &activityCoefficients,
-								   ChargeSummer<CAESReal, ISet, ThreadSafe> &chargeSummer);
+	std::pair<CAESReal *, CAESReal> estimatepHFast(const CAESReal &cHInitial, const RealVec *analyticalConcentrations,
+						       CAESReal *icConcs, CAESReal *dIcConcsdH,
+						       std::vector<CAESReal> &activityCoefficients,
+						       ChargeSummer<CAESReal, ISet, ThreadSafe> &chargeSummer);
 	template <bool ThreadSafe>
-	std::pair<SolverVector<CAESReal>, CAESReal> estimatepHSafe(const RealVec *analyticalConcentrations, MappedVector &icConcs,
-								   std::vector<CAESReal> &activityCoefficients,
-								   ChargeSummer<CAESReal, ISet, ThreadSafe> &chargeSummer);
+	std::pair<CAESReal *, CAESReal> estimatepHSafe(const RealVec *analyticalConcentrations, CAESReal *icConcs,
+						       std::vector<CAESReal> &activityCoefficients,
+						       ChargeSummer<CAESReal, ISet, ThreadSafe> &chargeSummer);
 	void initializeEstimators();
 	SolverInternal<CAESReal, ISet> * makeSolverInternal(const SolverContextImpl<CAESReal> *ctx) const;
 	void initializeTotalEquilibria(const SolverContextImpl<CAESReal> *ctx);
@@ -101,11 +94,8 @@ private:
 	size_t m_TECount;					/*!< Number of ionic concentrations that can be estimated from G-polynomial */
 	std::vector<TotalEquilibriumBase *> m_totalEquilibria;
 
-	RawArrayPtr m_estimatedICUnsafeRaw;
-	RawArrayPtr m_dEstimatedICdHRaw;
-
-	MappedVectorPtr m_estimatedIonicConcentrations;
-	MappedVectorPtr m_dEstimatedIonicConcentrationsdH;
+	RawArrayPtr m_estimatedICUnsafe;
+	RawArrayPtr m_dEstimatedICdHUnsafe;
 
 	std::vector<CAESReal> m_activityCoefficients;
 	ChargeSummer<CAESReal, ISet, false> *m_chargeSummerUnsafe;	/*!< ChargeSummer for thread-unsafe context */

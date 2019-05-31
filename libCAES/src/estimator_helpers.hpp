@@ -146,7 +146,7 @@ CAESReal calcTotalCharge(const SolverVector<CAESReal> &icConcs, const std::vecto
  */
 template <typename CAESReal>
 static
-void estimateComplexesDistribution(const CNVec<CAESReal> *complexNuclei, const LigandVec<CAESReal> *allLigands, const SolverVector<CAESReal> &estConcentrations, const size_t LGBlockOffset, SolverVector<CAESReal> &estimatedConcentrations)
+void estimateComplexesDistribution(const CNVec<CAESReal> *complexNuclei, const LigandVec<CAESReal> *allLigands, const CAESReal *estConcentrations, const size_t LGBlockOffset, SolverVector<CAESReal> &estimatedConcentrations)
 {
 	size_t rowCounter = 2;
 	size_t ecRowCounter = 2;
@@ -154,7 +154,7 @@ void estimateComplexesDistribution(const CNVec<CAESReal> *complexNuclei, const L
 	/* Set concentrations of all free forms and ligands first */
 	for (const ComplexNucleus<CAESReal> *cn : *complexNuclei) {
 		for (int charge = cn->chargeLow; charge <= cn->chargeHigh; charge++) {
-			estimatedConcentrations(rowCounter) = estConcentrations(ecRowCounter);
+			estimatedConcentrations(rowCounter) = estConcentrations[ecRowCounter];
 			rowCounter++; ecRowCounter++;
 
 			const FormVec<CAESReal> &fv = cn->forms.at(charge - cn->chargeLow);
@@ -163,7 +163,7 @@ void estimateComplexesDistribution(const CNVec<CAESReal> *complexNuclei, const L
 	}
 	for (const Ligand<CAESReal> *l : *allLigands) {
 		for (int charge = l->chargeLow; charge <= l->chargeHigh; charge++) {
-			estimatedConcentrations(rowCounter) = estConcentrations(ecRowCounter);
+			estimatedConcentrations(rowCounter) = estConcentrations[ecRowCounter];
 			rowCounter++; ecRowCounter++;
 		}
 	}
