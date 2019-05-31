@@ -56,7 +56,7 @@ void calculateDistributionWithDerivative(const CAESReal &v,
 			distribution[rowCounter] = c * fC;
 
 			/* dDistdV */
-			const CAESReal fD = (dT * X - T * dX) / (X * X);
+			const CAESReal fD = (dT * X - T * dX) / X / X;
 			dDistdV[rowCounter] = c * fD;
 
 			rowCounter++;
