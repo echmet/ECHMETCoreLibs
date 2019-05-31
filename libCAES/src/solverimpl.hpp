@@ -141,8 +141,9 @@ RetCode SolverImpl<CAESReal, ISet>::estimateDistributionCommon(const ECHMETReal 
 		if (tRet != RetCode::OK)
 			return tRet;
 
+		ECHMETReal *ics = &(*calcProps.ionicConcentrations)[0];
 		for (int idx = 0; idx < estC.size(); idx++)
-			(*calcProps.ionicConcentrations)[idx] = CAESRealToECHMETReal(estC(idx));
+			ics[idx] = CAESRealToECHMETReal(estC(idx));
 		calcProps.ionicStrength = CAESRealToECHMETReal(ionicStrength);
 
 		return RetCode::OK;
