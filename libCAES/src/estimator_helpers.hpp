@@ -34,6 +34,8 @@ void calculateDistributionWithDerivative(const CAESReal &v,
 {
 	size_t rowCounter = 2;
 
+	const ECHMETReal *acRaw = &analyticalConcentrations->elem(0);
+
 	for (TotalEquilibriumBase *teb : totalEquilibria) {
 		auto *te = static_cast<TotalEquilibrium<CAESReal, ThreadSafe> *>(teb);
 		CAESReal X = 0.0;
@@ -43,7 +45,7 @@ void calculateDistributionWithDerivative(const CAESReal &v,
 
 		assert(Ts.size() == dTsdV.size());
 
-		const CAESReal &c = analyticalConcentrations->elem(te->concentrationIndex);
+		const ECHMETReal c = acRaw[te->concentrationIndex];
 
 		for (size_t idx = 0; idx < Ts.size(); idx++) {
 			const CAESReal &T = Ts[idx];
