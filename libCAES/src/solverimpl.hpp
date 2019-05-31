@@ -337,10 +337,6 @@ std::pair<SolverVector<CAESReal>, CAESReal> SolverImpl<CAESReal, ISet>::estimate
 
 		ECHMET_DEBUG_CODE(fprintf(stderr, "cH = %g\n", CAESRealToDouble(cH)));
 
-		// TODO: Simplify this!
-		icConcs(0) = cHNew;
-		icConcs(1) = cOH;
-
 		ionicStrength = chargeSummer.calculateIonicStrength(icConcsRaw);
 		if (m_correctDebyeHuckel) {
 			calculateActivityCoefficients(ionicStrength, activityCoefficients, m_ctx->chargesSquared);
@@ -417,10 +413,6 @@ std::pair<SolverVector<CAESReal>, CAESReal> SolverImpl<CAESReal, ISet>::estimate
 
 			cH = (rightWall - leftWall) / 2.0 + leftWall;
 		}
-
-		// TODO: Simplify this
-		icConcs(0) = cH;
-		icConcs(1) = cOH;
 
 		ionicStrength = chargeSummer.calculateIonicStrength(icConcsRaw);
 		if (m_correctDebyeHuckel) {
