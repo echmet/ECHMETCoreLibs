@@ -95,6 +95,7 @@ void calculateDistribution(const CAESReal &v,
 	}
 }
 
+/*
 template <typename CAESReal, InstructionSet ISet, bool ThreadSafe>
 static
 CAESReal calculateIonicStrength(const typename MMTypes<CAESReal, ISet>::Vector &icConcs, std::vector<TotalEquilibriumBase *> &totalEquilibria, const std::vector<int> &chargesSquared)
@@ -111,8 +112,9 @@ CAESReal calculateIonicStrength(const typename MMTypes<CAESReal, ISet>::Vector &
 
 	ionicStrength += icConcs(0) + icConcs(1);
 
-	return 0.0005 * ionicStrength; /* Scale to mol/dm3 */
+	return 0.0005 * ionicStrength; / Scale to mol/dm3 /
 }
+*/
 
 /*
 template <typename CAESReal, bool ThreadSafe>

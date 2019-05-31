@@ -19,22 +19,30 @@ public:
 		m_NBlock{N - (N % m_blockSize)}
 	{
 		m_chargesArray = AlignedAllocator<double, VDType<ISet>::ALIGNMENT_BYTES>::alloc(m_N);
+		m_chargesSquared = AlignedAllocator<double, VDType<ISet>::ALIGNMENT_BYTES>::alloc(m_N);
 
 		size_t ctr{2};
 		for (const TotalEquilibriumBase *teb : totalEquilibria) {
 			const auto *te = static_cast<const TotalEquilibrium<CAESReal, ThreadSafe> *>(teb);
-			for (int charge = te->numLow; charge <= te->numHigh; charge++)
-				m_chargesArray[ctr++] = charge;
+			for (int charge = te->numLow; charge <= te->numHigh; charge++) {
+				m_chargesArray[ctr] = charge;
+				m_chargesSquared[ctr] = charge * charge;
 
+				ctr++;
+			}
 		}
-		m_chargesArray[0] = 1;	/* H+ */
-		m_chargesArray[1] = -1;	/* OH- */
+		m_chargesArray[0] = 1.0;	/* H+ */
+		m_chargesArray[1] = -1.0;	/* OH- */
+
+		m_chargesSquared[0] = 1.0;	/* H+ */
+		m_chargesSquared[1] = 1.0;	/* OH- */
 	}
 
 
 	~ChargeSummer() noexcept
 	{
 		AlignedAllocator<double, VDType<ISet>::ALIGNMENT_BYTES>::free(m_chargesArray);
+		AlignedAllocator<double, VDType<ISet>::ALIGNMENT_BYTES>::free(m_chargesSquared);
 	}
 
 	CAESReal calc(const CAESReal *const ECHMET_RESTRICT_PTR icConcs) noexcept
@@ -45,6 +53,16 @@ public:
 			z += m_chargesArray[idx] * icConcs[idx];
 
 		return z;
+	}
+
+	CAESReal calculateIonicStrength(const CAESReal *const ECHMET_RESTRICT_PTR icConcs) noexcept
+	{
+		CAESReal ionicStrength{0};
+
+		for (size_t idx = 0; idx < m_N; idx++)
+			ionicStrength += m_chargesSquared[idx] * icConcs[idx];
+
+		return 0.0005 * ionicStrength; /* Scale to mol/dm3 */
 	}
 
 	void calcWithdZ(const CAESReal *const ECHMET_RESTRICT_PTR icConcs,
@@ -66,6 +84,7 @@ private:
 	const size_t m_NBlock;
 
 	double *m_chargesArray;
+	double *m_chargesSquared;
 };
 
 template <>

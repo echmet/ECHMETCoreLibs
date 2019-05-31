@@ -341,7 +341,7 @@ std::pair<SolverVector<CAESReal>, CAESReal> SolverImpl<CAESReal, ISet>::estimate
 		icConcs(0) = cHNew;
 		icConcs(1) = cOH;
 
-		ionicStrength = calculateIonicStrength<CAESReal, ISet, ThreadSafe>(icConcs, m_totalEquilibria, m_ctx->chargesSquared);
+		ionicStrength = chargeSummer.calculateIonicStrength(icConcsRaw);
 		if (m_correctDebyeHuckel) {
 			calculateActivityCoefficients(ionicStrength, activityCoefficients, m_ctx->chargesSquared);
 			ionicStrengthUnstable = !hasIonicStrengthConverged(maxChargeActivityCoeff, activityCoefficients.back());
@@ -422,7 +422,7 @@ std::pair<SolverVector<CAESReal>, CAESReal> SolverImpl<CAESReal, ISet>::estimate
 		icConcs(0) = cH;
 		icConcs(1) = cOH;
 
-		ionicStrength = calculateIonicStrength<CAESReal, ISet, ThreadSafe>(icConcs, m_totalEquilibria, m_ctx->chargesSquared);
+		ionicStrength = chargeSummer.calculateIonicStrength(icConcsRaw);
 		if (m_correctDebyeHuckel) {
 			calculateActivityCoefficients(ionicStrength, activityCoefficients, m_ctx->chargesSquared);
 			ionicStrengthUnstable = !hasIonicStrengthConverged(maxChargeActivityCoeff, activityCoefficients.back());
