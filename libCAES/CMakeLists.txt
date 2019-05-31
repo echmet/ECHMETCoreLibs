@@ -33,6 +33,7 @@ set(libCAES_SRCS
     src/solverinternal_fma3.cpp
     src/chargesummer_sse2.cpp
     src/chargesummer_avx.cpp
+    src/chargesummer_fma3.cpp
     src/internals/newtonraphson_avx.cpp
     src/internals/newtonraphson_fma3.cpp
     src/vecmath/vecmath.cpp
@@ -44,6 +45,7 @@ if (UNIX)
     if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" OR
         ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
         set_source_files_properties(src/chargesummer_avx.cpp COMPILE_FLAGS "-mavx")
+        set_source_files_properties(src/chargesummer_fma3.cpp COMPILE_FLAGS "-mfma")
         set_source_files_properties(src/solverinternal_avx.cpp COMPILE_FLAGS "-mavx")
         set_source_files_properties(src/solverinternal_fma3.cpp COMPILE_FLAGS "-mfma")
         set_source_files_properties(src/vecmath/vecmath_avx.cpp COMPILE_FLAGS "-mavx")
@@ -54,6 +56,7 @@ if (UNIX)
 elseif (WIN32)
     if (MINGW OR MSYS)
         set_source_files_properties(src/chargesummer_avx.cpp COMPILE_FLAGS "-mavx")
+        set_source_files_properties(src/chargesummer_fma3.cpp COMPILE_FLAGS "-mfma")
         set_source_files_properties(src/solverinternal_avx.cpp COMPILE_FLAGS "-mavx")
         set_source_files_properties(src/solverinternal_fma3.cpp COMPILE_FLAGS "-mfma")
         set_source_files_properties(src/vecmath/vecmath_avx.cpp COMPILE_FLAGS "-mavx")
@@ -62,6 +65,7 @@ elseif (WIN32)
         set_source_files_properties(src/internals/newtonraphson_fma3.cpp COMPILE_FLAGS "-mfma")
     elseif (MSVC)
         set_source_files_properties(src/chargesummer_avx.cpp COMPILE_FLAGS "/arch:AVX")
+        set_source_files_properties(src/chargesummer_fma3.cpp COMPILE_FLAGS "/arch:AVX2")
         set_source_files_properties(src/solverinternal_avx.cpp COMPILE_FLAGS "/arch:AVX")
         set_source_files_properties(src/solverinternal_fma3.cpp COMPILE_FLAGS "/arch:AVX2")
         set_source_files_properties(src/vecmath/vecmath_avx.cpp COMPILE_FLAGS "/arch:AVX")

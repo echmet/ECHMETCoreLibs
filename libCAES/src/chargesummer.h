@@ -88,12 +88,25 @@ template <>
 double ChargeSummer<double, InstructionSet::AVX, true>::calc(const double *const ECHMET_RESTRICT_PTR icConcs) noexcept;
 template <>
 void ChargeSummer<double, InstructionSet::AVX, false>::calcWithdZ(const double *const ECHMET_RESTRICT_PTR icConcs,
-								   const double *const ECHMET_RESTRICT_PTR dIcConcsdH,
-								   double &z, double &dZ) noexcept;
+								  const double *const ECHMET_RESTRICT_PTR dIcConcsdH,
+								  double &z, double &dZ) noexcept;
 template <>
 void ChargeSummer<double, InstructionSet::AVX, true>::calcWithdZ(const double *const ECHMET_RESTRICT_PTR icConcs,
 								 const double *const ECHMET_RESTRICT_PTR dIcConcsdH,
 								 double &z, double &dZ) noexcept;
+
+template <>
+double ChargeSummer<double, InstructionSet::FMA3, false>::calc(const double *const ECHMET_RESTRICT_PTR icConcs) noexcept;
+template <>
+double ChargeSummer<double, InstructionSet::FMA3, true>::calc(const double *const ECHMET_RESTRICT_PTR icConcs) noexcept;
+template <>
+void ChargeSummer<double, InstructionSet::FMA3, false>::calcWithdZ(const double *const ECHMET_RESTRICT_PTR icConcs,
+								   const double *const ECHMET_RESTRICT_PTR dIcConcsdH,
+								   double &z, double &dZ) noexcept;
+template <>
+void ChargeSummer<double, InstructionSet::FMA3, true>::calcWithdZ(const double *const ECHMET_RESTRICT_PTR icConcs,
+								  const double *const ECHMET_RESTRICT_PTR dIcConcsdH,
+								  double &z, double &dZ) noexcept;
 } // namespace CAES
 } // namespace ECHMET
 
