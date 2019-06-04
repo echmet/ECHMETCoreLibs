@@ -18,21 +18,21 @@ public:
 		m_blockSize{VDType<ISet>::ALIGNMENT_BYTES / sizeof(CAESReal)},
 		m_NBlock{N - (N % m_blockSize)}
 	{
-		m_chargesArray = AlignedAllocator<double, VDType<ISet>::ALIGNMENT_BYTES>::alloc(m_N);
+		m_charges = AlignedAllocator<double, VDType<ISet>::ALIGNMENT_BYTES>::alloc(m_N);
 		m_chargesSquared = AlignedAllocator<double, VDType<ISet>::ALIGNMENT_BYTES>::alloc(m_N);
 
 		size_t ctr{2};
 		for (const TotalEquilibriumBase *teb : totalEquilibria) {
 			const auto *te = static_cast<const TotalEquilibrium<CAESReal, ThreadSafe> *>(teb);
 			for (int charge = te->numLow; charge <= te->numHigh; charge++) {
-				m_chargesArray[ctr] = charge;
+				m_charges[ctr] = charge;
 				m_chargesSquared[ctr] = charge * charge;
 
 				ctr++;
 			}
 		}
-		m_chargesArray[0] = 1.0;	/* H+ */
-		m_chargesArray[1] = -1.0;	/* OH- */
+		m_charges[0] = 1.0;	/* H+ */
+		m_charges[1] = -1.0;	/* OH- */
 
 		m_chargesSquared[0] = 1.0;	/* H+ */
 		m_chargesSquared[1] = 1.0;	/* OH- */
@@ -41,7 +41,7 @@ public:
 
 	~ChargeSummer() noexcept
 	{
-		AlignedAllocator<double, VDType<ISet>::ALIGNMENT_BYTES>::free(m_chargesArray);
+		AlignedAllocator<double, VDType<ISet>::ALIGNMENT_BYTES>::free(m_charges);
 		AlignedAllocator<double, VDType<ISet>::ALIGNMENT_BYTES>::free(m_chargesSquared);
 	}
 
@@ -50,7 +50,7 @@ public:
 		CAESReal z{0};
 
 		for (size_t idx = 0; idx < m_N; idx++)
-			z += m_chargesArray[idx] * icConcs[idx];
+			z += m_charges[idx] * icConcs[idx];
 
 		return z;
 	}
@@ -73,8 +73,8 @@ public:
 		dZ = CAESReal{0};
 
 		for (size_t idx = 0; idx < m_N; idx++) {
-			z += m_chargesArray[idx] * icConcs[idx];
-			dZ += m_chargesArray[idx] * dIcConcsdH[idx];
+			z += m_charges[idx] * icConcs[idx];
+			dZ += m_charges[idx] * dIcConcsdH[idx];
 		}
 	}
 
@@ -83,7 +83,7 @@ private:
 	const size_t m_blockSize;
 	const size_t m_NBlock;
 
-	double *m_chargesArray;
+	double *m_charges;
 	double *m_chargesSquared;
 };
 

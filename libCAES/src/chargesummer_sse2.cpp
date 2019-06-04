@@ -17,7 +17,7 @@ double ChargeSummer<double, InstructionSet::SSE2, false>::calc(const double *con
 	size_t idx{0};
 	for (; idx < m_NBlock; idx += m_blockSize) {
 		__m128d conc = M128D(icConcs + idx);
-		__m128d chg = M128D(m_chargesArray + idx);
+		__m128d chg = M128D(m_charges + idx);
 
 		conc = _mm_mul_pd(conc, chg);
 		zVec = _mm_add_pd(zVec, conc);
@@ -27,7 +27,7 @@ double ChargeSummer<double, InstructionSet::SSE2, false>::calc(const double *con
 	z = vz[0] + vz[1];
 
 	for (; idx < m_N; idx++)
-		z += m_chargesArray[idx] * icConcs[idx];
+		z += m_charges[idx] * icConcs[idx];
 
 	return z;
 }
@@ -42,7 +42,7 @@ double ChargeSummer<double, InstructionSet::SSE2, true>::calc(const double *cons
 	size_t idx{0};
 	for (; idx < m_NBlock; idx += m_blockSize) {
 		__m128d conc = M128D(icConcs + idx);
-		__m128d chg = M128D(m_chargesArray + idx);
+		__m128d chg = M128D(m_charges + idx);
 
 		conc = _mm_mul_pd(conc, chg);
 		zVec = _mm_add_pd(zVec, conc);
@@ -52,7 +52,7 @@ double ChargeSummer<double, InstructionSet::SSE2, true>::calc(const double *cons
 	z = vz[0] + vz[1];
 
 	for (; idx < m_N; idx++)
-		z += m_chargesArray[idx] * icConcs[idx];
+		z += m_charges[idx] * icConcs[idx];
 
 	return z;
 }
@@ -71,7 +71,7 @@ void ChargeSummer<double, InstructionSet::SSE2, false>::calcWithdZ(const double 
 	for (; idx < m_NBlock; idx += m_blockSize) {
 		__m128d conc = M128D(icConcs + idx);
 		__m128d dConc = M128D(dIcConcsdH + idx);
-		__m128d chg = M128D(m_chargesArray + idx);
+		__m128d chg = M128D(m_charges + idx);
 
 		conc = _mm_mul_pd(conc, chg);
 		dConc = _mm_mul_pd(dConc, chg);
@@ -87,8 +87,8 @@ void ChargeSummer<double, InstructionSet::SSE2, false>::calcWithdZ(const double 
 	dZ = vdZ[0] + vdZ[1];
 
 	for (; idx < m_N; idx++) {
-		z += m_chargesArray[idx] * icConcs[idx];
-		dZ += m_chargesArray[idx] * dIcConcsdH[idx];
+		z += m_charges[idx] * icConcs[idx];
+		dZ += m_charges[idx] * dIcConcsdH[idx];
 	}
 }
 
@@ -106,7 +106,7 @@ void ChargeSummer<double, InstructionSet::SSE2, true>::calcWithdZ(const double *
 	for (; idx < m_NBlock; idx += m_blockSize) {
 		__m128d conc = M128D(icConcs + idx);
 		__m128d dConc = M128D(dIcConcsdH + idx);
-		__m128d chg = M128D(m_chargesArray + idx);
+		__m128d chg = M128D(m_charges + idx);
 
 		conc = _mm_mul_pd(conc, chg);
 		dConc = _mm_mul_pd(dConc, chg);
@@ -122,8 +122,8 @@ void ChargeSummer<double, InstructionSet::SSE2, true>::calcWithdZ(const double *
 	dZ = vdZ[0] + vdZ[1];
 
 	for (; idx < m_N; idx++) {
-		z += m_chargesArray[idx] * icConcs[idx];
-		dZ += m_chargesArray[idx] * dIcConcsdH[idx];
+		z += m_charges[idx] * icConcs[idx];
+		dZ += m_charges[idx] * dIcConcsdH[idx];
 	}
 }
 
