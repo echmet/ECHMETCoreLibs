@@ -42,15 +42,16 @@ void calculateActivityCoefficients(const CAESReal &ionicStrength, std::vector<CA
 template <typename CAESReal, InstructionSet ISet, bool ThreadSafe>
 static
 void calculateDistributionWithDerivative(const CAESReal &v,
-					 CAESReal *const distribution,
-					 CAESReal *const dDistdV,
-					 std::vector<TotalEquilibriumBase *> &totalEquilibria, const ECHMETReal *acRaw,
+					 CAESReal *const ECHMET_RESTRICT_PTR distribution,
+					 CAESReal *const ECHMET_RESTRICT_PTR dDistdV,
+					 std::vector<TotalEquilibriumBase *> &totalEquilibria,
+					 const ECHMETReal *const ECHMET_RESTRICT_PTR acRaw,
 					 const std::vector<CAESReal> &activityCoefficients)
 {
 	size_t rowCounter = 2;
 
 	for (TotalEquilibriumBase *teb : totalEquilibria) {
-		auto *te = static_cast<TotalEquilibrium<CAESReal, ThreadSafe> *>(teb);
+		auto te = static_cast<TotalEquilibrium<CAESReal, ThreadSafe> *>(teb);
 		CAESReal X{};
 		CAESReal dX{};
 		const auto pack = te->TsAnddTsdV(v, activityCoefficients, X, dX);
@@ -89,14 +90,15 @@ void calculateDistributionWithDerivative(const CAESReal &v,
 template <typename CAESReal, InstructionSet ISet, bool ThreadSafe>
 static
 void calculateDistribution(const CAESReal &v,
-			   CAESReal *distribution,
-			   std::vector<TotalEquilibriumBase *> &totalEquilibria, const ECHMETReal *acRaw,
+			   CAESReal *const ECHMET_RESTRICT_PTR distribution,
+			   std::vector<TotalEquilibriumBase *> &totalEquilibria,
+			   const ECHMETReal *const ECHMET_RESTRICT_PTR acRaw,
 			   const std::vector<CAESReal> &activityCoefficients)
 {
 	size_t rowCounter = 2;
 
 	for (TotalEquilibriumBase *teb : totalEquilibria) {
-		auto *te = static_cast<TotalEquilibrium<CAESReal, ThreadSafe> *>(teb);
+		auto te = static_cast<TotalEquilibrium<CAESReal, ThreadSafe> *>(teb);
 		CAESReal X = 0.0;
 		const std::vector<CAESReal> & Ts = te->Ts(v, activityCoefficients, X);
 
@@ -162,7 +164,8 @@ CAESReal calcTotalCharge(const SolverVector<CAESReal> &icConcs, const std::vecto
  */
 template <typename CAESReal>
 static
-void estimateComplexesDistribution(const CNVec<CAESReal> *complexNuclei, const LigandVec<CAESReal> *allLigands, const CAESReal *estConcentrations, const size_t LGBlockOffset, SolverVector<CAESReal> &estimatedConcentrations)
+void estimateComplexesDistribution(const CNVec<CAESReal> *complexNuclei, const LigandVec<CAESReal> *allLigands,
+				   const CAESReal *const ECHMET_RESTRICT_PTR estConcentrations, const size_t LGBlockOffset, SolverVector<CAESReal> &estimatedConcentrations)
 {
 	size_t rowCounter = 2;
 	size_t ecRowCounter = 2;
