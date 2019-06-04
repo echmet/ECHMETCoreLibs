@@ -6,6 +6,7 @@ option(ECHMET_USE_HIGH_PRECISION "Use arbitrary precision data type instead of I
 option(ECHMET_HACKS_ENABLED "Enable ad-hoc hacks - do not switch this on" OFF)
 option(MANUAL_HIPREC_LIBS_PATH "Use manually specified paths to GMP and MPFR libraries on UNIX" OFF)
 option(ENABLE_DIAGNOSTIC_OUTPUT "Enables diagnostic text output. This output is enabled automatically in debug builds" OFF)
+option(USE_CLANG_FPROF "Enables Clang-specific code profiling instrumentation" OFF)
 
 if (WIN32)
     option(ECHMET_FORCE_WINXP "Define target Windows version to Windows XP")
@@ -88,6 +89,12 @@ elseif (UNIX)
         endif ()
 
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -std=c++14 -Wall -Wextra -pedantic -Wno-unused-function -fvisibility=hidden -g -O3 -msse2")
+	
+	if (USE_CLANG_FPROF)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-instr-generate -fcoverage-mapping")
+		set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -fprofile-instr-generate")
+	endif()
+
         add_definitions("-DECHMET_COMPILER_GCC_LIKE ")
         set(DEFAULT_SYMVER_LINK "-Wl,--default-symver")
     endif ()
