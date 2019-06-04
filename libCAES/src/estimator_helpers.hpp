@@ -37,10 +37,12 @@ void calculateDistributionWithDerivative(const CAESReal &v,
 
 	for (TotalEquilibriumBase *teb : totalEquilibria) {
 		auto *te = static_cast<TotalEquilibrium<CAESReal, ThreadSafe> *>(teb);
-		CAESReal X = 0.0;
-		CAESReal dX = 0.0;
-		const std::vector<CAESReal> & Ts = te->Ts(v, activityCoefficients, X);
-		const std::vector<CAESReal> & dTsdV = te->dTsdV(v, activityCoefficients, dX);
+		CAESReal X{};
+		CAESReal dX{};
+		const auto pack = te->TsAnddTsdV(v, activityCoefficients, X, dX);
+
+		const std::vector<CAESReal> & Ts = std::get<0>(pack);
+		const std::vector<CAESReal> & dTsdV = std::get<1>(pack);
 
 		assert(Ts.size() == dTsdV.size());
 

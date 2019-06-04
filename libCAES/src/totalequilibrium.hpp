@@ -49,6 +49,46 @@ void calculatedTsdV(std::vector<CAESReal> &dts, const CAESReal &v, const std::ve
 	}
 }
 
+template <typename CAESReal>
+static ECHMET_FORCE_INLINE
+void calculateTsAnddTsdV(std::vector<CAESReal> &ts, std::vector<CAESReal> &dts, const CAESReal &v,
+			 const std::vector<CAESReal> &activityCoefficients,
+			 CAESReal &X, CAESReal &dX,
+			 const std::vector<CAESReal> &Ls, const int numLow)
+{
+	assert(ts.size() == dts.size());
+
+	const size_t len = ts.size();
+
+	X = 1.0;
+	ts[0] = 1.0;
+	dX = 0.0;
+	dts[0] = 0.0;
+
+	const CAESReal activityLow = activityCoefficients[std::abs(numLow)];
+	const CAESReal vMul = v * activityCoefficients[1];
+	int num = numLow + 1;
+	CAESReal dvPow = 1.0;
+	CAESReal vPow = vMul;
+	for (size_t idx = 1; idx < len; idx++) {
+		const CAESReal actTerm = activityLow / activityCoefficients[std::abs(num++)];
+		const CAESReal LA = Ls[idx] * actTerm;
+
+		const CAESReal T = LA * vPow;
+		const CAESReal dT = idx * LA * dvPow;
+
+		/* FIX THIS DOUBLE MULTIPLICATION!!! */
+		dvPow = vPow;
+		vPow *= vMul;
+
+		ts[idx] = T;
+		X += T;
+
+		dts[idx] = dT;
+		dX += dT;
+	}
+}
+
 /*!
  * TotalEquilibrium c-tor.
  *
@@ -332,6 +372,38 @@ const std::vector<CAESReal> & TotalEquilibrium<CAESReal, false>::Ts(const CAESRe
 	calculateTs(m_Ts, v, activityCoefficients, X, Ls, numLow);
 
 	return m_Ts;
+}
+
+template <typename CAESReal>
+typename TotalEquilibrium<CAESReal, true>::DDPack
+TotalEquilibrium<CAESReal, true>::TsAnddTsdV(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients,
+					     CAESReal &X, CAESReal &dX)
+{
+	std::vector<CAESReal> ts{};
+	std::vector<CAESReal> dts{};
+
+	const size_t len = Ls.size();
+
+	assert(len == static_cast<size_t>(numHigh - numLow + 1));
+
+	ts.resize(len);
+	dts.resize(len);
+
+	calculateTsAnddTsdV(ts, dts, v, activityCoefficients, X, dX, Ls, numLow);
+
+	return { std::move(ts), std::move(dts) };
+}
+
+template <typename CAESReal>
+typename TotalEquilibrium<CAESReal, false>::DDPack
+TotalEquilibrium<CAESReal, false>::TsAnddTsdV(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients,
+					      CAESReal &X, CAESReal &dX)
+{
+	assert(m_Ts.size() == static_cast<size_t>(numHigh - numLow + 1));
+
+	calculateTsAnddTsdV(m_Ts, m_dTsdV, v, activityCoefficients, X, dX, Ls, numLow);
+
+	return { m_Ts, m_dTsdV };
 }
 
 } // namespace CAES

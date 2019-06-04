@@ -74,6 +74,7 @@ public:
 	std::vector<CAESReal> distribution(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients) const;
 	std::vector<CAESReal> dTsdV(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, CAESReal &X) const;
 	std::vector<CAESReal> Ts(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, CAESReal &X) const;
+	DDPack TsAnddTsdV(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, CAESReal &X, CAESReal &dX);
 
 	const size_t concentrationIndex;	/*!< Analytical concentration index of the constituent */
 	const std::vector<CAESReal> Ls;		/*!< Vector of total equilibirum constants */
@@ -143,6 +144,7 @@ public:
 	const std::vector<CAESReal> & distribution(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients);
 	std::vector<CAESReal> & dTsdV(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, CAESReal &X);
 	const std::vector<CAESReal> & Ts(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, CAESReal &X);
+	DDPack TsAnddTsdV(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, CAESReal &X, CAESReal &dX);
 
 	const size_t concentrationIndex;	/*!< Analytical concentration index of the constituent */
 	const std::vector<CAESReal> Ls;		/*!< Vector of total equilibirum constants */
