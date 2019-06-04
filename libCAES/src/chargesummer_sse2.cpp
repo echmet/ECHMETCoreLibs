@@ -150,7 +150,7 @@ double ChargeSummer<double, InstructionSet::SSE2, true>::calculateIonicStrength(
 	for (; idx < m_N; idx++)
 		is += icConcs[idx] * m_chargesSquared[idx];
 
-	return is;
+	return 0.0005 * is;
 }
 
 template <>
