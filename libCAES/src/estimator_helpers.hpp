@@ -6,6 +6,20 @@
 namespace ECHMET {
 namespace CAES {
 
+template <typename T>
+class FetchType {
+public:
+	using Type = T&;
+	using CType = const T&;
+};
+
+template <>
+class FetchType<double> {
+public:
+	using Type = double;
+	using CType = const double;
+};
+
 template <typename CAESReal>
 static
 void calculateActivityCoefficients(const CAESReal &ionicStrength, std::vector<CAESReal> &activityCoefficients, const std::vector<int> &chargesSquared)
@@ -49,8 +63,8 @@ void calculateDistributionWithDerivative(const CAESReal &v,
 		const ECHMETReal c = acRaw[te->concentrationIndex];
 
 		for (size_t idx = 0; idx < Ts.size(); idx++) {
-			const CAESReal &T = Ts[idx];
-			const CAESReal &dT = dTsdV[idx];
+			typename FetchType<CAESReal>::CType T = Ts[idx];
+			typename FetchType<CAESReal>::CType dT = dTsdV[idx];
 
 			/* Distribution */
 			const CAESReal fC = T / X;
