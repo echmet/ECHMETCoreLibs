@@ -102,7 +102,7 @@ void ChargeSummer<double, InstructionSet::SSE2, true>::calcWithdZ(const double *
 template <>
 double ChargeSummer<double, InstructionSet::SSE2, false>::calculateIonicStrength(const double *const ECHMET_RESTRICT_PTR icConcs) noexcept;
 template <>
-double ChargeSummer<double, InstructionSet::SSE2, false>::calculateIonicStrength(const double *const ECHMET_RESTRICT_PTR icConcs) noexcept;
+double ChargeSummer<double, InstructionSet::SSE2, true>::calculateIonicStrength(const double *const ECHMET_RESTRICT_PTR icConcs) noexcept;
 
 template <>
 double ChargeSummer<double, InstructionSet::AVX, false>::calc(const double *const ECHMET_RESTRICT_PTR icConcs) noexcept;
@@ -116,6 +116,10 @@ template <>
 void ChargeSummer<double, InstructionSet::AVX, true>::calcWithdZ(const double *const ECHMET_RESTRICT_PTR icConcs,
 								 const double *const ECHMET_RESTRICT_PTR dIcConcsdH,
 								 double &z, double &dZ) noexcept;
+template <>
+double ChargeSummer<double, InstructionSet::AVX, false>::calculateIonicStrength(const double *const ECHMET_RESTRICT_PTR icConcs) noexcept;
+template <>
+double ChargeSummer<double, InstructionSet::AVX, true>::calculateIonicStrength(const double *const ECHMET_RESTRICT_PTR icConcs) noexcept;
 
 template <>
 double ChargeSummer<double, InstructionSet::FMA3, false>::calc(const double *const ECHMET_RESTRICT_PTR icConcs) noexcept;
@@ -129,6 +133,10 @@ template <>
 void ChargeSummer<double, InstructionSet::FMA3, true>::calcWithdZ(const double *const ECHMET_RESTRICT_PTR icConcs,
 								  const double *const ECHMET_RESTRICT_PTR dIcConcsdH,
 								  double &z, double &dZ) noexcept;
+template <>
+double ChargeSummer<double, InstructionSet::FMA3, false>::calculateIonicStrength(const double *const ECHMET_RESTRICT_PTR icConcs) noexcept;
+template <>
+double ChargeSummer<double, InstructionSet::FMA3, true>::calculateIonicStrength(const double *const ECHMET_RESTRICT_PTR icConcs) noexcept;
 
 } // namespace CAES
 } // namespace ECHMET
