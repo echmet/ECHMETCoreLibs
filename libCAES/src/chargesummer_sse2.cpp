@@ -127,5 +127,57 @@ void ChargeSummer<double, InstructionSet::SSE2, true>::calcWithdZ(const double *
 	}
 }
 
+template <>
+double ChargeSummer<double, InstructionSet::SSE2, true>::calculateIonicStrength(const double *const ECHMET_RESTRICT_PTR icConcs) noexcept
+{
+	double is;
+	VD vIs;
+	__m128d isVec = M128D(ZERO);
+
+	size_t idx{0};
+	for (; idx < m_NBlock; idx += m_blockSize) {
+		__m128d conc = M128D(icConcs + idx);
+		__m128d chgSq = M128D(m_chargesSquared + idx);
+
+		conc = _mm_mul_pd(conc, chgSq);
+		isVec = _mm_add_pd(isVec, conc);
+	}
+
+	_mm_store_pd(vIs, isVec);
+
+	is = vIs[0] + vIs[1];
+
+	for (; idx < m_N; idx++)
+		is += icConcs[idx] * m_chargesSquared[idx];
+
+	return is;
+}
+
+template <>
+double ChargeSummer<double, InstructionSet::SSE2, false>::calculateIonicStrength(const double *const ECHMET_RESTRICT_PTR icConcs) noexcept
+{
+	double is;
+	VD vIs;
+	__m128d isVec = M128D(ZERO);
+
+	size_t idx{0};
+	for (; idx < m_NBlock; idx += m_blockSize) {
+		__m128d conc = M128D(icConcs + idx);
+		__m128d chgSq = M128D(m_chargesSquared + idx);
+
+		conc = _mm_mul_pd(conc, chgSq);
+		isVec = _mm_add_pd(isVec, conc);
+	}
+
+	_mm_store_pd(vIs, isVec);
+
+	is = vIs[0] + vIs[1];
+
+	for (; idx < m_N; idx++)
+		is += icConcs[idx] * m_chargesSquared[idx];
+
+	return 0.0005 * is;
+}
+
 } // namespace CAES
 } // namespace ECHMET
