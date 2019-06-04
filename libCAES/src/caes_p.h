@@ -65,11 +65,12 @@ private:
 					   const bool useFastEstimate) noexcept;
 	template <bool ThreadSafe>
 	std::pair<CAESReal *, CAESReal> estimatepHFast(const CAESReal &cHInitial, const RealVec *analyticalConcentrations,
-						       CAESReal *icConcs, CAESReal *dIcConcsdH,
+						       CAESReal *const ECHMET_RESTRICT_PTR icConcs, CAESReal *const ECHMET_RESTRICT_PTR dIcConcsdH,
 						       std::vector<CAESReal> &activityCoefficients,
 						       ChargeSummer<CAESReal, ISet, ThreadSafe> &chargeSummer);
 	template <bool ThreadSafe>
-	std::pair<CAESReal *, CAESReal> estimatepHSafe(const RealVec *analyticalConcentrations, CAESReal *icConcs,
+	std::pair<CAESReal *, CAESReal> estimatepHSafe(const RealVec *analyticalConcentrations,
+						       CAESReal *const ECHMET_RESTRICT_PTR icConcs,
 						       std::vector<CAESReal> &activityCoefficients,
 						       ChargeSummer<CAESReal, ISet, ThreadSafe> &chargeSummer);
 	void initializeEstimators();

@@ -274,9 +274,9 @@ RetCode SolverImpl<CAESReal, ISet>::estimateDistributionInternal(const CAESReal 
  */
 template <typename CAESReal, InstructionSet ISet> template <bool ThreadSafe>
 std::pair<CAESReal *, CAESReal> SolverImpl<CAESReal, ISet>::estimatepHFast(const CAESReal &cHInitial, const RealVec *analyticalConcentrations,
-										       CAESReal *icConcs, CAESReal *dIcConcsdH,
-										       std::vector<CAESReal> &activityCoefficients,
-										       ChargeSummer<CAESReal, ISet, ThreadSafe> &chargeSummer)
+									   CAESReal *const ECHMET_RESTRICT_PTR icConcs, CAESReal *const ECHMET_RESTRICT_PTR dIcConcsdH,
+									   std::vector<CAESReal> &activityCoefficients,
+									   ChargeSummer<CAESReal, ISet, ThreadSafe> &chargeSummer)
 {
 	const CAESReal KW_298 = CAESReal(PhChConsts::KW_298) * 1e6;
 	const CAESReal threshold = electroneturalityPrecision<CAESReal>();
@@ -288,7 +288,7 @@ std::pair<CAESReal *, CAESReal> SolverImpl<CAESReal, ISet>::estimatepHFast(const
 	CAESReal maxChargeActivityCoeff;
 	bool ionicStrengthUnstable;
 
-	const ECHMETReal *acRaw = analyticalConcentrations->size() > 0 ? &analyticalConcentrations->elem(0) : nullptr;
+	const ECHMETReal *acRaw = analyticalConcentrations->cdata();
 
 	if (m_correctDebyeHuckel || ThreadSafe)
 		defaultActivityCoefficients(activityCoefficients);
@@ -356,9 +356,10 @@ std::pair<CAESReal *, CAESReal> SolverImpl<CAESReal, ISet>::estimatepHFast(const
  * @return Vector of concentrations of all ionic forms including \p H+ and \p OH-
  */
 template <typename CAESReal, InstructionSet ISet> template <bool ThreadSafe>
-std::pair<CAESReal *, CAESReal> SolverImpl<CAESReal, ISet>::estimatepHSafe(const RealVec *analyticalConcentrations, CAESReal *icConcs,
-										       std::vector<CAESReal> &activityCoefficients,
-										       ChargeSummer<CAESReal, ISet, ThreadSafe> &chargeSummer)
+std::pair<CAESReal *, CAESReal> SolverImpl<CAESReal, ISet>::estimatepHSafe(const RealVec *analyticalConcentrations,
+									   CAESReal *const ECHMET_RESTRICT_PTR icConcs,
+									   std::vector<CAESReal> &activityCoefficients,
+									   ChargeSummer<CAESReal, ISet, ThreadSafe> &chargeSummer)
 {
 	const CAESReal KW_298 = CAESReal(PhChConsts::KW_298) * 1e6;
 	const CAESReal threshold = electroneturalityPrecision<CAESReal>();
@@ -368,7 +369,7 @@ std::pair<CAESReal *, CAESReal> SolverImpl<CAESReal, ISet>::estimatepHSafe(const
 	CAESReal maxChargeActivityCoeff;
 	bool ionicStrengthUnstable;
 
-	const ECHMETReal *acRaw = analyticalConcentrations->size() > 0 ? &analyticalConcentrations->elem(0) : nullptr;
+	const ECHMETReal *acRaw = analyticalConcentrations->cdata();
 
 	if (m_correctDebyeHuckel || ThreadSafe)
 		defaultActivityCoefficients(activityCoefficients);
