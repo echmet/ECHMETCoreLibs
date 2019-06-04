@@ -68,14 +68,24 @@ public:
 		return m_stlVec.back();
 	}
 
-	virtual Vec<T> * ECHMET_CC duplicate() const noexcept override
+	virtual T const * ECHMET_CC cdata() const noexcept override
 	{
-		return new (std::nothrow) VecImpl(m_stlVec);
+		return m_stlVec.data();
+	}
+
+	virtual T * ECHMET_CC data() noexcept override
+	{
+		return m_stlVec.data();
 	}
 
 	virtual void ECHMET_CC destroy() const noexcept override
 	{
 		delete this;
+	}
+
+	virtual Vec<T> * ECHMET_CC duplicate() const noexcept override
+	{
+		return new (std::nothrow) VecImpl(m_stlVec);
 	}
 
 	virtual const T & ECHMET_CC elem(const size_t idx) const noexcept override

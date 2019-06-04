@@ -388,11 +388,25 @@ public:
 	virtual const T & ECHMET_CC at(const size_t idx) const ECHMET_NOEXCEPT = 0;
 
 	/*!
+	 * Returns const pointer to underlying data array
+	 *
+	 * @return Const pointer to underlying data array
+	 */
+	virtual T const * ECHMET_CC cdata() const ECHMET_NOEXCEPT = 0;
+
+	/*!
 	 * Returns a const reference to the last item in the vector.
 	 *
 	 * @return Const reference to the item.
 	 */
 	virtual const T & ECHMET_CC back() const ECHMET_NOEXCEPT = 0;
+
+	/*!
+	 * Returns pointer to underlying data array
+	 *
+	 * @return Pointer to underlying data array
+	 */
+	virtual T * ECHMET_CC data() ECHMET_NOEXCEPT = 0;
 
 	/*!
 	 * Frees resources claimed by the object.
