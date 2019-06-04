@@ -171,28 +171,29 @@ void estimateComplexesDistribution(const CNVec<CAESReal> *complexNuclei, const L
 	size_t ecRowCounter = 2;
 
 	/* Set concentrations of all free forms and ligands first */
-	for (const ComplexNucleus<CAESReal> *cn : *complexNuclei) {
+	for (const auto cn : *complexNuclei) {
 		for (int charge = cn->chargeLow; charge <= cn->chargeHigh; charge++) {
 			estimatedConcentrations(rowCounter) = estConcentrations[ecRowCounter];
 			rowCounter++; ecRowCounter++;
 
-			const FormVec<CAESReal> &fv = cn->forms.at(charge - cn->chargeLow);
+			const auto &fv = cn->forms[charge - cn->chargeLow];
 			rowCounter += fv.size() - 1;
 		}
 	}
-	for (const Ligand<CAESReal> *l : *allLigands) {
+
+	for (const auto l : *allLigands) {
 		for (int charge = l->chargeLow; charge <= l->chargeHigh; charge++) {
 			estimatedConcentrations(rowCounter) = estConcentrations[ecRowCounter];
 			rowCounter++; ecRowCounter++;
 		}
 	}
 
-	for (const ComplexNucleus<CAESReal> *cn : *complexNuclei) {
+	for (const auto cn : *complexNuclei) {
 		for (int charge = cn->chargeLow; charge <= cn->chargeHigh; charge++) {
-			const FormVec<CAESReal> &forms = cn->forms.at(charge - cn->chargeLow);
+			const auto &forms = cn->forms[charge - cn->chargeLow];
 
 			for (size_t idx = 1; idx < forms.size(); idx++) {
-				const Form<CAESReal> *f = forms.at(idx);
+				const auto f = forms[idx];
 
 				CAESReal complexConcentration = X10(f->pB + 3.0) * estimatedConcentrations(f->ancestorGlobalIdx + 2) * estimatedConcentrations(f->ligandIFIdx + LGBlockOffset);
 				ECHMET_DEBUG_CODE(fprintf(stderr, "N: %s, myIdx: %zu, GAIdx: %zu, LFIdx: %zu, CC: %g\n", f->name.c_str(), f->myIdx + 2, f->ancestorGlobalIdx + 2, f->ligandIFIdx + LGBlockOffset, CAESRealToDouble(complexConcentration)));
