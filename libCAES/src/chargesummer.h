@@ -38,6 +38,8 @@ public:
 		m_chargesSquared[1] = 1.0;	/* OH- */
 	}
 
+	ChargeSummer(const ChargeSummer &) = delete;
+	ChargeSummer(const ChargeSummer &&) = delete;
 
 	~ChargeSummer() noexcept
 	{
@@ -83,8 +85,8 @@ private:
 	const size_t m_blockSize;
 	const size_t m_NBlock;
 
-	double *m_charges;
-	double *m_chargesSquared;
+	double *ECHMET_RESTRICT_PTR m_charges;
+	double *ECHMET_RESTRICT_PTR m_chargesSquared;
 };
 
 template <>
