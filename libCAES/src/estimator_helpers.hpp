@@ -186,7 +186,7 @@ void setLigandConcentrations<double>(const LigandVec<double> *const ECHMET_RESTR
 
 	double *ecRaw = estimatedConcentrations.data();
 
-	memmove(&ecRaw[rowCounter], &estConcentrations[ecRowCounter], totalLigandCopySize);
+	memcpy(&ecRaw[rowCounter], &estConcentrations[ecRowCounter], totalLigandCopySize);
 
 	rowCounter += totalLigandCopySize;
 	ecRowCounter += totalLigandCopySize;
