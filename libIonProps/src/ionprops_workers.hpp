@@ -374,51 +374,24 @@ RetCode calculateEffectiveMobilitiesWorker(const SysComp::ChemicalSystem &chemSy
 			(*emVec)[emIdx] = 0.0;
 			continue;
 
-			/* Doing this is safer than returing inf */
+			/* Doing this is safer than returning inf */
 		}
 
 		for (size_t jdx = 0; jdx < c->ionicForms->size(); jdx++) {
 			const SysComp::IonicForm *iF = c->ionicForms->elem(jdx);
 			const size_t icIdx = iF->ionicConcentrationIndex;
 			const size_t imIdx = iF->ionicMobilityIndex;
-			int count;
+			int xfrMult;
 
+			const auto tRet = getTransferMultiplier(c, iF, xfrMult);
+			if (tRet != RetCode::OK)
+				return tRet;
 
-			switch (c->ctype) {
-			case SysComp::ConstituentType::NUCLEUS:
-				count = 1;
-				break;
-			case SysComp::ConstituentType::LIGAND:
-				{
-				auto getLigandCount = [](const SysComp::IonicForm *iF, const FixedString *name) {
-					for (;;) {
-						if (iF->ligand == nullptr)
-							return 1; /* This ionic form corresponds to free ligand */
-
-						if (*(iF->ligand->name) == *name)
-							return iF->ligandCount;
-
-						if (iF->ancestor == nullptr)
-							return 0;
-
-						iF = iF->ancestor;
-					}
-				};
-
-				count = getLigandCount(iF, c->name);
-				if (count == 0)
-					return RetCode::E_BAD_INPUT;
-				}
-				break;
-			default:
-				return RetCode::E_BAD_INPUT;
-			}
-
-			ECHMET_DEBUG_CODE(fprintf(stderr, "[%s] - IF:%s: Cnt = %d, TC = %d, u =  %.4g, ic = %g, ac = %g\n", c->name->c_str(), iF->name->c_str(), count, iF->totalCharge,
+			ECHMET_DEBUG_CODE(fprintf(stderr, "[%s] - IF:%s: Cnt = %d, TC = %d, u =  %.4g, ic = %g, ac = %g\n", c->name->c_str(), iF->name->c_str(), xfrMult, iF->totalCharge,
 															    IPRealToDouble(imVec->at(imIdx)),
 															    IPRealToDouble(icVec->at(icIdx)),
 															    IPRealToDouble(analyticalConcentrations->at(acIdx))));
-			efm += count * sgn(iF->totalCharge) * imVec->elem(imIdx) * icVec->elem(icIdx);
+			efm += xfrMult * sgn(iF->totalCharge) * imVec->elem(imIdx) * icVec->elem(icIdx);
 
 		}
 

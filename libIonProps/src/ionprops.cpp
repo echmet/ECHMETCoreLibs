@@ -28,6 +28,41 @@ RetCode ECHMET_CC correctMobilities(ComputationContext *ctx, const NonidealityCo
 	return correctMobilitiesInternal<ECHMETReal>(ctx, corrections, analyticalConcentrations, calcProps);
 }
 
+RetCode ECHMET_CC getTransferMultiplier(const SysComp::Constituent *c, const SysComp::IonicForm *iF, int &xfrMult) noexcept
+{
+	switch (c->ctype) {
+	case SysComp::ConstituentType::NUCLEUS:
+		xfrMult = 1;
+		break;
+	case SysComp::ConstituentType::LIGAND:
+	{
+		auto getLigandCount = [](const SysComp::IonicForm *iF, const FixedString *name) {
+			for (;;) {
+				if (iF->ligand == nullptr)
+					return 1; /* This ionic form corresponds to free ligand */
+
+				if (*(iF->ligand->name) == *name)
+					return iF->ligandCount;
+
+				if (iF->ancestor == nullptr)
+					return 0;
+
+				iF = iF->ancestor;
+			}
+		};
+
+		xfrMult = getLigandCount(iF, c->name);
+		if (xfrMult == 0)
+			return RetCode::E_BAD_INPUT;
+		}
+		break;
+	default:
+		return RetCode::E_BAD_INPUT;
+	}
+
+	return RetCode::OK;
+}
+
 ComputationContext * ECHMET_CC makeComputationContext(const SysComp::ChemicalSystem &chemSystem, const ComputationContext::Options options) noexcept
 {
 	return new (std::nothrow) ComputationContextImpl<ECHMETReal>(chemSystem, options);

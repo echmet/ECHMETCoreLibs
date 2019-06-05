@@ -116,6 +116,8 @@ ECHMET_API ECHMETReal ECHMET_CC calculatepH_direct(const ECHMETReal &cH, const E
  */
 ECHMET_API RetCode ECHMET_CC correctMobilities(ComputationContext *ctx, const NonidealityCorrections corrections, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) ECHMET_NOEXCEPT;
 
+ECHMET_API RetCode ECHMET_CC getTransferMultiplier(const SysComp::Constituent *c, const SysComp::IonicForm *iF, int &xfrMult) ECHMET_NOEXCEPT;
+
 /*!
  * Makes computation context for the given chemical system and analytical concentrations.
  * <b>Note: The \p ComputationContext object holds references to all objects passed as
