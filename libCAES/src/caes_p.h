@@ -100,6 +100,7 @@ private:
 
 	std::vector<CAESReal> m_activityCoefficients;
 	ChargeSummer<CAESReal, ISet, false> *m_chargeSummerUnsafe;	/*!< ChargeSummer for thread-unsafe context */
+	size_t m_totalLigandCopySize;
 };
 
 template <typename CAESReal, bool ThreadSafe>

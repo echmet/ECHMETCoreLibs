@@ -63,20 +63,22 @@ void calculateDistributionWithDerivative(const CAESReal &v,
 
 		const ECHMETReal c = acRaw[te->concentrationIndex];
 
-		for (size_t idx = 0; idx < Ts.size(); idx++) {
+		const size_t len = Ts.size();
+		for (size_t idx = 0; idx < len; idx++) {
+			const size_t rIdx{rowCounter + idx};
 			typename FetchType<CAESReal>::CType T = Ts[idx];
 			typename FetchType<CAESReal>::CType dT = dTsdV[idx];
 
 			/* Distribution */
 			const CAESReal fC = T / X;
-			distribution[rowCounter] = c * fC;
+			distribution[rIdx] = c * fC;
 
 			/* dDistdV */
 			const CAESReal fD = (dT * X - T * dX) / X / X;
-			dDistdV[rowCounter] = c * fD;
-
-			rowCounter++;
+			dDistdV[rIdx] = c * fD;
 		}
+
+		rowCounter += len;
 	}
 }
 
@@ -153,6 +155,43 @@ CAESReal calcTotalCharge(const SolverVector<CAESReal> &icConcs, const std::vecto
 }
 */
 
+template <typename CAESReal>
+static
+ECHMET_FORCE_INLINE
+void setLigandConcentrations(const LigandVec<CAESReal> *const ECHMET_RESTRICT_PTR allLigands,
+			     const size_t totalLigandCopySize,
+			     const CAESReal *const ECHMET_RESTRICT_PTR estConcentrations,
+			     SolverVector<CAESReal> &estimatedConcentrations,
+			     size_t &rowCounter, size_t &ecRowCounter)
+{
+	(void)totalLigandCopySize;
+
+	for (const auto l : *allLigands) {
+		for (int charge = l->chargeLow; charge <= l->chargeHigh; charge++) {
+			estimatedConcentrations(rowCounter) = estConcentrations[ecRowCounter];
+			rowCounter++; ecRowCounter++;
+		}
+	}
+}
+
+template <>
+ECHMET_FORCE_INLINE
+void setLigandConcentrations<double>(const LigandVec<double> *const ECHMET_RESTRICT_PTR allLigands,
+				     const size_t totalLigandCopySize,
+				     const double *const ECHMET_RESTRICT_PTR estConcentrations,
+				     SolverVector<double> &estimatedConcentrations,
+				     size_t &rowCounter, size_t &ecRowCounter)
+{
+	(void)allLigands;
+
+	double *ecRaw = estimatedConcentrations.data();
+
+	memmove(&ecRaw[rowCounter], &estConcentrations[ecRowCounter], totalLigandCopySize);
+
+	rowCounter += totalLigandCopySize;
+	ecRowCounter += totalLigandCopySize;
+}
+
 /*!
  * Calculates initial estimate of concentration of all complex forms.
  *
@@ -164,7 +203,9 @@ CAESReal calcTotalCharge(const SolverVector<CAESReal> &icConcs, const std::vecto
  */
 template <typename CAESReal>
 static
-void estimateComplexesDistribution(const CNVec<CAESReal> *complexNuclei, const LigandVec<CAESReal> *allLigands,
+void estimateComplexesDistribution(const CNVec<CAESReal> *const ECHMET_RESTRICT_PTR complexNuclei,
+				   const LigandVec<CAESReal> *const ECHMET_RESTRICT_PTR allLigands,
+				   const size_t totalLigandCopySize,
 				   const CAESReal *const ECHMET_RESTRICT_PTR estConcentrations, const size_t LGBlockOffset, SolverVector<CAESReal> &estimatedConcentrations)
 {
 	size_t rowCounter = 2;
@@ -181,12 +222,9 @@ void estimateComplexesDistribution(const CNVec<CAESReal> *complexNuclei, const L
 		}
 	}
 
-	for (const auto l : *allLigands) {
-		for (int charge = l->chargeLow; charge <= l->chargeHigh; charge++) {
-			estimatedConcentrations(rowCounter) = estConcentrations[ecRowCounter];
-			rowCounter++; ecRowCounter++;
-		}
-	}
+	setLigandConcentrations<CAESReal>(allLigands, totalLigandCopySize,
+					  estConcentrations, estimatedConcentrations,
+					  rowCounter, ecRowCounter);
 
 	for (const auto cn : *complexNuclei) {
 		for (int charge = cn->chargeLow; charge <= cn->chargeHigh; charge++) {

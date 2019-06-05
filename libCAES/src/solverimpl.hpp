@@ -141,7 +141,7 @@ RetCode SolverImpl<CAESReal, ISet>::estimateDistributionCommon(const ECHMETReal 
 		if (tRet != RetCode::OK)
 			return tRet;
 
-		ECHMETReal *ics = &(*calcProps.ionicConcentrations)[0];
+		ECHMETReal *ics = calcProps.ionicConcentrations->data();
 		for (int idx = 0; idx < estC.size(); idx++)
 			ics[idx] = CAESRealToECHMETReal(estC(idx));
 		calcProps.ionicStrength = CAESRealToECHMETReal(ionicStrength);
@@ -249,7 +249,9 @@ RetCode SolverImpl<CAESReal, ISet>::estimateDistributionInternal(const CAESReal 
 		estimatedConcentrations(0) = results.first[0];
 		estimatedConcentrations(1) = results.first[1];
 
-		estimateComplexesDistribution<CAESReal>(m_ctx->complexNuclei, m_ctx->allLigands, results.first, m_ctx->allForms->size() + 2, estimatedConcentrations);
+		estimateComplexesDistribution<CAESReal>(m_ctx->complexNuclei, m_ctx->allLigands,
+							m_totalLigandCopySize,
+							results.first, m_ctx->allForms->size() + 2, estimatedConcentrations);
 
 		if (!(m_options & Solver::Options::DISABLE_THREAD_SAFETY))
 			releaseRawArray(results.first);
@@ -432,6 +434,11 @@ void SolverImpl<CAESReal, ISet>::initializeEstimators()
 
 	m_activityCoefficients.resize(m_ctx->chargesSquared.size());
 	defaultActivityCoefficients(m_activityCoefficients);
+
+	m_totalLigandCopySize = 0;
+	for (const auto l : *m_ctx->allLigands)
+		m_totalLigandCopySize += l->chargeHigh - l->chargeLow + 1;
+	m_totalLigandCopySize *= sizeof(double);
 }
 
 /*!
