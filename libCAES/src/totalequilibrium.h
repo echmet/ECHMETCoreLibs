@@ -71,6 +71,7 @@ public:
 	const std::vector<CAESReal> Ls;		/*!< Vector of total equilibirum constants */
 	const int numLow;			/*!< Lowest equilibrium index */
 	const int numHigh;			/*!< Highest equilibrium index */
+	const size_t len;
 
 private:
 	/*!
@@ -141,6 +142,7 @@ public:
 	const std::vector<CAESReal> Ls;		/*!< Vector of total equilibirum constants */
 	const int numLow;			/*!< Lowest equilibrium index */
 	const int numHigh;			/*!< Highest equilibrium index */
+	const size_t len;
 
 private:
 	/*!

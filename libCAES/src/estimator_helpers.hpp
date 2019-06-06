@@ -62,7 +62,7 @@ void calculateDistributionWithDerivative(const CAESReal &v,
 
 		const ECHMETReal c = acRaw[te.concentrationIndex];
 
-		const size_t len = Ts.size();
+		const size_t len = te.len;
 		for (size_t idx = 0; idx < len; idx++) {
 			const size_t rIdx{rowCounter + idx};
 			typename FetchType<CAESReal>::CType T = Ts[idx];
