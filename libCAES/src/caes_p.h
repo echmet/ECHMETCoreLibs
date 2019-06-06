@@ -39,13 +39,15 @@ public:
 	virtual void ECHMET_CC destroy() const noexcept override;
 	virtual RetCode ECHMET_CC estimateDistributionFast(const ECHMETReal &cHInitial, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept override;
 	virtual RetCode ECHMET_CC estimateDistributionSafe(const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept override;
-	RetCode estimateDistributionInternal(const CAESReal &cHInitial, const RealVec *analyticalConcentrations, SolverVector<CAESReal> &estimatedConcentrations,
-					     CAESReal &ionicStrength, const bool useFastEstimate) noexcept;
+	template <typename OutputReal>
+	RetCode estimateDistributionInternal(const CAESReal &cHInitial, const RealVec *analyticalConcentrations,
+					     Vec<OutputReal> *estimatedConcentrations, OutputReal &ionicStrength,
+					     const bool useFastEstimate) noexcept;
 	virtual Options ECHMET_CC options() const noexcept override;
 	virtual RetCode ECHMET_CC setContext(SolverContext *ctx) noexcept override;
 	virtual RetCode ECHMET_CC setOptions(const Options options) noexcept override;
 	virtual RetCode ECHMET_CC solve(const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps, const size_t iterations, SolverIterations *iterationsNeeded = nullptr) noexcept override;
-	RetCode solveRaw(SolverVector<CAESReal> &concentrations, CAESReal &ionicStrength, const SolverVector<CAESReal> *anCVec, const SolverVector<CAESReal> &estimatedConcentrations,
+	RetCode solveRaw(SolverVector<CAESReal> &concentrations, CAESReal &ionicStrength, const SolverVector<CAESReal> *anCVec, const Vec<CAESReal> *estimatedConcentrations,
 			 const size_t iterations, SolverIterations *iterationsNeeded = nullptr) noexcept;
 
 private:
@@ -61,8 +63,7 @@ private:
 	}
 
 	void defaultActivityCoefficients(std::vector<CAESReal> &activityCoefficients) const;
-	RetCode estimateDistributionCommon(const ECHMETReal &cHInitial, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps,
-					   const bool useFastEstimate) noexcept;
+
 	template <bool ThreadSafe>
 	std::pair<CAESReal *, CAESReal> estimatepHFast(const CAESReal &cHInitial, const RealVec *analyticalConcentrations,
 						       CAESReal *const ECHMET_RESTRICT_PTR icConcs, CAESReal *const ECHMET_RESTRICT_PTR dIcConcsdH,
@@ -88,7 +89,6 @@ private:
 	SolverInternal<CAESReal, ISet> *m_internalUnsafe;	/*!< Internal solver used by thread-unsafe variant of the solver */
 	SolverVector<CAESReal> *m_anCVecUnsafe;			/*!< Vector of analytical concentrations used by thread-unsafe variant of the solver */
 	CAESReal *m_estimatedConcentrationsUnsafe;		/*!< Aligned array of estimated concentrations used by thread-unsafe variant of the solver */
-	SolverVector<CAESReal> m_estimatedCVecUnsafe;		/*!< Vector of estimated concentrations used by thread-unsafe variant of pH estimator */
 
 	const bool m_correctDebyeHuckel;			/*!< Correct with Debye-Hückel */
 

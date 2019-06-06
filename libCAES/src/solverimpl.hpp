@@ -72,7 +72,6 @@ SolverImpl<CAESReal, ISet>::SolverImpl(SolverContextImpl<CAESReal> *ctx, const O
 			m_internalUnsafe = makeSolverInternal(ctx);
 			m_anCVecUnsafe = new SolverVector<CAESReal>(ctx->analyticalConcentrationCount);
 			m_estimatedConcentrationsUnsafe = AlignedAllocator<CAESReal, 32>::alloc(ctx->concentrationCount);
-			m_estimatedCVecUnsafe.resize(ctx->concentrationCount);
 		} catch (const std::bad_alloc &) {
 			delete m_internalUnsafe;
 			delete m_anCVecUnsafe;
@@ -128,41 +127,11 @@ void SolverImpl<CAESReal, ISet>::defaultActivityCoefficients(std::vector<CAESRea
 }
 
 template <typename CAESReal, InstructionSet ISet>
-RetCode SolverImpl<CAESReal, ISet>::estimateDistributionCommon(const ECHMETReal &cHInitial, const RealVec *analyticalConcentrations,
-							       SysComp::CalculatedProperties &calcProps,
-							       const bool useFastEstimate) noexcept
-{
-	const auto process = [&](SolverVector<CAESReal> &estC) {
-		CAESReal ionicStrength;
-
-		const auto tRet = estimateDistributionInternal(cHInitial, analyticalConcentrations,
-							       estC,
-							       ionicStrength, useFastEstimate);
-		if (tRet != RetCode::OK)
-			return tRet;
-
-		ECHMETReal *ics = calcProps.ionicConcentrations->data();
-		for (int idx = 0; idx < estC.size(); idx++)
-			ics[idx] = CAESRealToECHMETReal(estC(idx));
-		calcProps.ionicStrength = CAESRealToECHMETReal(ionicStrength);
-
-		return RetCode::OK;
-	};
-
-	if (m_options & Solver::Options::DISABLE_THREAD_SAFETY)
-		return process(m_estimatedCVecUnsafe);
-	else {
-		SolverVector<CAESReal> cVec{};
-		cVec.resize(m_ctx->concentrationCount);
-
-		return process(cVec);
-	}
-}
-
-template <typename CAESReal, InstructionSet ISet>
 RetCode ECHMET_CC SolverImpl<CAESReal, ISet>::estimateDistributionFast(const ECHMETReal &cHInitial, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept
 {
-	return estimateDistributionCommon(cHInitial, analyticalConcentrations, calcProps, true);
+	return estimateDistributionInternal<ECHMETReal>(cHInitial, analyticalConcentrations,
+					    calcProps.ionicConcentrations, calcProps.ionicStrength,
+					    true);
 }
 
 template <typename CAESReal, InstructionSet ISet>
@@ -170,7 +139,9 @@ RetCode ECHMET_CC SolverImpl<CAESReal, ISet>::estimateDistributionSafe(const Rea
 {
 	const ECHMETReal dummy = 0.0;	/* Unused */
 
-	return estimateDistributionCommon(dummy, analyticalConcentrations, calcProps, false);
+	return estimateDistributionInternal<ECHMETReal>(dummy, analyticalConcentrations,
+							calcProps.ionicConcentrations, calcProps.ionicStrength,
+							false);
 }
 
 /*!
@@ -189,15 +160,17 @@ RetCode ECHMET_CC SolverImpl<CAESReal, ISet>::estimateDistributionSafe(const Rea
  * @retval RetCode::E_NO_MEMORY Not enough memory to estimate distribution.
  * @retval RetCode::E_FAST_ESTIMATE_FAILURE Fast estimation failed to find a solution.
  */
-template <typename CAESReal, InstructionSet ISet>
+template <typename CAESReal, InstructionSet ISet> template <typename OutputReal>
 RetCode SolverImpl<CAESReal, ISet>::estimateDistributionInternal(const CAESReal &cHInitial, const RealVec *analyticalConcentrations,
-								 SolverVector<CAESReal> &estimatedConcentrations,
-								 CAESReal &ionicStrength, const bool useFastEstimate) noexcept
+								 Vec<OutputReal> *estimatedConcentrations, OutputReal &ionicStrength,
+								 const bool useFastEstimate) noexcept
 {
 	if (analyticalConcentrations->size() != m_ctx->analyticalConcentrationCount)
 		return RetCode::E_INVALID_ARGUMENT;
 
-	assert(estimatedConcentrations.size() == m_ctx->concentrationCount);
+	assert(estimatedConcentrations->size() == m_ctx->concentrationCount);
+
+	OutputReal *estimatedConcentrationsRaw = estimatedConcentrations->data();
 
 	try {
 		const auto results = [&]() {
@@ -236,7 +209,6 @@ RetCode SolverImpl<CAESReal, ISet>::estimateDistributionInternal(const CAESReal 
 				}
 			}
 		}();
-		ionicStrength = results.second;
 
 		ECHMET_DEBUG_CODE(for (int idx = 0; idx < results.first.size(); idx++) {
 				  const CAESReal &v = results.first(idx);
@@ -246,12 +218,14 @@ RetCode SolverImpl<CAESReal, ISet>::estimateDistributionInternal(const CAESReal 
 		ECHMET_DEBUG_CODE(fprintf(stderr, "Estimated pH = %g\n", CAESRealToDouble(pX(results.first(0)) + 3.0)));
 		ECHMET_DEBUG_CODE(fprintf(stderr, "Estimated ionic strength = %g\n", CAESRealToDouble(ionicStrength)));
 		/* H+ and OH- are expected to be the first and second item in the vector */
-		estimatedConcentrations(0) = results.first[0];
-		estimatedConcentrations(1) = results.first[1];
+		estimatedConcentrationsRaw[0] = CAESRealToECHMETReal<CAESReal, OutputReal>(results.first[0]);
+		estimatedConcentrationsRaw[1] = CAESRealToECHMETReal<CAESReal, OutputReal>(results.first[1]);
 
-		estimateComplexesDistribution<CAESReal>(m_ctx->complexNuclei, m_ctx->allLigands,
+		estimateComplexesDistribution<CAESReal, OutputReal>(m_ctx->complexNuclei, m_ctx->allLigands,
 							m_totalLigandCopySize,
-							results.first, m_ctx->allForms->size() + 2, estimatedConcentrations);
+							results.first, m_ctx->allForms->size() + 2, estimatedConcentrationsRaw);
+
+		ionicStrength = CAESRealToECHMETReal<CAESReal, OutputReal>(results.second);
 
 		if (!(m_options & Solver::Options::DISABLE_THREAD_SAFETY))
 			releaseRawArray(results.first);
@@ -568,7 +542,6 @@ RetCode SolverImpl<CAESReal, ISet>::setContextInternal(SolverContextImpl<CAESRea
 			m_internalUnsafe = makeSolverInternal(ctx);
 			m_anCVecUnsafe = new SolverVector<CAESReal>(ctx->analyticalConcentrationCount);
 			m_estimatedConcentrationsUnsafe = AlignedAllocator<CAESReal, 32>::alloc(ctx->concentrationCount);
-			m_estimatedCVecUnsafe.resize(ctx->concentrationCount);
 		} catch (const std::bad_alloc &) {
 			delete m_anCVecUnsafe;
 			delete m_internalUnsafe;
@@ -710,7 +683,7 @@ RetCode ECHMET_CC SolverImpl<CAESReal, ISet>::solve(const RealVec *analyticalCon
  */
 template <typename CAESReal, InstructionSet ISet>
 RetCode SolverImpl<CAESReal, ISet>::solveRaw(SolverVector<CAESReal> &concentrations, CAESReal &ionicStrength, const SolverVector<CAESReal> *anCVec,
-					     const SolverVector<CAESReal> &estimatedConcentrations, const size_t iterations, SolverIterations *iterationsNeeded) noexcept
+					     const Vec<CAESReal> *estimatedConcentrations, const size_t iterations, SolverIterations *iterationsNeeded) noexcept
 {
 	SolverInternal<CAESReal, ISet> *internal = nullptr;
 	CAESReal *estimatedConcentrationsInternal = nullptr;
@@ -734,8 +707,8 @@ RetCode SolverImpl<CAESReal, ISet>::solveRaw(SolverVector<CAESReal> &concentrati
 		}
 	}
 
-	for (int idx = 0; idx < estimatedConcentrations.rows(); idx++)
-		estimatedConcentrationsInternal[idx] = estimatedConcentrations(idx);
+	for (size_t idx = 0; idx < estimatedConcentrations->size(); idx++)
+		estimatedConcentrationsInternal[idx] = estimatedConcentrations->elem(idx);
 
 	const RetCode tRet = internal->solve(anCVec, estimatedConcentrationsInternal, m_correctDebyeHuckel, iterations, ionicStrength);
 	if (tRet != RetCode::OK) {

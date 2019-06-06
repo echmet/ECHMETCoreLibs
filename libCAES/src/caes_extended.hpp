@@ -5,9 +5,20 @@
 #include <algorithm>
 #include <cassert>
 #include <map>
+#include <memory>
+
+#define ECHMET_IMPORT_INTERNAL
+#include <containers/echmetvec_p.h>
 
 namespace ECHMET {
 namespace CAES {
+
+using MPRealVec = Vec<mpfr::mpreal>;
+
+inline
+void releaseMPRealVec(MPRealVec *vec) { vec->destroy(); }
+
+using MPRealVecWrap = std::unique_ptr<MPRealVec, decltype(&releaseMPRealVec)>;
 
 /*!
  * Wrapper function for the derivators.
@@ -31,7 +42,7 @@ template <InstructionSet ISet, typename... EParams>
 static
 RetCode derivatorSkin(RealVec *derivatives, const ECHMETReal &H, Solver *solver, const SysComp::ChemicalSystem &chemSystem,
 		      const RealVec *analyticalConcentrations, const ECHMETReal &inIonicStrength,
-		      std::function<RetCode (RealVec *, const ECHMETReal &, SolverImpl<mpfr::mpreal, ISet> *, const SysComp::ChemicalSystem &, const RealVec *, const SolverVector<mpfr::mpreal> &, EParams...)> &executor, EParams... params)
+		      std::function<RetCode (RealVec *, const ECHMETReal &, SolverImpl<mpfr::mpreal, ISet> *, const SysComp::ChemicalSystem &, const RealVec *, const MPRealVecWrap &, EParams...)> &executor, EParams... params)
 {
 	RetCode tRet;
 	const int currentMpfrPrec = mpfr::mpreal::get_default_prec();
@@ -50,10 +61,14 @@ RetCode derivatorSkin(RealVec *derivatives, const ECHMETReal &H, Solver *solver,
 
 	mpfr::mpreal::set_default_prec(mpfr::digits2bits(200));
 
-	SolverVector<mpfr::mpreal> estimatedConcentrations{};
-	estimatedConcentrations.resize(solverImpl->contextInternal()->concentrationCount);
+	MPRealVecWrap estimatedConcentrations(createECHMETVec<mpfr::mpreal, false>(solverImpl->contextInternal()->concentrationCount), releaseMPRealVec);
+	if (estimatedConcentrations == nullptr)
+		return RetCode::E_NO_MEMORY;
+
+	estimatedConcentrations->resize(solverImpl->contextInternal()->concentrationCount);
+
 	mpfr::mpreal ionicStrength = mpfr::mpreal(inIonicStrength);
-	tRet = solverImpl->estimateDistributionInternal(mpfr::mpreal(0.0), analyticalConcentrations, estimatedConcentrations, ionicStrength, false);
+	tRet = solverImpl->estimateDistributionInternal(mpfr::mpreal(0.0), analyticalConcentrations, estimatedConcentrations.get(), ionicStrength, false);
 	if (tRet != RetCode::OK) {
 		mpfr::mpreal::set_default_prec(currentMpfrPrec);
 		return tRet;
