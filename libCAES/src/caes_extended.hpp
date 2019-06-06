@@ -42,7 +42,7 @@ template <InstructionSet ISet, typename... EParams>
 static
 RetCode derivatorSkin(RealVec *derivatives, const ECHMETReal &H, Solver *solver, const SysComp::ChemicalSystem &chemSystem,
 		      const RealVec *analyticalConcentrations, const ECHMETReal &inIonicStrength,
-		      std::function<RetCode (RealVec *, const ECHMETReal &, SolverImpl<mpfr::mpreal, ISet> *, const SysComp::ChemicalSystem &, const RealVec *, const MPRealVecWrap &, EParams...)> &executor, EParams... params)
+		      std::function<RetCode (RealVec *, const ECHMETReal &, SolverImpl<mpfr::mpreal, ISet, true> *, const SysComp::ChemicalSystem &, const RealVec *, const MPRealVecWrap &, EParams...)> &executor, EParams... params)
 {
 	RetCode tRet;
 	const int currentMpfrPrec = mpfr::mpreal::get_default_prec();
@@ -55,7 +55,7 @@ RetCode derivatorSkin(RealVec *derivatives, const ECHMETReal &H, Solver *solver,
 			return RetCode::E_INVALID_ARGUMENT;
 	}
 
-	SolverImpl<mpfr::mpreal, ISet> *solverImpl = dynamic_cast<SolverImpl<mpfr::mpreal, ISet> *>(solver);
+	auto solverImpl = dynamic_cast<SolverImpl<mpfr::mpreal, ISet, true> *>(solver);
 	if (solverImpl == nullptr)
 		return RetCode::E_INVALID_ARGUMENT;
 

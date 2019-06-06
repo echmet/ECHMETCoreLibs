@@ -13,7 +13,7 @@ class ChargeSummer {
 public:
 	using MappedVector = typename MMTypes<CAESReal, ISet>::Vector;
 
-	ChargeSummer(const size_t N, const std::vector<TotalEquilibriumBase *> &totalEquilibria) :
+	ChargeSummer(const size_t N, const std::vector<TotalEquilibrium<CAESReal, ThreadSafe>> &totalEquilibria) :
 		m_N{N},
 		m_blockSize{VDType<ISet>::ALIGNMENT_BYTES / sizeof(CAESReal)},
 		m_NBlock{N - (N % m_blockSize)}
@@ -22,9 +22,8 @@ public:
 		m_chargesSquared = AlignedAllocator<double, VDType<ISet>::ALIGNMENT_BYTES>::alloc(m_N);
 
 		size_t ctr{2};
-		for (const TotalEquilibriumBase *teb : totalEquilibria) {
-			const auto *te = static_cast<const TotalEquilibrium<CAESReal, ThreadSafe> *>(teb);
-			for (int charge = te->numLow; charge <= te->numHigh; charge++) {
+		for (const auto &te : totalEquilibria) {
+			for (int charge = te.numLow; charge <= te.numHigh; charge++) {
 				m_charges[ctr] = charge;
 				m_chargesSquared[ctr] = charge * charge;
 

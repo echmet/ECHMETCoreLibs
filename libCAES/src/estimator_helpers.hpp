@@ -44,24 +44,23 @@ static
 void calculateDistributionWithDerivative(const CAESReal &v,
 					 CAESReal *const ECHMET_RESTRICT_PTR distribution,
 					 CAESReal *const ECHMET_RESTRICT_PTR dDistdV,
-					 std::vector<TotalEquilibriumBase *> &totalEquilibria,
+					 std::vector<TotalEquilibrium<CAESReal, ThreadSafe>> &totalEquilibria,
 					 const ECHMETReal *const ECHMET_RESTRICT_PTR acRaw,
 					 const std::vector<CAESReal> &activityCoefficients)
 {
 	size_t rowCounter = 2;
 
-	for (TotalEquilibriumBase *teb : totalEquilibria) {
-		auto te = static_cast<TotalEquilibrium<CAESReal, ThreadSafe> *>(teb);
+	for (auto &te : totalEquilibria) {
 		CAESReal X{};
 		CAESReal dX{};
-		const auto pack = te->TsAnddTsdV(v, activityCoefficients, X, dX);
+		const auto pack = te.TsAnddTsdV(v, activityCoefficients, X, dX);
 
 		const std::vector<CAESReal> & Ts = std::get<0>(pack);
 		const std::vector<CAESReal> & dTsdV = std::get<1>(pack);
 
 		assert(Ts.size() == dTsdV.size());
 
-		const ECHMETReal c = acRaw[te->concentrationIndex];
+		const ECHMETReal c = acRaw[te.concentrationIndex];
 
 		const size_t len = Ts.size();
 		for (size_t idx = 0; idx < len; idx++) {
@@ -93,18 +92,17 @@ template <typename CAESReal, InstructionSet ISet, bool ThreadSafe>
 static
 void calculateDistribution(const CAESReal &v,
 			   CAESReal *const ECHMET_RESTRICT_PTR distribution,
-			   std::vector<TotalEquilibriumBase *> &totalEquilibria,
+			   std::vector<TotalEquilibrium<CAESReal, ThreadSafe>> &totalEquilibria,
 			   const ECHMETReal *const ECHMET_RESTRICT_PTR acRaw,
 			   const std::vector<CAESReal> &activityCoefficients)
 {
 	size_t rowCounter = 2;
 
-	for (TotalEquilibriumBase *teb : totalEquilibria) {
-		auto te = static_cast<TotalEquilibrium<CAESReal, ThreadSafe> *>(teb);
+	for (auto &te : totalEquilibria) {
 		CAESReal X = 0.0;
-		const std::vector<CAESReal> & Ts = te->Ts(v, activityCoefficients, X);
+		const std::vector<CAESReal> & Ts = te.Ts(v, activityCoefficients, X);
 
-		const ECHMETReal c = acRaw[te->concentrationIndex];
+		const ECHMETReal c = acRaw[te.concentrationIndex];
 		for (const CAESReal &T : Ts) {
 			const CAESReal fC = c * T / X;
 

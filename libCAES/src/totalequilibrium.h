@@ -30,20 +30,11 @@ std::vector<CAESReal> calculateLsBase(const std::vector<CAESReal> &pBs)
 	return _Ls;
 }
 
-class TotalEquilibriumBase {
-public:
-	virtual ~TotalEquilibriumBase() {}
-};
-
-/*!
- * Description of total distribution equilibria for a given constituent
- */
 template <typename CAESReal, bool ThreadSafe>
-class TotalEquilibrium : public TotalEquilibriumBase
-{};
+class TotalEquilibrium;
 
 template <typename CAESReal>
-class TotalEquilibrium<CAESReal, true> : public TotalEquilibriumBase {
+class TotalEquilibrium<CAESReal, true> {
 public:
 	typedef std::tuple<std::vector<CAESReal>, std::vector<CAESReal>> DDPack;
 
@@ -108,7 +99,7 @@ private:
 };
 
 template <typename CAESReal>
-class TotalEquilibrium<CAESReal, false> : public TotalEquilibriumBase {
+class TotalEquilibrium<CAESReal, false> {
 public:
 	typedef std::tuple<const std::vector<CAESReal> &, const std::vector<CAESReal> &> DDPack;
 

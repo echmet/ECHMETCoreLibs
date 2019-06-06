@@ -441,6 +441,15 @@ SolverMatrix<CAESReal> * prepareJacobian(const CNVec<CAESReal> *complexNuclei, c
 	return pJx;
 }
 
+template <typename CAESReal, InstructionSet ISet>
+static
+Solver * makeSolverImpl(bool threadUnsafe, SolverContextImpl<CAESReal> *ctxImpl, const Solver::Options options, const NonidealityCorrections corrections)
+{
+	if (threadUnsafe)
+		return new (std::nothrow) SolverImpl<CAESReal, ISet, false>(ctxImpl, options, corrections);
+	return new (std::nothrow) SolverImpl<CAESReal, ISet, true>(ctxImpl, options, corrections);
+}
+
 template <typename CAESReal>
 static
 Solver * createSolverInternal(SolverContext *ctx, const Solver::Options options, const NonidealityCorrections corrections) noexcept
@@ -449,15 +458,17 @@ Solver * createSolverInternal(SolverContext *ctx, const Solver::Options options,
 	if (ctxImpl == nullptr)
 		return nullptr;
 
+	const bool threadUnsafe = options & Solver::Options::DISABLE_THREAD_SAFETY;
+
 	switch (detectInstructionSet()) {
 	case InstructionSet::GENERIC:
-		return new (std::nothrow) SolverImpl<CAESReal, InstructionSet::GENERIC>(ctxImpl, options, corrections);
+		return makeSolverImpl<CAESReal, InstructionSet::GENERIC>(threadUnsafe, ctxImpl, options, corrections);
 	case InstructionSet::SSE2:
-		return new (std::nothrow) SolverImpl<CAESReal, InstructionSet::SSE2>(ctxImpl, options, corrections);
+		return makeSolverImpl<CAESReal, InstructionSet::SSE2>(threadUnsafe, ctxImpl, options, corrections);
 	case InstructionSet::AVX:
-		return new (std::nothrow) SolverImpl<CAESReal, InstructionSet::AVX>(ctxImpl, options, corrections);
+		return makeSolverImpl<CAESReal, InstructionSet::AVX>(threadUnsafe, ctxImpl, options, corrections);
 	case InstructionSet::FMA3:
-		return new (std::nothrow) SolverImpl<CAESReal, InstructionSet::FMA3>(ctxImpl, options, corrections);
+		return makeSolverImpl<CAESReal, InstructionSet::FMA3>(threadUnsafe, ctxImpl, options, corrections);
 	}
 
 	return nullptr;

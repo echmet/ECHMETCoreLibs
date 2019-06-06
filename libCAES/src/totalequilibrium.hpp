@@ -144,8 +144,8 @@ TotalEquilibrium<CAESReal, false>::TotalEquilibrium(const TotalEquilibrium &othe
 	numLow(other.numLow),
 	numHigh(other.numHigh),
 	m_concentrations(other.m_concentrations),
-	m_dDistdV(other.m_dDistdV),
 	m_distribution(other.m_distribution),
+	m_dDistdV(other.m_dDistdV),
 	m_dTsdV(other.m_dTsdV),
 	m_Ts(other.m_Ts)
 {

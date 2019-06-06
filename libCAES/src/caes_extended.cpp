@@ -61,7 +61,7 @@ RetCode calculatepHResponse(ECHMETReal &bufferCapacity, const ECHMETReal &H, con
 			    const RealVec *analyticalConcentrations, const SysComp::Constituent *perturbedConstituent)
 {
 	typedef std::tuple<int32_t, ECHMETReal> ContributingForm;
-	typedef std::function<RetCode (RealVec *, const ECHMETReal &, SolverImpl<mpfr::mpreal, InstructionSet::GENERIC> *, const SysComp::ChemicalSystem &, const RealVec *, const MPRealVecWrap &, const SysComp::Constituent *)> ExFunc;
+	typedef std::function<RetCode (RealVec *, const ECHMETReal &, SolverImpl<mpfr::mpreal, InstructionSet::GENERIC, true> *, const SysComp::ChemicalSystem &, const RealVec *, const MPRealVecWrap &, const SysComp::Constituent *)> ExFunc;
 
 	const size_t N = chemSystem.ionicForms->size();
 	const ECHMETReal &cAc = analyticalConcentrations->at(perturbedConstituent->analyticalConcentrationIndex);
@@ -114,20 +114,20 @@ RetCode calculatepHResponse(ECHMETReal &bufferCapacity, const ECHMETReal &H, con
 
 	try {
 		const Solver::Options opts = Solver::defaultOptions();
-		solver = new SolverImpl<mpfr::mpreal, InstructionSet::GENERIC>(static_cast<SolverContextImpl<mpfr::mpreal> *>(solverCtx), opts, corrections);
+		solver = new SolverImpl<mpfr::mpreal, InstructionSet::GENERIC, true>(static_cast<SolverContextImpl<mpfr::mpreal> *>(solverCtx), opts, corrections);
 	} catch (std::bad_alloc &) {
 		solverCtx->destroy();
 
 		return RetCode::E_NO_MEMORY;
 	}
 
-	ExFunc executor = [&pHHigh, &pHLow, N, corrections, &inIonicStrength](RealVec *, const ECHMETReal &H, SolverImpl<mpfr::mpreal, InstructionSet::GENERIC> *solver, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const MPRealVecWrap &estimatedConcentrations,
+	ExFunc executor = [&pHHigh, &pHLow, N, corrections, &inIonicStrength](RealVec *, const ECHMETReal &H, SolverImpl<mpfr::mpreal, InstructionSet::GENERIC, true> *solver, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const MPRealVecWrap &estimatedConcentrations,
 			     const SysComp::Constituent *perturbedConstituent) {
 		const size_t anCIdx = perturbedConstituent->analyticalConcentrationIndex;
 		const mpfr::mpreal HH{H};
 		RetCode tRet;
 
-		auto solvePerturbed = [corrections, &inIonicStrength](SolverVector<mpfr::mpreal> &perturbedConcentrations, mpfr::mpreal &pH, SolverImpl<mpfr::mpreal, InstructionSet::GENERIC> *solver, const SolverVector<mpfr::mpreal> *inConcentrations, const SysComp::ChemicalSystem &chemSystem, const MPRealVecWrap &estimatedConcentrations) {
+		auto solvePerturbed = [corrections, &inIonicStrength](SolverVector<mpfr::mpreal> &perturbedConcentrations, mpfr::mpreal &pH, SolverImpl<mpfr::mpreal, InstructionSet::GENERIC, true> *solver, const SolverVector<mpfr::mpreal> *inConcentrations, const SysComp::ChemicalSystem &chemSystem, const MPRealVecWrap &estimatedConcentrations) {
 			mpfr::mpreal ionicStrength = mpfr::mpreal(inIonicStrength);
 			SysComp::CalculatedProperties calcProps;
 
@@ -221,7 +221,7 @@ RetCode prepareDerivatorContextInternal(RealVec *&derivatives, Solver *&solver, 
 
 	try {
 		const Solver::Options opts = Solver::defaultOptions();
-		solver = new SolverImpl<mpfr::mpreal, InstructionSet::GENERIC>(static_cast<SolverContextImpl<mpfr::mpreal> *>(solverCtx), opts, corrections);
+		solver = new SolverImpl<mpfr::mpreal, InstructionSet::GENERIC, true>(static_cast<SolverContextImpl<mpfr::mpreal> *>(solverCtx), opts, corrections);
 	} catch (std::bad_alloc &) {
 		solverCtx->destroy();
 
@@ -295,9 +295,9 @@ RetCode ECHMET_CC calculateFirstConcentrationDerivatives(RealVec *&derivatives, 
 
 RetCode ECHMET_CC calculateFirstConcentrationDerivatives_prepared(RealVec *derivatives, ECHMETReal &conductivityDerivative, Solver *solver, const ECHMETReal &H, const NonidealityCorrections corrections, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const SysComp::Constituent *perturbedConstituent, const ECHMETReal &inIonicStrength) noexcept
 {
-	typedef std::function<RetCode (RealVec *, const ECHMETReal &, SolverImpl<mpfr::mpreal, InstructionSet::GENERIC> *, const SysComp::ChemicalSystem &, const RealVec *, const MPRealVecWrap &, ECHMETReal &, const SysComp::Constituent *)> ExFunc;
+	typedef std::function<RetCode (RealVec *, const ECHMETReal &, SolverImpl<mpfr::mpreal, InstructionSet::GENERIC, true> *, const SysComp::ChemicalSystem &, const RealVec *, const MPRealVecWrap &, ECHMETReal &, const SysComp::Constituent *)> ExFunc;
 
-	ExFunc executor = [corrections, &inIonicStrength](RealVec *derivatives, const ECHMETReal &H, SolverImpl<mpfr::mpreal, InstructionSet::GENERIC> *solver, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const MPRealVecWrap &estimatedConcentrations,
+	ExFunc executor = [corrections, &inIonicStrength](RealVec *derivatives, const ECHMETReal &H, SolverImpl<mpfr::mpreal, InstructionSet::GENERIC, true> *solver, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const MPRealVecWrap &estimatedConcentrations,
 			     ECHMETReal &conductivityDerivative, const SysComp::Constituent *perturbedConstituent) {
 		const size_t N = chemSystem.ionicForms->size();
 		const size_t anCIdx = perturbedConstituent->analyticalConcentrationIndex;
@@ -308,7 +308,7 @@ RetCode ECHMET_CC calculateFirstConcentrationDerivatives_prepared(RealVec *deriv
 		SolverVector<mpfr::mpreal> perturbedLow{N};
 		SolverVector<mpfr::mpreal> perturbedHigh{N};
 
-		auto solvePerturbed = [corrections, &inIonicStrength](SolverVector<mpfr::mpreal> &perturbedConcentrations, mpfr::mpreal &perturbedConductivity, SolverImpl<mpfr::mpreal, InstructionSet::GENERIC> *solver, const SolverVector<mpfr::mpreal> *inConcentrations, const SysComp::ChemicalSystem &chemSystem, const RealVec *acVec, const MPRealVecWrap &estimatedConcentrations) {
+		auto solvePerturbed = [corrections, &inIonicStrength](SolverVector<mpfr::mpreal> &perturbedConcentrations, mpfr::mpreal &perturbedConductivity, SolverImpl<mpfr::mpreal, InstructionSet::GENERIC, true> *solver, const SolverVector<mpfr::mpreal> *inConcentrations, const SysComp::ChemicalSystem &chemSystem, const RealVec *acVec, const MPRealVecWrap &estimatedConcentrations) {
 			mpfr::mpreal ionicStrength = mpfr::mpreal(inIonicStrength);
 			SysComp::CalculatedProperties calcProps;
 
@@ -419,9 +419,9 @@ RetCode ECHMET_CC calculateCrossConcentrationDerivatives_prepared(RealVec *deriv
 static
 RetCode calculateSecondConcentrationDerivatives(RealVec *derivatives, Solver *solver, const ECHMETReal &H, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const SysComp::Constituent *perturbedConstituent, const ECHMETReal &inIonicStrength)
 {
-	typedef std::function<RetCode (RealVec *, const ECHMETReal &, SolverImpl<mpfr::mpreal, InstructionSet::GENERIC> *, const SysComp::ChemicalSystem &, const RealVec *, const MPRealVecWrap &, const SysComp::Constituent *)> ExFunc;
+	typedef std::function<RetCode (RealVec *, const ECHMETReal &, SolverImpl<mpfr::mpreal, InstructionSet::GENERIC, true> *, const SysComp::ChemicalSystem &, const RealVec *, const MPRealVecWrap &, const SysComp::Constituent *)> ExFunc;
 
-	ExFunc executor = [&inIonicStrength](RealVec *derivatives, const ECHMETReal &H, SolverImpl<mpfr::mpreal, InstructionSet::GENERIC> *solver, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const MPRealVecWrap &estimatedConcentrations,
+	ExFunc executor = [&inIonicStrength](RealVec *derivatives, const ECHMETReal &H, SolverImpl<mpfr::mpreal, InstructionSet::GENERIC, true> *solver, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const MPRealVecWrap &estimatedConcentrations,
 			     const SysComp::Constituent *perturbedConstituent) {
 		const size_t N = chemSystem.ionicForms->size();
 		const size_t anCIdx = perturbedConstituent->analyticalConcentrationIndex;
@@ -431,7 +431,7 @@ RetCode calculateSecondConcentrationDerivatives(RealVec *derivatives, Solver *so
 		SolverVector<mpfr::mpreal> perturbedHigh(N);
 		SolverVector<mpfr::mpreal> center(N);
 
-		auto solvePerturbed = [&inIonicStrength](SolverVector<mpfr::mpreal> &perturbedConcentrations, SolverImpl<mpfr::mpreal, InstructionSet::GENERIC> *solver, const SolverVector<mpfr::mpreal> *inConcentrations,
+		auto solvePerturbed = [&inIonicStrength](SolverVector<mpfr::mpreal> &perturbedConcentrations, SolverImpl<mpfr::mpreal, InstructionSet::GENERIC, true> *solver, const SolverVector<mpfr::mpreal> *inConcentrations,
 					 const MPRealVecWrap &estimatedConcentrations) {
 			 mpfr::mpreal ionicStrength = mpfr::mpreal(inIonicStrength);
 
@@ -472,9 +472,9 @@ RetCode calculateSecondConcentrationDerivatives(RealVec *derivatives, Solver *so
 static
 RetCode calculateMixedConcentrationDerivatives(RealVec *derivatives, Solver *solver, const ECHMETReal &H, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const SysComp::Constituent *perturbedConstituentJ, const SysComp::Constituent *perturbedConstituentK, const ECHMETReal &inIonicStrength)
 {
-	typedef std::function<RetCode (RealVec *, const ECHMETReal &, SolverImpl<mpfr::mpreal, InstructionSet::GENERIC> *, const SysComp::ChemicalSystem &, const RealVec *, const MPRealVecWrap &, const SysComp::Constituent *, const SysComp::Constituent *)> ExFunc;
+	typedef std::function<RetCode (RealVec *, const ECHMETReal &, SolverImpl<mpfr::mpreal, InstructionSet::GENERIC, true> *, const SysComp::ChemicalSystem &, const RealVec *, const MPRealVecWrap &, const SysComp::Constituent *, const SysComp::Constituent *)> ExFunc;
 
-	ExFunc executor = [&inIonicStrength](RealVec *derivatives, const ECHMETReal &H, SolverImpl<mpfr::mpreal, InstructionSet::GENERIC> *solver, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const MPRealVecWrap &estimatedConcentrations,
+	ExFunc executor = [&inIonicStrength](RealVec *derivatives, const ECHMETReal &H, SolverImpl<mpfr::mpreal, InstructionSet::GENERIC, true> *solver, const SysComp::ChemicalSystem &chemSystem, const RealVec *analyticalConcentrations, const MPRealVecWrap &estimatedConcentrations,
 			     const SysComp::Constituent *perturbedConstituentJ, const SysComp::Constituent *perturbedConstituentK) {
 		const size_t N = chemSystem.ionicForms->size();
 		const size_t anCIdxJ = perturbedConstituentJ->analyticalConcentrationIndex;
@@ -486,7 +486,7 @@ RetCode calculateMixedConcentrationDerivatives(RealVec *derivatives, Solver *sol
 		SolverVector<mpfr::mpreal> perturbedHjHk(N);
 		SolverVector<mpfr::mpreal> perturbedHjLk(N);
 
-		auto solvePerturbed = [&inIonicStrength](SolverVector<mpfr::mpreal> &perturbedConcentrations, SolverImpl<mpfr::mpreal, InstructionSet::GENERIC> *solver, const SolverVector<mpfr::mpreal> *inConcentrations,
+		auto solvePerturbed = [&inIonicStrength](SolverVector<mpfr::mpreal> &perturbedConcentrations, SolverImpl<mpfr::mpreal, InstructionSet::GENERIC, true> *solver, const SolverVector<mpfr::mpreal> *inConcentrations,
 					 const MPRealVecWrap &estimatedConcentrations) {
 			mpfr::mpreal ionicStrength = mpfr::mpreal(inIonicStrength);
 

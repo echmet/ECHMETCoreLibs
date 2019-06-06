@@ -26,10 +26,51 @@ class FreeMPFRCacheSwitch {};
 template <typename CAESReal, InstructionSet ISet>
 class SolverInternal;
 
+template <typename CAESReal, InstructionSet ISet>
+inline
+void releaseRawArray(CAESReal *v) noexcept
+{
+	AlignedAllocator<CAESReal, VDType<ISet>::ALIGNMENT_BYTES>::free(v);
+}
+
+template <typename CAESReal, InstructionSet ISet>
+using RawArrayPtr = std::unique_ptr<CAESReal, decltype(&releaseRawArray<CAESReal, ISet>)>;
+
+template <typename CAESReal, InstructionSet ISet>
+RawArrayPtr<CAESReal, ISet> makeRawArray(size_t size)
+{
+	return RawArrayPtr<CAESReal, ISet>{AlignedAllocator<CAESReal, VDType<ISet>::ALIGNMENT_BYTES>::alloc(size), &releaseRawArray<CAESReal, ISet>};
+}
+
+template <typename CAESReal, InstructionSet ISet, bool ThreadSafe>
+class UnsafeContext;
+
+template <typename CAESReal, InstructionSet ISet>
+class UnsafeContext<CAESReal, ISet, false> {
+public:
+	UnsafeContext();
+
+	SolverInternal<CAESReal, ISet> *internal;
+	SolverVector<CAESReal> *anCVec;
+
+	RawArrayPtr<CAESReal, ISet> estimatedConcentrations;
+	RawArrayPtr<CAESReal, ISet> estimatedIC;
+	RawArrayPtr<CAESReal, ISet> dEstimatedICdH;
+
+	std::vector<CAESReal> activityCoefficients;
+	ChargeSummer<CAESReal, ISet, false> *chargeSummer;
+};
+
+template <typename CAESReal, InstructionSet ISet>
+class UnsafeContext<CAESReal, ISet, true> {
+public:
+	/* Empty */
+};
+
 /*!
  * Equilibria solver object implementation
  */
-template <typename CAESReal, InstructionSet ISet>
+template <typename CAESReal, InstructionSet ISet, bool ThreadSafe>
 class SolverImpl : public Solver {
 public:
 	explicit SolverImpl(SolverContextImpl<CAESReal> *ctx, const Options options, const NonidealityCorrections corrections);
@@ -51,33 +92,18 @@ public:
 			 const size_t iterations, SolverIterations *iterationsNeeded = nullptr) noexcept;
 
 private:
-	static
-	void releaseRawArray(CAESReal *v) noexcept
-	{
-		AlignedAllocator<CAESReal, VDType<ISet>::ALIGNMENT_BYTES>::free(v);
-	}
-	using RawArrayPtr = std::unique_ptr<CAESReal, decltype(&SolverImpl<CAESReal, ISet>::releaseRawArray)>;
-	RawArrayPtr makeRawArray(size_t size)
-	{
-		return RawArrayPtr{AlignedAllocator<CAESReal, VDType<ISet>::ALIGNMENT_BYTES>::alloc(size), &SolverImpl<CAESReal, ISet>::releaseRawArray};
-	}
-
 	void defaultActivityCoefficients(std::vector<CAESReal> &activityCoefficients) const;
 
-	template <bool ThreadSafe>
-	std::pair<CAESReal *, CAESReal> estimatepHFast(const CAESReal &cHInitial, const RealVec *analyticalConcentrations,
+	std::pair<CAESReal *, CAESReal> estimatepHFast(const CAESReal &cHInitial, const ECHMETReal *analyticalConcentrations,
 						       CAESReal *const ECHMET_RESTRICT_PTR icConcs, CAESReal *const ECHMET_RESTRICT_PTR dIcConcsdH,
 						       std::vector<CAESReal> &activityCoefficients,
 						       ChargeSummer<CAESReal, ISet, ThreadSafe> &chargeSummer);
-	template <bool ThreadSafe>
-	std::pair<CAESReal *, CAESReal> estimatepHSafe(const RealVec *analyticalConcentrations,
+	std::pair<CAESReal *, CAESReal> estimatepHSafe(const ECHMETReal *analyticalConcentrations,
 						       CAESReal *const ECHMET_RESTRICT_PTR icConcs,
 						       std::vector<CAESReal> &activityCoefficients,
 						       ChargeSummer<CAESReal, ISet, ThreadSafe> &chargeSummer);
-	void initializeEstimators();
-	SolverInternal<CAESReal, ISet> * makeSolverInternal(const SolverContextImpl<CAESReal> *ctx) const;
 	void initializeTotalEquilibria(const SolverContextImpl<CAESReal> *ctx);
-	void releaseTotalEquilibria();
+	SolverInternal<CAESReal, ISet> * makeSolverInternal(const SolverContextImpl<CAESReal> *ctx) const;
 	void releaseSolverInternal(SolverInternal<CAESReal, ISet> *internal, FreeMPFRCacheSwitch<true>) noexcept;
 	void releaseSolverInternal(SolverInternal<CAESReal, ISet> *internal, FreeMPFRCacheSwitch<false>) noexcept;
 	RetCode setContextInternal(SolverContextImpl<CAESReal> *ctx) noexcept;
@@ -86,26 +112,68 @@ private:
 
 	Solver::Options m_options;
 
-	SolverInternal<CAESReal, ISet> *m_internalUnsafe;	/*!< Internal solver used by thread-unsafe variant of the solver */
-	SolverVector<CAESReal> *m_anCVecUnsafe;			/*!< Vector of analytical concentrations used by thread-unsafe variant of the solver */
-	CAESReal *m_estimatedConcentrationsUnsafe;		/*!< Aligned array of estimated concentrations used by thread-unsafe variant of the solver */
-
 	const bool m_correctDebyeHuckel;			/*!< Correct with Debye-Hückel */
 
 	size_t m_TECount;					/*!< Number of ionic concentrations that can be estimated from G-polynomial */
-	std::vector<TotalEquilibriumBase *> m_totalEquilibria;
+	std::vector<TotalEquilibrium<CAESReal, ThreadSafe>> m_totalEquilibria;
 
-	RawArrayPtr m_estimatedICUnsafe;
-	RawArrayPtr m_dEstimatedICdHUnsafe;
-
-	std::vector<CAESReal> m_activityCoefficients;
-	ChargeSummer<CAESReal, ISet, false> *m_chargeSummerUnsafe;	/*!< ChargeSummer for thread-unsafe context */
 	size_t m_totalLigandCopySize;
+
+	UnsafeContext<CAESReal, ISet, ThreadSafe> m_unsafe;
+
+	template <typename X, InstructionSet, bool> friend class SolverImplSpec;
+};
+
+template <typename CAESReal, InstructionSet ISet, bool ThreadSafe>
+class SolverImplSpec;
+
+template <typename CAESReal, InstructionSet ISet>
+class SolverImplSpec<CAESReal, ISet, false>
+{
+public:
+	using SI = SolverImpl<CAESReal, ISet, false>;
+
+	SolverImplSpec() = delete;
+
+	static std::pair<CAESReal *, CAESReal> estimatepHFastWrapper(SI *solver, const CAESReal &cHInitial, const RealVec *analyticalConcentrations);
+	static std::pair<CAESReal *, CAESReal> estimatepHSafeWrapper(SI *solver, const RealVec *analyticalConcentrations);
+	static void initializeEstimators(SI *solver);
+	static void initializeUnsafe(SI *solver, const SolverContextImpl<CAESReal> *ctx);
+	static void releaseUnsafe(SI *solver) noexcept;
+	static void setContainersForSolve(SI *solver,
+			SolverInternal<CAESReal, ISet> *&internal,
+				   SolverVector<CAESReal> *&anCVec,
+				   CAESReal *&estimatedConcentrations);
+	static void setContainersForSolveRaw(SI *solver,
+					     SolverInternal<CAESReal, ISet> *&internal,
+					     CAESReal *&estimatedConcentrationsInternal);
+};
+
+template <typename CAESReal, InstructionSet ISet>
+class SolverImplSpec<CAESReal, ISet, true>
+{
+public:
+	using SI = SolverImpl<CAESReal, ISet, true>;
+
+	SolverImplSpec() = delete;
+
+	static std::pair<CAESReal *, CAESReal> estimatepHFastWrapper(SI *solver, const CAESReal &cHInitial, const RealVec *analyticalConcentrations);
+	static std::pair<CAESReal *, CAESReal> estimatepHSafeWrapper(SI *solver, const RealVec *analyticalConcentrations);
+	static void initializeEstimators(SI *solver);
+	static void initializeUnsafe(SI *solver, const SolverContextImpl<CAESReal> *ctx);
+	static void releaseUnsafe(SI *solver) noexcept;
+	static void setContainersForSolve(SI *solver,
+			SolverInternal<CAESReal, ISet> *&internal,
+				   SolverVector<CAESReal> *&anCVec,
+				   CAESReal *&estimatedConcentrations);
+	static void setContainersForSolveRaw(SI *solver,
+					     SolverInternal<CAESReal, ISet> *&internal,
+					     CAESReal *&estimatedConcentrationsInternal);
 };
 
 template <typename CAESReal, bool ThreadSafe>
 static
-void calculateDistribution(const CAESReal &v, SolverVector<CAESReal> &distribution, std::vector<TotalEquilibriumBase *> &totalEquilibria, const RealVec *analyticalConcentrations);
+void calculateDistribution(const CAESReal &v, SolverVector<CAESReal> &distribution, std::vector<TotalEquilibrium<CAESReal, ThreadSafe>> &totalEquilibria, const RealVec *analyticalConcentrations);
 
 template <typename CAESReal>
 static
