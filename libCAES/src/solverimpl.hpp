@@ -273,7 +273,7 @@ RetCode ECHMET_CC SolverImpl<CAESReal, ISet, ThreadSafe>::estimateDistributionFa
 	if (analyticalConcentrations->size() != m_ctx->analyticalConcentrationCount)
 		return RetCode::E_INVALID_ARGUMENT;
 
-	assert(estimatedConcentrations->size() == m_ctx->concentrationCount);
+	assert(calcProps.ionicConcentrations->size() == m_ctx->concentrationCount);
 
 	try {
 		const auto results = SolverImplSpec<CAESReal, ISet, ThreadSafe>::estimatepHFastWrapper(this, cHInitial, analyticalConcentrations);
@@ -294,7 +294,7 @@ RetCode ECHMET_CC SolverImpl<CAESReal, ISet, ThreadSafe>::estimateDistributionSa
 	if (analyticalConcentrations->size() != m_ctx->analyticalConcentrationCount)
 		return RetCode::E_INVALID_ARGUMENT;
 
-	assert(estimatedConcentrations->size() == m_ctx->concentrationCount);
+	assert(calcProps.ionicConcentrations->size() == m_ctx->concentrationCount);
 
 	return estimateDistributionSafeInternal<ECHMETReal>(analyticalConcentrations, calcProps.ionicConcentrations->data(), calcProps.ionicStrength);
 }
