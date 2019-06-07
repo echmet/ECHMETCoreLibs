@@ -68,7 +68,7 @@ RetCode derivatorSkin(RealVec *derivatives, const ECHMETReal &H, Solver *solver,
 	estimatedConcentrations->resize(solverImpl->contextInternal()->concentrationCount);
 
 	mpfr::mpreal ionicStrength = mpfr::mpreal(inIonicStrength);
-	tRet = solverImpl->estimateDistributionInternal(mpfr::mpreal(0.0), analyticalConcentrations, estimatedConcentrations.get(), ionicStrength, false);
+	tRet = solverImpl->estimateDistributionSafeInternal(analyticalConcentrations, estimatedConcentrations->data(), ionicStrength);
 	if (tRet != RetCode::OK) {
 		mpfr::mpreal::set_default_prec(currentMpfrPrec);
 		return tRet;

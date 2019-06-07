@@ -81,15 +81,18 @@ public:
 	virtual RetCode ECHMET_CC estimateDistributionFast(const ECHMETReal &cHInitial, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept override;
 	virtual RetCode ECHMET_CC estimateDistributionSafe(const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept override;
 	template <typename OutputReal>
-	RetCode estimateDistributionInternal(const CAESReal &cHInitial, const RealVec *analyticalConcentrations,
-					     Vec<OutputReal> *estimatedConcentrations, OutputReal &ionicStrength,
-					     const bool useFastEstimate) noexcept;
+	RetCode fillResults(const std::pair<CAESReal *, CAESReal> &results,
+			    OutputReal *estimatedConcentrations, OutputReal &ionicStrength) noexcept;
 	virtual Options ECHMET_CC options() const noexcept override;
 	virtual RetCode ECHMET_CC setContext(SolverContext *ctx) noexcept override;
 	virtual RetCode ECHMET_CC setOptions(const Options options) noexcept override;
 	virtual RetCode ECHMET_CC solve(const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps, const size_t iterations, SolverIterations *iterationsNeeded = nullptr) noexcept override;
 	RetCode solveRaw(SolverVector<CAESReal> &concentrations, CAESReal &ionicStrength, const SolverVector<CAESReal> *anCVec, const Vec<CAESReal> *estimatedConcentrations,
 			 const size_t iterations, SolverIterations *iterationsNeeded = nullptr) noexcept;
+
+	template <typename OutputReal>
+	RetCode estimateDistributionSafeInternal(const RealVec *const ECHMET_RESTRICT_PTR analyticalConcentrations,
+						 OutputReal *const ECHMET_RESTRICT_PTR estimatedConcentrations, OutputReal &ionicStrength) noexcept;
 
 private:
 	void defaultActivityCoefficients(std::vector<CAESReal> &activityCoefficients) const;

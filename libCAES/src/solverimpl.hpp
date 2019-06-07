@@ -270,19 +270,49 @@ void SolverImpl<CAESReal, ISet, ThreadSafe>::defaultActivityCoefficients(std::ve
 template <typename CAESReal, InstructionSet ISet, bool ThreadSafe>
 RetCode ECHMET_CC SolverImpl<CAESReal, ISet, ThreadSafe>::estimateDistributionFast(const ECHMETReal &cHInitial, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept
 {
-	return estimateDistributionInternal<ECHMETReal>(cHInitial, analyticalConcentrations,
-					    calcProps.ionicConcentrations, calcProps.ionicStrength,
-					    true);
+	if (analyticalConcentrations->size() != m_ctx->analyticalConcentrationCount)
+		return RetCode::E_INVALID_ARGUMENT;
+
+	assert(estimatedConcentrations->size() == m_ctx->concentrationCount);
+
+	try {
+		const auto results = SolverImplSpec<CAESReal, ISet, ThreadSafe>::estimatepHFastWrapper(this, cHInitial, analyticalConcentrations);
+
+		fillResults<ECHMETReal>(results, calcProps.ionicConcentrations->data(), calcProps.ionicStrength);
+	} catch (const FastEstimateFailureException &) {
+		return RetCode::E_FAST_ESTIMATE_FAILURE;
+	} catch (const std::bad_alloc &) {
+		return RetCode::E_NO_MEMORY;
+	}
+
+	return RetCode::OK;
 }
 
 template <typename CAESReal, InstructionSet ISet, bool ThreadSafe>
 RetCode ECHMET_CC SolverImpl<CAESReal, ISet, ThreadSafe>::estimateDistributionSafe(const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept
 {
-	const ECHMETReal dummy = 0.0;	/* Unused */
+	if (analyticalConcentrations->size() != m_ctx->analyticalConcentrationCount)
+		return RetCode::E_INVALID_ARGUMENT;
 
-	return estimateDistributionInternal<ECHMETReal>(dummy, analyticalConcentrations,
-							calcProps.ionicConcentrations, calcProps.ionicStrength,
-							false);
+	assert(estimatedConcentrations->size() == m_ctx->concentrationCount);
+
+	return estimateDistributionSafeInternal<ECHMETReal>(analyticalConcentrations, calcProps.ionicConcentrations->data(), calcProps.ionicStrength);
+}
+
+template <typename CAESReal, InstructionSet ISet, bool ThreadSafe> template <typename OutputReal>
+RetCode SolverImpl<CAESReal, ISet, ThreadSafe>::estimateDistributionSafeInternal(const RealVec *const ECHMET_RESTRICT_PTR analyticalConcentrations,
+										 OutputReal *const ECHMET_RESTRICT_PTR estimatedConcentrations,
+										 OutputReal &ionicStrength) noexcept
+{
+	try {
+		const auto results = SolverImplSpec<CAESReal, ISet, ThreadSafe>::estimatepHSafeWrapper(this, analyticalConcentrations);
+
+		fillResults<OutputReal>(results, estimatedConcentrations, ionicStrength);
+	} catch (const std::bad_alloc &) {
+		return RetCode::E_NO_MEMORY;
+	}
+
+	return RetCode::OK;
 }
 
 /*!
@@ -302,50 +332,22 @@ RetCode ECHMET_CC SolverImpl<CAESReal, ISet, ThreadSafe>::estimateDistributionSa
  * @retval RetCode::E_FAST_ESTIMATE_FAILURE Fast estimation failed to find a solution.
  */
 template <typename CAESReal, InstructionSet ISet, bool ThreadSafe> template <typename OutputReal>
-RetCode SolverImpl<CAESReal, ISet, ThreadSafe>::estimateDistributionInternal(const CAESReal &cHInitial, const RealVec *analyticalConcentrations,
-									     Vec<OutputReal> *estimatedConcentrations, OutputReal &ionicStrength,
-									     const bool useFastEstimate) noexcept
+RetCode SolverImpl<CAESReal, ISet, ThreadSafe>::fillResults(const std::pair<CAESReal *, CAESReal> &results, OutputReal *estimatedConcentrations, OutputReal &ionicStrength) noexcept
 {
-	if (analyticalConcentrations->size() != m_ctx->analyticalConcentrationCount)
-		return RetCode::E_INVALID_ARGUMENT;
+	ECHMET_DEBUG_CODE(fprintf(stderr, "Estimated pH = %g\n", CAESRealToDouble(pX(results.first(0)) + 3.0)));
+	ECHMET_DEBUG_CODE(fprintf(stderr, "Estimated ionic strength = %g\n", CAESRealToDouble(ionicStrength)));
 
-	assert(estimatedConcentrations->size() == m_ctx->concentrationCount);
+	/* H+ and OH- are expected to be the first and second item in the vector */
+	estimatedConcentrations[0] = CAESRealToECHMETReal<CAESReal, OutputReal>(results.first[0]);
+	estimatedConcentrations[1] = CAESRealToECHMETReal<CAESReal, OutputReal>(results.first[1]);
 
-	OutputReal *estimatedConcentrationsRaw = estimatedConcentrations->data();
+	estimateComplexesDistribution<CAESReal, OutputReal>(m_ctx->complexNuclei, m_ctx->allLigands, m_totalLigandCopySize,
+							    results.first, m_ctx->allForms->size() + 2, estimatedConcentrations);
 
-	try {
-		const auto results = [&]() {
-			if (useFastEstimate) {
-				return SolverImplSpec<CAESReal, ISet, ThreadSafe>::estimatepHFastWrapper(this, cHInitial, analyticalConcentrations);
-			} else {
-				return SolverImplSpec<CAESReal, ISet, ThreadSafe>::estimatepHSafeWrapper(this, analyticalConcentrations);
-			}
-		}();
+	ionicStrength = CAESRealToECHMETReal<CAESReal, OutputReal>(results.second);
 
-		ECHMET_DEBUG_CODE(for (int idx = 0; idx < results.first.size(); idx++) {
-				  const CAESReal &v = results.first(idx);
-				  fprintf(stderr, "estC: %.4g, pX: %.4g\n", CAESRealToDouble(v), CAESRealToDouble(pX(v)));
-				  });
-
-		ECHMET_DEBUG_CODE(fprintf(stderr, "Estimated pH = %g\n", CAESRealToDouble(pX(results.first(0)) + 3.0)));
-		ECHMET_DEBUG_CODE(fprintf(stderr, "Estimated ionic strength = %g\n", CAESRealToDouble(ionicStrength)));
-		/* H+ and OH- are expected to be the first and second item in the vector */
-		estimatedConcentrationsRaw[0] = CAESRealToECHMETReal<CAESReal, OutputReal>(results.first[0]);
-		estimatedConcentrationsRaw[1] = CAESRealToECHMETReal<CAESReal, OutputReal>(results.first[1]);
-
-		estimateComplexesDistribution<CAESReal, OutputReal>(m_ctx->complexNuclei, m_ctx->allLigands,
-							m_totalLigandCopySize,
-							results.first, m_ctx->allForms->size() + 2, estimatedConcentrationsRaw);
-
-		ionicStrength = CAESRealToECHMETReal<CAESReal, OutputReal>(results.second);
-
-		if (ThreadSafe)
-			releaseRawArray<CAESReal, ISet>(results.first);
-	} catch (const std::bad_alloc &) {
-		return RetCode::E_NO_MEMORY;
-	} catch (const FastEstimateFailureException &) {
-		return RetCode::E_FAST_ESTIMATE_FAILURE;
-	}
+	if (ThreadSafe)
+		releaseRawArray<CAESReal, ISet>(results.first);
 
 	return RetCode::OK;
 }
