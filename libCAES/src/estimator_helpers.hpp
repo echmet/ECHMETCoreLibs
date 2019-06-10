@@ -53,8 +53,8 @@ void calculateDistributionWithDerivative(const CAESReal &v,
 	size_t rowCounter = 2;
 
 	for (auto &te : totalEquilibria) {
-		CAESReal X{};
-		CAESReal dX{};
+		CAESReal X;
+		CAESReal dX;
 		const auto pack = te.TsAnddTsdV(v, activityCoefficients, X, dX);
 
 		const std::vector<CAESReal> & Ts = std::get<0>(pack);
@@ -101,7 +101,7 @@ void calculateDistribution(const CAESReal &v,
 	size_t rowCounter = 2;
 
 	for (auto &te : totalEquilibria) {
-		CAESReal X = 0.0;
+		CAESReal X;
 		const std::vector<CAESReal> & Ts = te.Ts(v, activityCoefficients, X);
 
 		const ECHMETReal c = acRaw[te.concentrationIndex];
