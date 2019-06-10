@@ -5,8 +5,43 @@
 #include "totalequilibrium.h"
 #include "mappedmatrix.h"
 
+#include <cassert>
+
 namespace ECHMET {
 namespace CAES {
+
+class BlockSize {
+public:
+	template <typename CAESReal, InstructionSet ISet, std::enable_if_t<std::is_fundamental<CAESReal>::value, int> = 0>
+	static
+	size_t blockSize() noexcept
+	{
+		return VDType<ISet>::ALIGNMENT_BYTES / sizeof(CAESReal);
+	}
+
+	template <typename CAESReal, InstructionSet ISet, std::enable_if_t<!std::is_fundamental<CAESReal>::value, int> = 0>
+	static
+	size_t blockSize() noexcept
+	{
+		return 0;
+	}
+
+	template <typename CAESReal, std::enable_if_t<std::is_fundamental<CAESReal>::value, int> = 0>
+	static
+	size_t nBlock(const size_t N, const size_t blockSize) noexcept
+	{
+		assert(blockSize > 0);
+
+		return N - (N % blockSize);
+	}
+
+	template <typename CAESReal, std::enable_if_t<!std::is_fundamental<CAESReal>::value, int> = 0>
+	static
+	size_t nBlock(const size_t, const size_t) noexcept
+	{
+		return 0;
+	}
+};
 
 template <typename CAESReal, InstructionSet ISet, bool ThreadSafe>
 class ChargeSummer {
@@ -15,11 +50,11 @@ public:
 
 	ChargeSummer(const size_t N, const std::vector<TotalEquilibrium<CAESReal, ThreadSafe>> &totalEquilibria) :
 		m_N{N},
-		m_blockSize{VDType<ISet>::ALIGNMENT_BYTES / sizeof(CAESReal)},
-		m_NBlock{N - (N % m_blockSize)}
+		m_blockSize{BlockSize::blockSize<CAESReal, ISet>()},
+		m_NBlock{BlockSize::nBlock<CAESReal>(m_N, m_blockSize)}
 	{
-		m_charges = AlignedAllocator<double, VDType<ISet>::ALIGNMENT_BYTES>::alloc(m_N);
-		m_chargesSquared = AlignedAllocator<double, VDType<ISet>::ALIGNMENT_BYTES>::alloc(m_N);
+		m_charges = AlignedAllocator<CAESReal, VDType<ISet>::ALIGNMENT_BYTES>::alloc(m_N);
+		m_chargesSquared = AlignedAllocator<CAESReal, VDType<ISet>::ALIGNMENT_BYTES>::alloc(m_N);
 
 		size_t ctr{2};
 		for (const auto &te : totalEquilibria) {
@@ -30,11 +65,11 @@ public:
 				ctr++;
 			}
 		}
-		m_charges[0] = 1.0;	/* H+ */
-		m_charges[1] = -1.0;	/* OH- */
+		m_charges[0] = CAESReal{1.0};	/* H+ */
+		m_charges[1] = CAESReal{-1.0};	/* OH- */
 
-		m_chargesSquared[0] = 1.0;	/* H+ */
-		m_chargesSquared[1] = 1.0;	/* OH- */
+		m_chargesSquared[0] = CAESReal{1.0};	/* H+ */
+		m_chargesSquared[1] = CAESReal{1.0};	/* OH- */
 	}
 
 	ChargeSummer(const ChargeSummer &) = delete;
@@ -42,8 +77,8 @@ public:
 
 	~ChargeSummer() noexcept
 	{
-		AlignedAllocator<double, VDType<ISet>::ALIGNMENT_BYTES>::free(m_charges);
-		AlignedAllocator<double, VDType<ISet>::ALIGNMENT_BYTES>::free(m_chargesSquared);
+		AlignedAllocator<CAESReal, VDType<ISet>::ALIGNMENT_BYTES>::free(m_charges);
+		AlignedAllocator<CAESReal, VDType<ISet>::ALIGNMENT_BYTES>::free(m_chargesSquared);
 	}
 
 	CAESReal calc(const CAESReal *const ECHMET_RESTRICT_PTR icConcs) noexcept
@@ -84,8 +119,8 @@ private:
 	const size_t m_blockSize;
 	const size_t m_NBlock;
 
-	double *ECHMET_RESTRICT_PTR m_charges;
-	double *ECHMET_RESTRICT_PTR m_chargesSquared;
+	CAESReal *ECHMET_RESTRICT_PTR m_charges;
+	CAESReal *ECHMET_RESTRICT_PTR m_chargesSquared;
 };
 
 template <>

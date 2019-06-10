@@ -334,7 +334,7 @@ RetCode SolverImpl<CAESReal, ISet, ThreadSafe>::estimateDistributionSafeInternal
 template <typename CAESReal, InstructionSet ISet, bool ThreadSafe> template <typename OutputReal>
 RetCode SolverImpl<CAESReal, ISet, ThreadSafe>::fillResults(const std::pair<CAESReal *, CAESReal> &results, OutputReal *estimatedConcentrations, OutputReal &ionicStrength) noexcept
 {
-	ECHMET_DEBUG_CODE(fprintf(stderr, "Estimated pH = %g\n", CAESRealToDouble(pX(results.first(0)) + 3.0)));
+	ECHMET_DEBUG_CODE(fprintf(stderr, "Estimated pH = %g\n", CAESRealToDouble(pX(results.first[0]) + 3.0)));
 	ECHMET_DEBUG_CODE(fprintf(stderr, "Estimated ionic strength = %g\n", CAESRealToDouble(ionicStrength)));
 
 	/* H+ and OH- are expected to be the first and second item in the vector */

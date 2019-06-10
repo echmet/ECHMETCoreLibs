@@ -201,8 +201,8 @@ void estimateComplexesDistribution(const CNVec<CAESReal> *const ECHMET_RESTRICT_
 
 				CAESReal complexConcentration = X10(f->pB + 3.0) * estimatedConcentrations[f->ancestorGlobalIdx + 2] * estimatedConcentrations[f->ligandIFIdx + LGBlockOffset];
 				ECHMET_DEBUG_CODE(fprintf(stderr, "N: %s, myIdx: %zu, GAIdx: %zu, LFIdx: %zu, CC: %g\n", f->name.c_str(), f->myIdx + 2, f->ancestorGlobalIdx + 2, f->ligandIFIdx + LGBlockOffset, CAESRealToDouble(complexConcentration)));
-				ECHMET_DEBUG_CODE(fprintf(stderr, "   [GA]=%g, [L]=%g, Kx=%g\n", CAESRealToDouble(estimatedConcentrations(f->ancestorGlobalIdx + 2)),
-												 CAESRealToDouble(estimatedConcentrations(f->ligandIFIdx + LGBlockOffset)),
+				ECHMET_DEBUG_CODE(fprintf(stderr, "   [GA]=%g, [L]=%g, Kx=%g\n", CAESRealToDouble(estimatedConcentrations[f->ancestorGlobalIdx + 2]),
+												 CAESRealToDouble(estimatedConcentrations[f->ligandIFIdx + LGBlockOffset]),
 												 CAESRealToDouble(X10(f->pB))));
 				estimatedConcentrations[f->myIdx + 2] = CAESRealToECHMETReal<CAESReal, OutputReal>(complexConcentration);
 			}
