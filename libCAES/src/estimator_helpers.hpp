@@ -35,9 +35,11 @@ void calculateActivityCoefficients(const CAESReal &ionicStrength, std::vector<CA
  * Calculates distribution of concentrations and its derivative of the entire system
  *
  * @param[in] v Variable in the equilibrium equations.
- * @param[in,out] distribution Resulting vector of concentrations. The vector has to be resized by the caller to accomodate all individual concentrations.
- * @param[in,out] dDistdV Resulting vector of concentration derivatives. The vector has to be resized by the caller to accomodate all individual concentrations.
- * @param[in] totalEquilibria Vector of objects that descibe the given equilibria.
+ * @param[in,out] distribution Resulting array of concentrations. The vector has to be resized by the caller to accomodate all individual concentrations.
+ * @param[in,out] dDistdV Resulting array of concentration derivatives. The vector has to be resized by the caller to accomodate all individual concentrations.
+ * @param[in] totalEquilibria Vector of objects that descibe the given equilibrium.
+ * @param[in] acRaw Array of analytical concentrations.
+ * @param[in] activityCoefficients Vector of activity coefficients.
  */
 template <typename CAESReal, InstructionSet ISet, bool ThreadSafe>
 static
@@ -113,54 +115,15 @@ void calculateDistribution(const CAESReal &v,
 	}
 }
 
-/*
-template <typename CAESReal, InstructionSet ISet, bool ThreadSafe>
-static
-CAESReal calculateIonicStrength(const typename MMTypes<CAESReal, ISet>::Vector &icConcs, std::vector<TotalEquilibriumBase *> &totalEquilibria, const std::vector<int> &chargesSquared)
-{
-	CAESReal ionicStrength = 0.0;
-	size_t rowCounter = 2;
-
-	for (TotalEquilibriumBase *teb : totalEquilibria) {
-		const auto *te = static_cast<const TotalEquilibrium<CAESReal, ThreadSafe> *>(teb);
-		for (int charge = te->numLow; charge <= te->numHigh; charge++)
-			ionicStrength += icConcs(rowCounter++) * chargesSquared[std::abs(charge)];
-
-	}
-
-	ionicStrength += icConcs(0) + icConcs(1);
-
-	return 0.0005 * ionicStrength; / Scale to mol/dm3 /
-}
-*/
-
-/*
-template <typename CAESReal, bool ThreadSafe>
-static
-CAESReal calcTotalCharge(const SolverVector<CAESReal> &icConcs, const std::vector<TotalEquilibriumBase *> &totalEquilibria)
-{
-	CAESReal z = 0;
-	size_t rowCounter = 2;
-
-	for (const TotalEquilibriumBase *teb : totalEquilibria) {
-		const auto *te = static_cast<const TotalEquilibrium<CAESReal, ThreadSafe> *>(teb);
-		for (int charge = te->numLow; charge <= te->numHigh; charge++)
-			z += icConcs(rowCounter++) * charge;
-
-	}
-
-	return z;
-}
-*/
-
 /*!
  * Calculates initial estimate of concentration of all complex forms.
  *
- * @param[in] complexNuclei Vector of all complex nuclei.
- * @param[in] allLigands Vector of all ligands.
- * @oaram[in] estConcentrations Vector of estimated concentrations of all free (=uncomplexed) species.
+ * @param[in] complexNuclei Pointer to vector of all complex nuclei.
+ * @param[in] allLigands Pointer to vector of all ligands.
+ * @param[in] totalLigandCopySize Number of ligand ionic forms that can be processed in a single pass
+ * @oaram[in] estConcentrations Array of estimated concentrations of all free (=uncomplexed) species.
  * @param[in] LGBlockOffset Offset of the block that contains concentraions of free ligands in the vector of all forms.
- * @param[in,out] estimatedConcentrations Vector of ionic concentrations of all species.
+ * @param[in,out] estimatedConcentrations Array of ionic concentrations of all species.
  */
 template <typename CAESReal, typename OutputReal>
 static
@@ -210,22 +173,22 @@ void estimateComplexesDistribution(const CNVec<CAESReal> *const ECHMET_RESTRICT_
 	}
 }
 
-
 /*!
  * Calculates initial estimate of concentration of all complex forms.
  *
- * @param[in] complexNuclei Vector of all complex nuclei.
- * @param[in] allLigands Vector of all ligands.
- * @oaram[in] estConcentrations Vector of estimated concentrations of all free (=uncomplexed) species.
+ * @param[in] complexNuclei Pointer to vector of all complex nuclei.
+ * @param[in] allLigands Pointer to vector of all ligands.
+ * @param[in] totalLigandCopySize Number of ligand ionic forms that can be processed in a single pass
+ * @oaram[in] estConcentrations Array of estimated concentrations of all free (=uncomplexed) species.
  * @param[in] LGBlockOffset Offset of the block that contains concentraions of free ligands in the vector of all forms.
- * @param[in,out] estimatedConcentrations Vector of ionic concentrations of all species.
+ * @param[in,out] estimatedConcentrations Array of ionic concentrations of all species.
  */
 template <>
 void estimateComplexesDistribution<double, double>(const CNVec<double> *const ECHMET_RESTRICT_PTR complexNuclei,
-					   const LigandVec<double> *const ECHMET_RESTRICT_PTR allLigands,
-					   const size_t totalLigandCopySize,
-					   const double *const ECHMET_RESTRICT_PTR estConcentrations, const size_t LGBlockOffset,
-					   double *estimatedConcentrations)
+						   const LigandVec<double> *const ECHMET_RESTRICT_PTR allLigands,
+						   const size_t totalLigandCopySize,
+						   const double *const ECHMET_RESTRICT_PTR estConcentrations, const size_t LGBlockOffset,
+						   double *estimatedConcentrations)
 {
 	(void)allLigands;
 

@@ -73,7 +73,6 @@ void calculateTsAnddTsdV(std::vector<CAESReal> &ts, std::vector<CAESReal> &dts, 
 		const CAESReal T = LA * vPow;
 		const CAESReal dT = idx * LA * dvPow;
 
-		/* FIX THIS DOUBLE MULTIPLICATION!!! */
 		dvPow = vPow;
 		vPow *= vMul;
 
