@@ -2,7 +2,6 @@
 #define ECHMET_CAES_CAES_P_H
 
 #include <echmetcaes.h>
-#include "mappedmatrix.h"
 #include "totalequilibrium.h"
 #include "chargesummer.h"
 #include "vecmath/vecmath.h"

@@ -1,8 +1,6 @@
 #ifndef ECHMET_CAES_ESTIMATOR_HELPERS_HPP
 #define ECHMET_CAES_ESTIMATOR_HELPERS_HPP
 
-#include "mappedmatrix.h"
-
 namespace ECHMET {
 namespace CAES {
 

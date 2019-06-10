@@ -3,7 +3,7 @@
 
 #include "solvercontextimpl.h"
 #include "totalequilibrium.h"
-#include "mappedmatrix.h"
+#include "vecmath/vecmath.h"
 
 #include <cassert>
 
@@ -46,8 +46,6 @@ public:
 template <typename CAESReal, InstructionSet ISet, bool ThreadSafe>
 class ChargeSummer {
 public:
-	using MappedVector = typename MMTypes<CAESReal, ISet>::Vector;
-
 	ChargeSummer(const size_t N, const std::vector<TotalEquilibrium<CAESReal, ThreadSafe>> &totalEquilibria) :
 		m_N{N},
 		m_blockSize{BlockSize::blockSize<CAESReal, ISet>()},
