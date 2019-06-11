@@ -51,7 +51,12 @@ set(IONPROPS_LINK_LIBS
     "${IONPROPS_LINK_LIBS}"
     ${ECHMET_HIPREC_LIBS})
 
-add_library(IonProps SHARED ${libIonProps_SRCS})
+if (BUILD_STATIC_LIBS)
+    add_library(IonProps STATIC ${libIonProps_SRCS})
+else ()
+    add_library(IonProps SHARED ${libIonProps_SRCS})
+endif ()
+
 target_include_directories(IonProps PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 set_target_properties(IonProps
                       PROPERTIES VERSION 0.2

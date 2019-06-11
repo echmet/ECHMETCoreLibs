@@ -92,7 +92,12 @@ if (!WIN32)
         m)
 endif()
 
-add_library(CAES SHARED ${libCAES_SRCS})
+if (BUILD_STATIC_LIBS)
+    add_library(CAES STATIC ${libCAES_SRCS})
+else ()
+    add_library(CAES SHARED ${libCAES_SRCS})
+endif ()
+
 target_include_directories(CAES PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 set_target_properties(CAES
                       PROPERTIES VERSION 0.2

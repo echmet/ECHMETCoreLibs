@@ -7,6 +7,7 @@ option(ECHMET_HACKS_ENABLED "Enable ad-hoc hacks - do not switch this on" OFF)
 option(MANUAL_HIPREC_LIBS_PATH "Use manually specified paths to GMP and MPFR libraries on UNIX" OFF)
 option(ENABLE_DIAGNOSTIC_OUTPUT "Enables diagnostic text output. This output is enabled automatically in debug builds" OFF)
 option(USE_CLANG_FPROF "Enables Clang-specific code profiling instrumentation" OFF)
+option(BUILD_STATIC_LIBS "Build static libraries" OFF)
 
 if (WIN32)
     option(ECHMET_FORCE_WINXP "Define target Windows version to Windows XP")
@@ -116,7 +117,6 @@ elseif (UNIX)
 else()
     message(FATAL_ERROR "Platform not recognized or not supported")
 endif()
-
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 CONFIGURE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/libECHMETShared/echmetcorelibs_config.h.in" "${CMAKE_CURRENT_BINARY_DIR}/echmetcorelibs_config.h")

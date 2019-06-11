@@ -28,7 +28,12 @@ if (ECHMET_USE_HIGH_PRECISION)
 	${ECHMET_HIPREC_LIBS})
 endif ()
 
-add_library(SysComp SHARED ${libSysComp_SRCS})
+if (BUILD_STATIC_LIBS)
+    add_library(SysComp STATIC ${libSysComp_SRCS})
+else ()
+    add_library(SysComp SHARED ${libSysComp_SRCS})
+endif ()
+
 target_include_directories(SysComp PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 set_target_properties(SysComp
                       PROPERTIES VERSION 0.1

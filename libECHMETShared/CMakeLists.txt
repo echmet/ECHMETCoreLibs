@@ -28,7 +28,12 @@ if (ECHMET_USE_HIGH_PRECISION)
         ${ECHMET_HIPREC_LIBS})
 endif ()
 
-add_library(ECHMETShared SHARED ${ECHMETShared_SRCS})
+if (BUILD_STATIC_LIBS)
+    add_library(ECHMETShared STATIC ${ECHMETShared_SRCS})
+else ()
+    add_library(ECHMETShared SHARED ${ECHMETShared_SRCS})
+endif ()
+
 target_include_directories(ECHMETShared PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 set_target_properties(ECHMETShared
                       PROPERTIES VERSION 0.1
