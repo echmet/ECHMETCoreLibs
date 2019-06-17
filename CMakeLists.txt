@@ -54,7 +54,7 @@ if (WIN32)
             libgmp-10
             libmpfr-6)
 	else ()
-	    set(ECHMET_HIPREC_LIBS
+        set(ECHMET_HIPREC_LIBS
             gmp-10
             mpfr-6)
     endif ()
