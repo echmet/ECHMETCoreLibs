@@ -19,8 +19,7 @@ double ChargeSummer<double, InstructionSet::SSE2, false>::calc(const double *con
 		__m128d conc = M128D(icConcs + idx);
 		__m128d chg = M128D(m_charges + idx);
 
-		conc = _mm_mul_pd(conc, chg);
-		zVec = _mm_add_pd(zVec, conc);
+		zVec = _mm_add_pd(zVec, _mm_mul_pd(conc, chg));
 	}
 
 	_mm_store_pd(vz, zVec);
@@ -44,8 +43,7 @@ double ChargeSummer<double, InstructionSet::SSE2, true>::calc(const double *cons
 		__m128d conc = M128D(icConcs + idx);
 		__m128d chg = M128D(m_charges + idx);
 
-		conc = _mm_mul_pd(conc, chg);
-		zVec = _mm_add_pd(zVec, conc);
+		zVec = _mm_add_pd(zVec, _mm_mul_pd(conc, chg));
 	}
 
 	_mm_store_pd(vz, zVec);
@@ -73,11 +71,8 @@ void ChargeSummer<double, InstructionSet::SSE2, false>::calcWithdZ(const double 
 		__m128d dConc = M128D(dIcConcsdH + idx);
 		__m128d chg = M128D(m_charges + idx);
 
-		conc = _mm_mul_pd(conc, chg);
-		dConc = _mm_mul_pd(dConc, chg);
-
-		zVec = _mm_add_pd(zVec, conc);
-		dZVec = _mm_add_pd(dZVec, dConc);
+		zVec = _mm_add_pd(zVec, _mm_mul_pd(conc, chg));
+		dZVec = _mm_add_pd(dZVec, _mm_mul_pd(dConc, chg));
 	}
 
 	_mm_store_pd(vz, zVec);
@@ -108,11 +103,8 @@ void ChargeSummer<double, InstructionSet::SSE2, true>::calcWithdZ(const double *
 		__m128d dConc = M128D(dIcConcsdH + idx);
 		__m128d chg = M128D(m_charges + idx);
 
-		conc = _mm_mul_pd(conc, chg);
-		dConc = _mm_mul_pd(dConc, chg);
-
-		zVec = _mm_add_pd(zVec, conc);
-		dZVec = _mm_add_pd(dZVec, dConc);
+		zVec = _mm_add_pd(zVec, _mm_mul_pd(conc, chg));
+		dZVec = _mm_add_pd(dZVec, _mm_mul_pd(dConc, chg));
 	}
 
 	_mm_store_pd(vz, zVec);
@@ -139,8 +131,7 @@ double ChargeSummer<double, InstructionSet::SSE2, true>::calculateIonicStrength(
 		__m128d conc = M128D(icConcs + idx);
 		__m128d chgSq = M128D(m_chargesSquared + idx);
 
-		conc = _mm_mul_pd(conc, chgSq);
-		isVec = _mm_add_pd(isVec, conc);
+		isVec = _mm_add_pd(isVec, _mm_mul_pd(conc, chgSq));
 	}
 
 	_mm_store_pd(vIs, isVec);
@@ -165,8 +156,7 @@ double ChargeSummer<double, InstructionSet::SSE2, false>::calculateIonicStrength
 		__m128d conc = M128D(icConcs + idx);
 		__m128d chgSq = M128D(m_chargesSquared + idx);
 
-		conc = _mm_mul_pd(conc, chgSq);
-		isVec = _mm_add_pd(isVec, conc);
+		isVec = _mm_add_pd(isVec, _mm_mul_pd(conc, chgSq));
 	}
 
 	_mm_store_pd(vIs, isVec);

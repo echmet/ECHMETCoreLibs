@@ -19,8 +19,7 @@ double ChargeSummer<double, InstructionSet::AVX, false>::calc(const double *cons
 		__m256d conc = M256D(icConcs + idx);
 		__m256d chg = M256D(m_charges + idx);
 
-		conc = _mm256_mul_pd(conc, chg);
-		zVec = _mm256_add_pd(zVec, conc);
+		zVec = _mm256_add_pd(zVec, _mm256_mul_pd(conc, chg));
 	}
 
 	_mm256_store_pd(vz, zVec);
@@ -44,8 +43,7 @@ double ChargeSummer<double, InstructionSet::AVX, true>::calc(const double *const
 		__m256d conc = M256D(icConcs + idx);
 		__m256d chg = M256D(m_charges + idx);
 
-		conc = _mm256_mul_pd(conc, chg);
-		zVec = _mm256_add_pd(zVec, conc);
+		zVec = _mm256_add_pd(zVec, _mm256_mul_pd(conc, chg));
 	}
 
 	_mm256_store_pd(vz, zVec);
@@ -73,11 +71,8 @@ void ChargeSummer<double, InstructionSet::AVX, false>::calcWithdZ(const double *
 		__m256d dConc = M256D(dIcConcsdH + idx);
 		__m256d chg = M256D(m_charges + idx);
 
-		conc = _mm256_mul_pd(conc, chg);
-		dConc = _mm256_mul_pd(dConc, chg);
-
-		zVec = _mm256_add_pd(zVec, conc);
-		dZVec = _mm256_add_pd(dZVec, dConc);
+		zVec = _mm256_add_pd(zVec, _mm256_mul_pd(conc, chg));
+		dZVec = _mm256_add_pd(dZVec, _mm256_mul_pd(dConc, chg));
 	}
 
 	_mm256_store_pd(vz, zVec);
@@ -108,11 +103,8 @@ void ChargeSummer<double, InstructionSet::AVX, true>::calcWithdZ(const double *c
 		__m256d dConc = M256D(dIcConcsdH + idx);
 		__m256d chg = M256D(m_charges + idx);
 
-		conc = _mm256_mul_pd(conc, chg);
-		dConc = _mm256_mul_pd(dConc, chg);
-
-		zVec = _mm256_add_pd(zVec, conc);
-		dZVec = _mm256_add_pd(dZVec, dConc);
+		zVec = _mm256_add_pd(zVec, _mm256_mul_pd(conc, chg));
+		dZVec = _mm256_add_pd(dZVec, _mm256_mul_pd(dConc, chg));
 	}
 
 	_mm256_store_pd(vz, zVec);
@@ -139,8 +131,7 @@ double ChargeSummer<double, InstructionSet::AVX, true>::calculateIonicStrength(c
 		__m256d conc = M256D(icConcs + idx);
 		__m256d chgSq = M256D(m_chargesSquared + idx);
 
-		conc = _mm256_mul_pd(conc, chgSq);
-		isVec = _mm256_add_pd(isVec, conc);
+		isVec = _mm256_add_pd(isVec, _mm256_mul_pd(conc, chgSq));
 	}
 
 	_mm256_store_pd(vIs, isVec);
@@ -165,8 +156,7 @@ double ChargeSummer<double, InstructionSet::AVX, false>::calculateIonicStrength(
 		__m256d conc = M256D(icConcs + idx);
 		__m256d chgSq = M256D(m_chargesSquared + idx);
 
-		conc = _mm256_mul_pd(conc, chgSq);
-		isVec = _mm256_add_pd(isVec, conc);
+		isVec = _mm256_add_pd(isVec, _mm256_mul_pd(conc, chgSq));
 	}
 
 	_mm256_store_pd(vIs, isVec);
