@@ -10,7 +10,7 @@ namespace ECHMET {
 namespace CAES {
 
 template <typename CAESReal, InstructionSet ISet>
-static
+inline
 void calculateTsAnddTsdV(CAESReal *const ECHMET_RESTRICT_PTR ts,
 			 CAESReal *const ECHMET_RESTRICT_PTR dts,
 			 const CAESReal &v,
