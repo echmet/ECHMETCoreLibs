@@ -117,7 +117,7 @@ private:
 	const bool m_correctDebyeHuckel;			/*!< Correct with Debye-Hückel */
 
 	size_t m_TECount;					/*!< Number of ionic concentrations that can be estimated from G-polynomial */
-	std::vector<TotalEquilibrium<CAESReal, ThreadSafe>> m_totalEquilibria;
+	std::vector<TotalEquilibrium<CAESReal, ISet, ThreadSafe>> m_totalEquilibria;
 
 	size_t m_totalLigandCopySize;
 
@@ -173,9 +173,9 @@ public:
 					     CAESReal *&estimatedConcentrationsInternal);
 };
 
-template <typename CAESReal, bool ThreadSafe>
+template <typename CAESReal, InstructionSet ISet, bool ThreadSafe>
 static
-void calculateDistribution(const CAESReal &v, SolverVector<CAESReal> &distribution, std::vector<TotalEquilibrium<CAESReal, ThreadSafe>> &totalEquilibria, const RealVec *analyticalConcentrations);
+void calculateDistribution(const CAESReal &v, SolverVector<CAESReal> &distribution, std::vector<TotalEquilibrium<CAESReal, ISet, ThreadSafe>> &totalEquilibria, const RealVec *analyticalConcentrations);
 
 template <typename CAESReal>
 static

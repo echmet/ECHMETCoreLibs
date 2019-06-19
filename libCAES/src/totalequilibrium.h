@@ -4,6 +4,7 @@
 #include <echmetcaes.h>
 #include <vector>
 #include "funcs.h"
+#include "vecmath/vecmath.h"
 
 namespace ECHMET {
 namespace CAES {
@@ -30,11 +31,11 @@ std::vector<CAESReal> calculateLsBase(const std::vector<CAESReal> &pBs)
 	return _Ls;
 }
 
-template <typename CAESReal, bool ThreadSafe>
+template <typename CAESReal, InstructionSet ISet, bool ThreadSafe>
 class TotalEquilibrium;
 
-template <typename CAESReal>
-class TotalEquilibrium<CAESReal, true> {
+template <typename CAESReal, InstructionSet ISet>
+class TotalEquilibrium<CAESReal, ISet, true> {
 public:
 	typedef std::tuple<std::vector<CAESReal>, std::vector<CAESReal>> DDPack;
 
@@ -99,8 +100,8 @@ private:
 	}
 };
 
-template <typename CAESReal>
-class TotalEquilibrium<CAESReal, false> {
+template <typename CAESReal, InstructionSet ISet>
+class TotalEquilibrium<CAESReal, ISet, false> {
 public:
 	typedef std::tuple<const std::vector<CAESReal> &, const std::vector<CAESReal> &> DDPack;
 

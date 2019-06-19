@@ -46,7 +46,7 @@ public:
 template <typename CAESReal, InstructionSet ISet, bool ThreadSafe>
 class ChargeSummer {
 public:
-	ChargeSummer(const size_t N, const std::vector<TotalEquilibrium<CAESReal, ThreadSafe>> &totalEquilibria) :
+	ChargeSummer(const size_t N, const std::vector<TotalEquilibrium<CAESReal, ISet, ThreadSafe>> &totalEquilibria) :
 		m_N{N},
 		m_blockSize{BlockSize::blockSize<CAESReal, ISet>()},
 		m_NBlock{BlockSize::nBlock<CAESReal>(m_N, m_blockSize)}

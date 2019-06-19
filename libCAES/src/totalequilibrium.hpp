@@ -1,6 +1,8 @@
 #ifndef ECHMET_CAES_TOTALEQUILIBRIUM_HPP
 #define ECHMET_CAES_TOTALEQUILIBRIUM_HPP
 
+#include "totalequilibrium.h"
+
 namespace ECHMET {
 namespace CAES {
 
@@ -48,7 +50,9 @@ void calculatedTsdV(std::vector<CAESReal> &dts, const CAESReal &v, const std::ve
 
 template <typename CAESReal>
 static ECHMET_FORCE_INLINE
-void calculateTsAnddTsdV(std::vector<CAESReal> &ts, std::vector<CAESReal> &dts, const CAESReal &v,
+void calculateTsAnddTsdV(CAESReal *const ECHMET_RESTRICT_PTR ts,
+			 CAESReal *const ECHMET_RESTRICT_PTR dts,
+			 const CAESReal &v,
 			 const std::vector<CAESReal> &activityCoefficients,
 			 CAESReal &X, CAESReal &dX,
 			 const std::vector<CAESReal> &Ls, const size_t len,
@@ -92,8 +96,8 @@ void calculateTsAnddTsdV(std::vector<CAESReal> &ts, std::vector<CAESReal> &dts, 
  * @param[in] pBs Vector of consecutive equilibrium constants.
  * @param[in] concentration Analytical concentration of the constituent.
  */
-template <typename CAESReal>
-TotalEquilibrium<CAESReal, true>::TotalEquilibrium(const int numLow, const int numHigh, const std::vector<CAESReal> &pBs, const size_t concentrationIndex) :
+template <typename CAESReal, InstructionSet ISet>
+TotalEquilibrium<CAESReal, ISet, true>::TotalEquilibrium(const int numLow, const int numHigh, const std::vector<CAESReal> &pBs, const size_t concentrationIndex) :
 	concentrationIndex(concentrationIndex),
 	Ls(calculateLs(pBs)),
 	numLow(numLow),
@@ -110,8 +114,8 @@ TotalEquilibrium<CAESReal, true>::TotalEquilibrium(const int numLow, const int n
  * @param[in] pBs Vector of consecutive equilibrium constants.
  * @param[in] concentration Analytical concentration of the constituent.
  */
-template <typename CAESReal>
-TotalEquilibrium<CAESReal, false>::TotalEquilibrium(const int numLow, const int numHigh, const std::vector<CAESReal> &pBs, const size_t concentrationIndex) :
+template <typename CAESReal, InstructionSet ISet>
+TotalEquilibrium<CAESReal, ISet, false>::TotalEquilibrium(const int numLow, const int numHigh, const std::vector<CAESReal> &pBs, const size_t concentrationIndex) :
 	concentrationIndex(concentrationIndex),
 	Ls(calculateLs(pBs)),
 	numLow(numLow),
@@ -125,8 +129,8 @@ TotalEquilibrium<CAESReal, false>::TotalEquilibrium(const int numLow, const int 
 	m_Ts.resize(Ls.size());
 }
 
-template <typename CAESReal>
-TotalEquilibrium<CAESReal, true>::TotalEquilibrium(const TotalEquilibrium &other) :
+template <typename CAESReal, InstructionSet ISet>
+TotalEquilibrium<CAESReal, ISet, true>::TotalEquilibrium(const TotalEquilibrium &other) :
 	concentrationIndex(other.concentrationIndex),
 	Ls(std::move(other.Ls)),
 	numLow(other.numLow),
@@ -135,8 +139,8 @@ TotalEquilibrium<CAESReal, true>::TotalEquilibrium(const TotalEquilibrium &other
 {
 }
 
-template <typename CAESReal>
-TotalEquilibrium<CAESReal, false>::TotalEquilibrium(const TotalEquilibrium &other) :
+template <typename CAESReal, InstructionSet ISet>
+TotalEquilibrium<CAESReal, ISet, false>::TotalEquilibrium(const TotalEquilibrium &other) :
 	concentrationIndex(other.concentrationIndex),
 	Ls(std::move(other.Ls)),
 	numLow(other.numLow),
@@ -156,8 +160,8 @@ TotalEquilibrium<CAESReal, false>::TotalEquilibrium(const TotalEquilibrium &othe
  *
  * @param[in] other TotalEquilibrium object being moved.
  */
-template <typename CAESReal>
-TotalEquilibrium<CAESReal, true>::TotalEquilibrium(TotalEquilibrium &&other) :
+template <typename CAESReal, InstructionSet ISet>
+TotalEquilibrium<CAESReal, ISet, true>::TotalEquilibrium(TotalEquilibrium &&other) :
 	concentrationIndex(other.concentrationIndex),
 	Ls(std::move(other.Ls)),
 	numLow(other.numLow),
@@ -171,8 +175,8 @@ TotalEquilibrium<CAESReal, true>::TotalEquilibrium(TotalEquilibrium &&other) :
  *
  * @param[in] other TotalEquilibrium object being moved.
  */
-template <typename CAESReal>
-TotalEquilibrium<CAESReal, false>::TotalEquilibrium(TotalEquilibrium &&other) :
+template <typename CAESReal, InstructionSet ISet>
+TotalEquilibrium<CAESReal, ISet, false>::TotalEquilibrium(TotalEquilibrium &&other) :
 	concentrationIndex(other.concentrationIndex),
 	Ls(std::move(other.Ls)),
 	numLow(other.numLow),
@@ -186,8 +190,8 @@ TotalEquilibrium<CAESReal, false>::TotalEquilibrium(TotalEquilibrium &&other) :
 {
 }
 
-template <typename CAESReal>
-std::vector<CAESReal> TotalEquilibrium<CAESReal, true>::concentrations(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, const RealVec *analyticalConcentrations) const
+template <typename CAESReal, InstructionSet ISet>
+std::vector<CAESReal> TotalEquilibrium<CAESReal, ISet, true>::concentrations(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, const RealVec *analyticalConcentrations) const
 {
 	CAESReal X = 0.0;
 	std::vector<CAESReal> concentrations{};
@@ -207,8 +211,8 @@ std::vector<CAESReal> TotalEquilibrium<CAESReal, true>::concentrations(const CAE
 	return concentrations;
 }
 
-template <typename CAESReal>
-const std::vector<CAESReal> & TotalEquilibrium<CAESReal, false>::concentrations(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, const RealVec *analyticalConcentrations)
+template <typename CAESReal, InstructionSet ISet>
+const std::vector<CAESReal> & TotalEquilibrium<CAESReal, ISet, false>::concentrations(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, const RealVec *analyticalConcentrations)
 {
 	CAESReal X = 0.0;
 	Ts(v, activityCoefficients, X); /* Recalculate Ts */
@@ -226,8 +230,8 @@ const std::vector<CAESReal> & TotalEquilibrium<CAESReal, false>::concentrations(
 	return m_concentrations;
 }
 
-template <typename CAESReal>
-typename TotalEquilibrium<CAESReal, true>::DDPack TotalEquilibrium<CAESReal, true>::distributionAnddDistdV(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients) const
+template <typename CAESReal, InstructionSet ISet>
+typename TotalEquilibrium<CAESReal, ISet, true>::DDPack TotalEquilibrium<CAESReal, ISet, true>::distributionAnddDistdV(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients) const
 {
 	const size_t len = Ls.size();
 
@@ -260,8 +264,8 @@ typename TotalEquilibrium<CAESReal, true>::DDPack TotalEquilibrium<CAESReal, tru
 	return { distribution, dDistdV };
 }
 
-template <typename CAESReal>
-typename TotalEquilibrium<CAESReal, false>::DDPack TotalEquilibrium<CAESReal, false>::distributionAnddDistdV(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients)
+template <typename CAESReal, InstructionSet ISet>
+typename TotalEquilibrium<CAESReal, ISet, false>::DDPack TotalEquilibrium<CAESReal, ISet, false>::distributionAnddDistdV(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients)
 {
 	const size_t len = Ls.size();
 
@@ -288,8 +292,8 @@ typename TotalEquilibrium<CAESReal, false>::DDPack TotalEquilibrium<CAESReal, fa
 	return { m_distribution, m_dDistdV };
 }
 
-template <typename CAESReal>
-std::vector<CAESReal> TotalEquilibrium<CAESReal, true>::distribution(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients) const
+template <typename CAESReal, InstructionSet ISet>
+std::vector<CAESReal> TotalEquilibrium<CAESReal, ISet, true>::distribution(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients) const
 {
 	CAESReal X = 0.0;
 	const auto ts = Ts(v, activityCoefficients, X); /* Recalculate Ts */
@@ -308,8 +312,8 @@ std::vector<CAESReal> TotalEquilibrium<CAESReal, true>::distribution(const CAESR
 	return distribution;
 }
 
-template <typename CAESReal>
-const std::vector<CAESReal> & TotalEquilibrium<CAESReal, false>::distribution(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients)
+template <typename CAESReal, InstructionSet ISet>
+const std::vector<CAESReal> & TotalEquilibrium<CAESReal, ISet, false>::distribution(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients)
 {
 	CAESReal X = 0.0;
 	Ts(v, activityCoefficients, X); /* Recalculate Ts */
@@ -326,8 +330,8 @@ const std::vector<CAESReal> & TotalEquilibrium<CAESReal, false>::distribution(co
 	return m_distribution;
 }
 
-template <typename CAESReal>
-std::vector<CAESReal> TotalEquilibrium<CAESReal, true>::dTsdV(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, CAESReal &X) const
+template <typename CAESReal, InstructionSet ISet>
+std::vector<CAESReal> TotalEquilibrium<CAESReal, ISet, true>::dTsdV(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, CAESReal &X) const
 {
 	std::vector<CAESReal> dts{};
 
@@ -341,8 +345,8 @@ std::vector<CAESReal> TotalEquilibrium<CAESReal, true>::dTsdV(const CAESReal &v,
 	return dts;
 }
 
-template <typename CAESReal>
-std::vector<CAESReal> & TotalEquilibrium<CAESReal, false>::dTsdV(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, CAESReal &X)
+template <typename CAESReal, InstructionSet ISet>
+std::vector<CAESReal> & TotalEquilibrium<CAESReal, ISet, false>::dTsdV(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, CAESReal &X)
 {
 	assert(m_dTsdV.size() == static_cast<size_t>(numHigh - numLow) + 1);
 	calculatedTsdV(m_dTsdV, v, activityCoefficients, X, Ls, len, numLow);
@@ -350,8 +354,8 @@ std::vector<CAESReal> & TotalEquilibrium<CAESReal, false>::dTsdV(const CAESReal 
 	return m_dTsdV;
 }
 
-template <typename CAESReal>
-std::vector<CAESReal> TotalEquilibrium<CAESReal, true>::Ts(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, CAESReal &X) const
+template <typename CAESReal, InstructionSet ISet>
+std::vector<CAESReal> TotalEquilibrium<CAESReal, ISet, true>::Ts(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, CAESReal &X) const
 {
 	std::vector<CAESReal> ts{};
 
@@ -365,8 +369,8 @@ std::vector<CAESReal> TotalEquilibrium<CAESReal, true>::Ts(const CAESReal &v, co
 	return ts;
 }
 
-template <typename CAESReal>
-const std::vector<CAESReal> & TotalEquilibrium<CAESReal, false>::Ts(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, CAESReal &X)
+template <typename CAESReal, InstructionSet ISet>
+const std::vector<CAESReal> & TotalEquilibrium<CAESReal, ISet, false>::Ts(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, CAESReal &X)
 {
 	assert(m_Ts.size() == static_cast<size_t>(numHigh - numLow + 1));
 
@@ -375,9 +379,9 @@ const std::vector<CAESReal> & TotalEquilibrium<CAESReal, false>::Ts(const CAESRe
 	return m_Ts;
 }
 
-template <typename CAESReal>
-typename TotalEquilibrium<CAESReal, true>::DDPack
-TotalEquilibrium<CAESReal, true>::TsAnddTsdV(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients,
+template <typename CAESReal, InstructionSet ISet>
+typename TotalEquilibrium<CAESReal, ISet, true>::DDPack
+TotalEquilibrium<CAESReal, ISet, true>::TsAnddTsdV(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients,
 					     CAESReal &X, CAESReal &dX)
 {
 	std::vector<CAESReal> ts{};
@@ -390,19 +394,19 @@ TotalEquilibrium<CAESReal, true>::TsAnddTsdV(const CAESReal &v, const std::vecto
 	ts.resize(len);
 	dts.resize(len);
 
-	calculateTsAnddTsdV(ts, dts, v, activityCoefficients, X, dX, Ls, len, numLow);
+	calculateTsAnddTsdV(ts.data(), dts.data(), v, activityCoefficients, X, dX, Ls, len, numLow);
 
 	return { std::move(ts), std::move(dts) };
 }
 
-template <typename CAESReal>
-typename TotalEquilibrium<CAESReal, false>::DDPack
-TotalEquilibrium<CAESReal, false>::TsAnddTsdV(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients,
+template <typename CAESReal, InstructionSet ISet>
+typename TotalEquilibrium<CAESReal, ISet, false>::DDPack
+TotalEquilibrium<CAESReal, ISet, false>::TsAnddTsdV(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients,
 					      CAESReal &X, CAESReal &dX)
 {
 	assert(m_Ts.size() == static_cast<size_t>(numHigh - numLow + 1));
 
-	calculateTsAnddTsdV(m_Ts, m_dTsdV, v, activityCoefficients, X, dX, Ls, len, numLow);
+	calculateTsAnddTsdV(m_Ts.data(), m_dTsdV.data(), v, activityCoefficients, X, dX, Ls, len, numLow);
 
 	return { m_Ts, m_dTsdV };
 }

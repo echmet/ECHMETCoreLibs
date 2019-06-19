@@ -1,6 +1,8 @@
 #ifndef ECHMET_CAES_ESTIMATOR_HELPERS_HPP
 #define ECHMET_CAES_ESTIMATOR_HELPERS_HPP
 
+#include "estimator_helpers.h"
+
 namespace ECHMET {
 namespace CAES {
 
@@ -19,7 +21,7 @@ public:
 };
 
 template <typename CAESReal>
-static
+inline
 void calculateActivityCoefficients(const CAESReal &ionicStrength, std::vector<CAESReal> &activityCoefficients, const std::vector<int> &chargesSquared)
 {
 	const CAESReal isSqrt = VMath::sqrt<CAESReal>(ionicStrength);
@@ -40,11 +42,11 @@ void calculateActivityCoefficients(const CAESReal &ionicStrength, std::vector<CA
  * @param[in] activityCoefficients Vector of activity coefficients.
  */
 template <typename CAESReal, InstructionSet ISet, bool ThreadSafe>
-static
+inline
 void calculateDistributionWithDerivative(const CAESReal &v,
 					 CAESReal *const ECHMET_RESTRICT_PTR distribution,
 					 CAESReal *const ECHMET_RESTRICT_PTR dDistdV,
-					 std::vector<TotalEquilibrium<CAESReal, ThreadSafe>> &totalEquilibria,
+					 std::vector<TotalEquilibrium<CAESReal, ISet, ThreadSafe>> &totalEquilibria,
 					 const ECHMETReal *const ECHMET_RESTRICT_PTR acRaw,
 					 const std::vector<CAESReal> &activityCoefficients)
 {
@@ -69,12 +71,10 @@ void calculateDistributionWithDerivative(const CAESReal &v,
 			typename FetchType<CAESReal>::CType dT = dTsdV[idx];
 
 			/* Distribution */
-			const CAESReal fC = T / X;
-			distribution[rIdx] = c * fC;
+			distribution[rIdx] = c * T / X;
 
 			/* dDistdV */
-			const CAESReal fD = (dT * X - T * dX) / X / X;
-			dDistdV[rIdx] = c * fD;
+			dDistdV[rIdx] = c * (dT * X - T * dX) / X / X;
 		}
 
 		rowCounter += len;
@@ -89,10 +89,10 @@ void calculateDistributionWithDerivative(const CAESReal &v,
  * @param[in] totalEquilibria Vector of objects that descibe the given equilibria.
  */
 template <typename CAESReal, InstructionSet ISet, bool ThreadSafe>
-static
+inline
 void calculateDistribution(const CAESReal &v,
 			   CAESReal *const ECHMET_RESTRICT_PTR distribution,
-			   std::vector<TotalEquilibrium<CAESReal, ThreadSafe>> &totalEquilibria,
+			   std::vector<TotalEquilibrium<CAESReal, ISet, ThreadSafe>> &totalEquilibria,
 			   const ECHMETReal *const ECHMET_RESTRICT_PTR acRaw,
 			   const std::vector<CAESReal> &activityCoefficients)
 {
@@ -124,7 +124,7 @@ void calculateDistribution(const CAESReal &v,
  * @param[in,out] estimatedConcentrations Array of ionic concentrations of all species.
  */
 template <typename CAESReal, typename OutputReal>
-static
+inline
 void estimateComplexesDistribution(const CNVec<CAESReal> *const ECHMET_RESTRICT_PTR complexNuclei,
 				   const LigandVec<CAESReal> *const ECHMET_RESTRICT_PTR allLigands,
 				   const size_t totalLigandCopySize,
@@ -182,6 +182,7 @@ void estimateComplexesDistribution(const CNVec<CAESReal> *const ECHMET_RESTRICT_
  * @param[in,out] estimatedConcentrations Array of ionic concentrations of all species.
  */
 template <>
+inline
 void estimateComplexesDistribution<double, double>(const CNVec<double> *const ECHMET_RESTRICT_PTR complexNuclei,
 						   const LigandVec<double> *const ECHMET_RESTRICT_PTR allLigands,
 						   const size_t totalLigandCopySize,

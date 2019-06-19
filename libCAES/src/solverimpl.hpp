@@ -59,8 +59,8 @@ std::pair<CAESReal *, CAESReal>
 SolverImplSpec<CAESReal, ISet, false>::estimatepHFastWrapper(SolverImplSpec::SI *solver, const CAESReal &cHInitial, const RealVec *analyticalConcentrations)
 {
 	return solver->estimatepHFast(cHInitial, analyticalConcentrations->cdata(),
-				solver->m_unsafe.estimatedIC.get(), solver->m_unsafe.dEstimatedICdH.get(),
-			      solver->m_unsafe.activityCoefficients, *solver->m_unsafe.chargeSummer);
+				      solver->m_unsafe.estimatedIC.get(), solver->m_unsafe.dEstimatedICdH.get(),
+				      solver->m_unsafe.activityCoefficients, *solver->m_unsafe.chargeSummer);
 }
 
 template <typename CAESReal, InstructionSet ISet>
@@ -75,8 +75,8 @@ SolverImplSpec<CAESReal, ISet, true>::estimatepHFastWrapper(SolverImplSpec::SI *
 	activityCoefficients.resize(solver->m_ctx->chargesSquared.size());
 
 	const auto ret = solver->estimatepHFast(cHInitial, analyticalConcentrations->cdata(),
-					icConcs.get(), dIcConcsdH.get(),
-					activityCoefficients, chargeSummer);
+						icConcs.get(), dIcConcsdH.get(),
+						activityCoefficients, chargeSummer);
 	icConcs.release();
 
 	return ret;
@@ -112,6 +112,7 @@ void SolverImplSpec<CAESReal, ISet, false>::initializeEstimators(SolverImplSpec:
 {
 	solver->m_unsafe.estimatedIC = makeRawArray<CAESReal, ISet>(solver->m_TECount);
 	solver->m_unsafe.dEstimatedICdH = makeRawArray<CAESReal, ISet>(solver->m_TECount);
+
 	solver->m_unsafe.chargeSummer = new ChargeSummer<CAESReal, ISet, false>{solver->m_TECount, solver->m_totalEquilibria};
 
 	solver->m_unsafe.activityCoefficients.resize(solver->m_ctx->chargesSquared.size());
@@ -390,7 +391,9 @@ std::pair<CAESReal *, CAESReal> SolverImpl<CAESReal, ISet, ThreadSafe>::estimate
 		CAESReal dZ;
 
 		while (true) {
-			calculateDistributionWithDerivative<CAESReal, ISet, ThreadSafe>(cH, icConcs, dIcConcsdH, m_totalEquilibria, analyticalConcentrations,
+			calculateDistributionWithDerivative<CAESReal, ISet, ThreadSafe>(cH, icConcs, dIcConcsdH,
+											m_totalEquilibria,
+											analyticalConcentrations,
 											activityCoefficients);
 
 			cOH = KW_298 / (cH * activityOneSquared);

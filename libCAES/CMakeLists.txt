@@ -34,6 +34,8 @@ set(libCAES_SRCS
     src/chargesummer_sse2.cpp
     src/chargesummer_avx.cpp
     src/chargesummer_fma3.cpp
+    src/estimator_helpers_avx.cpp
+    src/estimator_helpers_fma3.cpp
     src/internals/newtonraphson_avx.cpp
     src/internals/newtonraphson_fma3.cpp
     src/vecmath/vecmath.cpp
@@ -48,6 +50,8 @@ if (UNIX)
         set_source_files_properties(src/chargesummer_fma3.cpp COMPILE_FLAGS "-mfma")
         set_source_files_properties(src/solverinternal_avx.cpp COMPILE_FLAGS "-mavx")
         set_source_files_properties(src/solverinternal_fma3.cpp COMPILE_FLAGS "-mfma")
+        set_source_files_properties(src/estimator_helpers_avx.cpp COMPILE_FLAGS "-mavx")
+        set_source_files_properties(src/estimator_helpers_fma3.cpp COMPILE_FLAGS "-mfma")
         set_source_files_properties(src/vecmath/vecmath_avx.cpp COMPILE_FLAGS "-mavx")
         set_source_files_properties(src/vecmath/vecmath_fma3.cpp COMPILE_FLAGS "-mfma")
         set_source_files_properties(src/internals/newtonraphson_avx.cpp COMPILE_FLAGS "-mavx")
@@ -59,6 +63,8 @@ elseif (WIN32)
         set_source_files_properties(src/chargesummer_fma3.cpp COMPILE_FLAGS "-mfma")
         set_source_files_properties(src/solverinternal_avx.cpp COMPILE_FLAGS "-mavx")
         set_source_files_properties(src/solverinternal_fma3.cpp COMPILE_FLAGS "-mfma")
+        set_source_files_properties(src/estimator_helpers_avx.cpp COMPILE_FLAGS "-mavx")
+        set_source_files_properties(src/estimator_helpers_fma3.cpp COMPILE_FLAGS "-mfma")
         set_source_files_properties(src/vecmath/vecmath_avx.cpp COMPILE_FLAGS "-mavx")
         set_source_files_properties(src/vecmath/vecmath_fma3.cpp COMPILE_FLAGS "-mfma")
         set_source_files_properties(src/internals/newtonraphson_avx.cpp COMPILE_FLAGS "-mavx")
@@ -68,6 +74,8 @@ elseif (WIN32)
         set_source_files_properties(src/chargesummer_fma3.cpp COMPILE_FLAGS "/arch:AVX2")
         set_source_files_properties(src/solverinternal_avx.cpp COMPILE_FLAGS "/arch:AVX")
         set_source_files_properties(src/solverinternal_fma3.cpp COMPILE_FLAGS "/arch:AVX2")
+        set_source_files_properties(src/estimator_helpers_avx.cpp COMPILE_FLAGS "/arch:AVX")
+        set_source_files_properties(src/estimator_helpers_fma3.cpp COMPILE_FLAGS "/arch:AVX2")
         set_source_files_properties(src/vecmath/vecmath_avx.cpp COMPILE_FLAGS "/arch:AVX")
         set_source_files_properties(src/vecmath/vecmath_fma3.cpp COMPILE_FLAGS "/arch:AVX2")
         set_source_files_properties(src/internals/newtonraphson_avx.cpp COMPILE_FLAGS "/arch:AVX")
