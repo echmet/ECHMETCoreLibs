@@ -9,6 +9,35 @@
 namespace ECHMET {
 namespace CAES {
 
+template <typename CAESReal, InstructionSet ISet>
+static
+void calculateTsAnddTsdV(CAESReal *const ECHMET_RESTRICT_PTR ts,
+			 CAESReal *const ECHMET_RESTRICT_PTR dts,
+			 const CAESReal &v,
+			 const std::vector<CAESReal> &activityCoefficients,
+			 CAESReal &X, CAESReal &dX,
+			 const std::vector<CAESReal> &Ls, const size_t len,
+			 const int numLow);
+
+template <>
+void calculateTsAnddTsdV<double, InstructionSet::AVX>
+			(double *const ECHMET_RESTRICT_PTR ts,
+			 double *const ECHMET_RESTRICT_PTR dts,
+			 const double &v,
+			 const std::vector<double> &activityCoefficients,
+			 double &X, double &dX,
+			 const std::vector<double> &Ls, const size_t len,
+			 const int numLow);
+
+template <>
+void calculateTsAnddTsdV<double, InstructionSet::FMA3>
+			(double *const ECHMET_RESTRICT_PTR ts,
+			 double *const ECHMET_RESTRICT_PTR dts,
+			 const double &v,
+			 const std::vector<double> &activityCoefficients,
+			 double &X, double &dX,
+			 const std::vector<double> &Ls, const size_t len,
+			 const int numLow);
 /*!
  * Calculates total equilibrium constants from constecutive constants
  *
