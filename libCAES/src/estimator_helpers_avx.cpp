@@ -1,5 +1,4 @@
 #include "estimator_helpers.h"
-#include "veccpy.h"
 
 namespace ECHMET {
 namespace CAES {
@@ -108,7 +107,7 @@ void estimateComplexesDistribution<double, double, InstructionSet::AVX>
 		}
 	}
 
-	dbl_vec_cpy(&estimatedConcentrations[rowCounter], &estConcentrations[ecRowCounter], totalLigandCopyCount);
+	memcpy(&estimatedConcentrations[rowCounter], &estConcentrations[ecRowCounter], totalLigandCopyCount * sizeof(double));
 
 	rowCounter += totalLigandCopyCount;
 	ecRowCounter += totalLigandCopyCount;
