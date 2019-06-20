@@ -118,19 +118,17 @@ void SolverImplSpec<CAESReal, ISet, false>::initializeEstimators(SolverImplSpec:
 	solver->m_unsafe.activityCoefficients.resize(solver->m_ctx->chargesSquared.size());
 	solver->defaultActivityCoefficients(solver->m_unsafe.activityCoefficients);
 
-	solver->m_totalLigandCopySize = 0;
+	solver->m_totalLigandCopyCount = 0;
 	for (const auto l : *solver->m_ctx->allLigands)
-		solver->m_totalLigandCopySize += l->chargeHigh - l->chargeLow + 1;
-	solver->m_totalLigandCopySize *= sizeof(double);
+		solver->m_totalLigandCopyCount += l->chargeHigh - l->chargeLow + 1;
 }
 
 template <typename CAESReal, InstructionSet ISet>
 void SolverImplSpec<CAESReal, ISet, true>::initializeEstimators(SolverImplSpec::SI *solver)
 {
-	solver->m_totalLigandCopySize = 0;
+	solver->m_totalLigandCopyCount = 0;
 	for (const auto l : *solver->m_ctx->allLigands)
-		solver->m_totalLigandCopySize += l->chargeHigh - l->chargeLow + 1;
-	solver->m_totalLigandCopySize *= sizeof(double);
+		solver->m_totalLigandCopyCount += l->chargeHigh - l->chargeLow + 1;
 }
 
 template <typename CAESReal, InstructionSet ISet>
@@ -342,8 +340,8 @@ RetCode SolverImpl<CAESReal, ISet, ThreadSafe>::fillResults(const std::pair<CAES
 	estimatedConcentrations[0] = CAESRealToECHMETReal<CAESReal, OutputReal>(results.first[0]);
 	estimatedConcentrations[1] = CAESRealToECHMETReal<CAESReal, OutputReal>(results.first[1]);
 
-	estimateComplexesDistribution<CAESReal, OutputReal>(m_ctx->complexNuclei, m_ctx->allLigands, m_totalLigandCopySize,
-							    results.first, m_ctx->allForms->size() + 2, estimatedConcentrations);
+	estimateComplexesDistribution<CAESReal, OutputReal, ISet>(m_ctx->complexNuclei, m_ctx->allLigands, m_totalLigandCopyCount,
+								  results.first, m_ctx->allForms->size() + 2, estimatedConcentrations);
 
 	ionicStrength = CAESRealToECHMETReal<CAESReal, OutputReal>(results.second);
 

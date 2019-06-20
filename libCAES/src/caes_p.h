@@ -119,7 +119,7 @@ private:
 	size_t m_TECount;					/*!< Number of ionic concentrations that can be estimated from G-polynomial */
 	std::vector<TotalEquilibrium<CAESReal, ISet, ThreadSafe>> m_totalEquilibria;
 
-	size_t m_totalLigandCopySize;
+	size_t m_totalLigandCopyCount;
 
 	UnsafeContext<CAESReal, ISet, ThreadSafe> m_unsafe;
 

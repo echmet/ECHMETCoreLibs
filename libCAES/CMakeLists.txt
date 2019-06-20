@@ -34,6 +34,7 @@ set(libCAES_SRCS
     src/chargesummer_sse2.cpp
     src/chargesummer_avx.cpp
     src/chargesummer_fma3.cpp
+    src/estimator_helpers_sse2.cpp
     src/estimator_helpers_avx.cpp
     src/estimator_helpers_fma3.cpp
     src/totalequilibrium_avx.cpp

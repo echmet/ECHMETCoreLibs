@@ -53,6 +53,38 @@ void calculateDistributionWithDerivative<double, InstructionSet::FMA3, true>
 					 const ECHMETReal *const ECHMET_RESTRICT_PTR acRaw,
 					 const std::vector<double> &activityCoefficients);
 
+template <typename CAESReal, typename OutputReal, InstructionSet ISet>
+inline
+void estimateComplexesDistribution(const CNVec<CAESReal> *const ECHMET_RESTRICT_PTR complexNuclei,
+				   const LigandVec<CAESReal> *const ECHMET_RESTRICT_PTR allLigands,
+				   const size_t totalLigandCopySize,
+				   const CAESReal *const ECHMET_RESTRICT_PTR estConcentrations, const size_t LGBlockOffset,
+				   OutputReal *estimatedConcentrations);
+
+template <>
+void estimateComplexesDistribution<double, double, InstructionSet::SSE2>
+				(const CNVec<double> *const ECHMET_RESTRICT_PTR complexNuclei,
+				 const LigandVec<double> *const ECHMET_RESTRICT_PTR allLigands,
+				 const size_t totalLigandCopySize,
+				 const double *const ECHMET_RESTRICT_PTR estConcentrations, const size_t LGBlockOffset,
+				 double *estimatedConcentrations);
+
+template <>
+void estimateComplexesDistribution<double, double, InstructionSet::AVX>
+				(const CNVec<double> *const ECHMET_RESTRICT_PTR complexNuclei,
+				 const LigandVec<double> *const ECHMET_RESTRICT_PTR allLigands,
+				 const size_t totalLigandCopySize,
+				 const double *const ECHMET_RESTRICT_PTR estConcentrations, const size_t LGBlockOffset,
+				 double *estimatedConcentrations);
+
+template <>
+void estimateComplexesDistribution<double, double, InstructionSet::FMA3>
+				(const CNVec<double> *const ECHMET_RESTRICT_PTR complexNuclei,
+				 const LigandVec<double> *const ECHMET_RESTRICT_PTR allLigands,
+				 const size_t totalLigandCopySize,
+				 const double *const ECHMET_RESTRICT_PTR estConcentrations, const size_t LGBlockOffset,
+				 double *estimatedConcentrations);
+
 } // namespace CAES
 } // namespace ECHMET
 
