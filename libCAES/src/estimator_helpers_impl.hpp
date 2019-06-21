@@ -6,6 +6,46 @@
 namespace ECHMET {
 namespace CAES {
 
+template <InstructionSet ISet, bool ThreadSafe>
+inline
+void calculateDistributionWithDerivative_dbl(const double &v,
+					     double *const ECHMET_RESTRICT_PTR distribution,
+					     double *const ECHMET_RESTRICT_PTR dDistdV,
+					     std::vector<TotalEquilibrium<double, ISet, ThreadSafe>> &totalEquilibria,
+					     const ECHMETReal *const ECHMET_RESTRICT_PTR acRaw,
+					     const std::vector<double> &activityCoefficients)
+{
+	size_t rowCounter = 2;
+
+	for (auto &te : totalEquilibria) {
+		double X;
+		double dX;
+		const auto pack = te.TsAnddTsdV(v, activityCoefficients, X, dX);
+
+		const std::vector<double> & Ts = std::get<0>(pack);
+		const std::vector<double> & dTsdV = std::get<1>(pack);
+
+		assert(Ts.size() == dTsdV.size());
+
+		const ECHMETReal c = acRaw[te.concentrationIndex];
+
+		const size_t len = te.len;
+		for (size_t idx = 0; idx < len; idx++) {
+			const size_t rIdx{rowCounter + idx};
+			const double T = Ts[idx];
+			const double dT = dTsdV[idx];
+
+			/* Distribution */
+			distribution[rIdx] = c * T / X;
+
+			/* dDistdV */
+			dDistdV[rIdx] = c * (dT * X - T * dX) / X / X;
+		}
+
+		rowCounter += len;
+	}
+}
+
 ECHMET_FORCE_INLINE
 void estimateComplexesDistribution_dbl(const CNVec<double> *const ECHMET_RESTRICT_PTR complexNuclei,
 				       const size_t totalLigandCopyCount,

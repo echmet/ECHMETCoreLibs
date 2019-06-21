@@ -12,35 +12,8 @@ void calculateDistributionWithDerivative<double, InstructionSet::AVX, false>
 					 const ECHMETReal *const ECHMET_RESTRICT_PTR acRaw,
 					 const std::vector<double> &activityCoefficients)
 {
-	size_t rowCounter = 2;
-
-	for (auto &te : totalEquilibria) {
-		double X;
-		double dX;
-		const auto pack = te.TsAnddTsdV(v, activityCoefficients, X, dX);
-
-		const std::vector<double> & Ts = std::get<0>(pack);
-		const std::vector<double> & dTsdV = std::get<1>(pack);
-
-		assert(Ts.size() == dTsdV.size());
-
-		const ECHMETReal c = acRaw[te.concentrationIndex];
-
-		const size_t len = te.len;
-		for (size_t idx = 0; idx < len; idx++) {
-			const size_t rIdx{rowCounter + idx};
-			const double T = Ts[idx];
-			const double dT = dTsdV[idx];
-
-			/* Distribution */
-			distribution[rIdx] = c * T / X;
-
-			/* dDistdV */
-			dDistdV[rIdx] = c * (dT * X - T * dX) / X / X;
-		}
-
-		rowCounter += len;
-	}
+	calculateDistributionWithDerivative_dbl<InstructionSet::AVX, false>
+		(v, distribution, dDistdV, totalEquilibria, acRaw, activityCoefficients);
 }
 
 template <>
@@ -52,35 +25,8 @@ void calculateDistributionWithDerivative<double, InstructionSet::AVX, true>
 					 const ECHMETReal *const ECHMET_RESTRICT_PTR acRaw,
 					 const std::vector<double> &activityCoefficients)
 {
-	size_t rowCounter = 2;
-
-	for (auto &te : totalEquilibria) {
-		double X;
-		double dX;
-		const auto pack = te.TsAnddTsdV(v, activityCoefficients, X, dX);
-
-		const std::vector<double> & Ts = std::get<0>(pack);
-		const std::vector<double> & dTsdV = std::get<1>(pack);
-
-		assert(Ts.size() == dTsdV.size());
-
-		const ECHMETReal c = acRaw[te.concentrationIndex];
-
-		const size_t len = te.len;
-		for (size_t idx = 0; idx < len; idx++) {
-			const size_t rIdx{rowCounter + idx};
-			const double T = Ts[idx];
-			const double dT = dTsdV[idx];
-
-			/* Distribution */
-			distribution[rIdx] = c * T / X;
-
-			/* dDistdV */
-			dDistdV[rIdx] = c * (dT * X - T * dX) / X / X;
-		}
-
-		rowCounter += len;
-	}
+	calculateDistributionWithDerivative_dbl<InstructionSet::AVX, true>
+		(v, distribution, dDistdV, totalEquilibria, acRaw, activityCoefficients);
 }
 
 template <>
