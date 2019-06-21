@@ -89,7 +89,7 @@ elseif (UNIX)
             message(FATAL_ERROR "Clang 3.4 or newer is required to build ECHMETCoreLibs")
         endif ()
 
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -std=c++14 -Wall -Wextra -pedantic -Wno-unused-function -fvisibility=hidden -g -O3 -msse2")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -std=c++14 -Wall -Wextra -pedantic -Wno-unused-function -fvisibility=hidden -ftree-vectorize -g -O3 -msse2")
 	
 	if (USE_CLANG_FPROF)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-instr-generate -fcoverage-mapping")
