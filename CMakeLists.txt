@@ -90,7 +90,12 @@ elseif (UNIX)
         endif ()
 
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -std=c++14 -Wall -Wextra -pedantic -Wno-unused-function -fvisibility=hidden -ftree-vectorize -g -O3 -msse2")
-	
+
+        if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" AND
+            CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 9.1.0 OR
+            CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 9.1.0)
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
+        endif ()
 	if (USE_CLANG_FPROF)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-instr-generate -fcoverage-mapping")
 		set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -fprofile-instr-generate")
