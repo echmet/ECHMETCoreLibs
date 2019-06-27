@@ -85,8 +85,14 @@ typename VecMath<InstructionSet::SSE2>::TD VecMath<InstructionSet::SSE2>::exp10m
 
 	tmp = _mm_set_pd(tr_hi, tr_lo);
 #else
-	__m64 mm0 = _mm_cvttpd_pi32(px);
-	tmp = _mm_cvtpi32_pd(mm0);
+	#if defined(_M_X64) 	/* MSVC x86_64 hack */
+		__m128i emm0 = _mm_cvttpd_epi32(px);
+		tmp = _mm_cvtepi32_pd(emm0);
+	#else
+		__m64 mm0 = _mm_cvttpd_pi32(px);
+		tmp = _mm_cvtpi32_pd(mm0);
+	#endif // _M_X64
+
 #endif /* I swear I have no idea what the fuck is up with MinGW on Windows
 	  but it seems to generate assembly that breaks the calculation
 	  when the truncated ints are converted back to doubles. Hacking around it
@@ -150,12 +156,23 @@ typename VecMath<InstructionSet::SSE2>::TD VecMath<InstructionSet::SSE2>::exp10m
 typename VecMath<InstructionSet::SSE2>::TD VecMath<InstructionSet::SSE2>::mlog10(const double *ECHMET_RESTRICT_PTR inx) const
 {
 	VD vx;
+	/* x86_64 MSVC hack */
+#if defined(ECHMET_COMPILER_MSVC) && defined(_M_X64)
+	int32_t ECHMET_ALIGNED_BEF_16 ve[4] ECHMET_ALIGNED_AFT_16;
+#else
 	int32_t ECHMET_ALIGNED_BEF_16 ve[2] ECHMET_ALIGNED_AFT_16;
+#endif // MSVC hack
+
+
 	vx[0] = VecMathCommon::cephes_frexp(inx[0], &ve[0]);
 	vx[1] = VecMathCommon::cephes_frexp(inx[1], &ve[1]);
 
 	__m128d x = M128D(vx);
+#if defined(ECHMET_COMPILER_MSVC) && defined(_M_X64)
+	__m128d e = _mm_cvtepi32_pd(M128I(ve));
+#else
 	__m128d e = _mm_cvtpi32_pd(M64(ve));
+#endif // MSVC hack
 
 	/* if (x < SQRTH)
 	 * then
