@@ -56,7 +56,7 @@ UnsafeContext<CAESReal, ISet, false>::UnsafeContext() :
 
 template <typename CAESReal, InstructionSet ISet>
 std::pair<CAESReal *, CAESReal>
-SolverImplSpec<CAESReal, ISet, false>::estimatepHFastWrapper(SolverImplSpec::SI *solver, const CAESReal &cHInitial, const RealVec *analyticalConcentrations)
+SolverImplSpec<CAESReal, ISet, false>::estimatepHFastWrapper(SolverImpl<CAESReal, ISet, false> *solver, const CAESReal &cHInitial, const RealVec *analyticalConcentrations)
 {
 	return solver->estimatepHFast(cHInitial, analyticalConcentrations->cdata(),
 				      solver->m_unsafe.estimatedIC.get(), solver->m_unsafe.dEstimatedICdH.get(),
@@ -65,7 +65,7 @@ SolverImplSpec<CAESReal, ISet, false>::estimatepHFastWrapper(SolverImplSpec::SI 
 
 template <typename CAESReal, InstructionSet ISet>
 std::pair<CAESReal *, CAESReal>
-SolverImplSpec<CAESReal, ISet, true>::estimatepHFastWrapper(SolverImplSpec::SI *solver, const CAESReal &cHInitial, const RealVec *analyticalConcentrations)
+SolverImplSpec<CAESReal, ISet, true>::estimatepHFastWrapper(SolverImpl<CAESReal, ISet, true> *solver, const CAESReal &cHInitial, const RealVec *analyticalConcentrations)
 {
 	std::vector<CAESReal> activityCoefficients;
 	auto icConcs = makeRawArray<CAESReal, ISet>(solver->m_TECount);
@@ -84,7 +84,7 @@ SolverImplSpec<CAESReal, ISet, true>::estimatepHFastWrapper(SolverImplSpec::SI *
 
 template <typename CAESReal, InstructionSet ISet>
 std::pair<CAESReal *, CAESReal>
-SolverImplSpec<CAESReal, ISet, false>::estimatepHSafeWrapper(SolverImplSpec::SI *solver, const RealVec *analyticalConcentrations)
+SolverImplSpec<CAESReal, ISet, false>::estimatepHSafeWrapper(SolverImpl<CAESReal, ISet, false> *solver, const RealVec *analyticalConcentrations)
 {
 	return solver->estimatepHSafe(analyticalConcentrations->cdata(), solver->m_unsafe.estimatedIC.get(),
 				      solver->m_unsafe.activityCoefficients, *solver->m_unsafe.chargeSummer);
@@ -92,7 +92,7 @@ SolverImplSpec<CAESReal, ISet, false>::estimatepHSafeWrapper(SolverImplSpec::SI 
 
 template <typename CAESReal, InstructionSet ISet>
 std::pair<CAESReal *, CAESReal>
-SolverImplSpec<CAESReal, ISet, true>::estimatepHSafeWrapper(SolverImplSpec::SI *solver, const RealVec *analyticalConcentrations)
+SolverImplSpec<CAESReal, ISet, true>::estimatepHSafeWrapper(SolverImpl<CAESReal, ISet, true> *solver, const RealVec *analyticalConcentrations)
 {
 	std::vector<CAESReal> activityCoefficients;
 	auto icConcs = makeRawArray<CAESReal, ISet>(solver->m_TECount);
@@ -108,7 +108,7 @@ SolverImplSpec<CAESReal, ISet, true>::estimatepHSafeWrapper(SolverImplSpec::SI *
 }
 
 template <typename CAESReal, InstructionSet ISet>
-void SolverImplSpec<CAESReal, ISet, false>::initializeEstimators(SolverImplSpec::SI *solver)
+void SolverImplSpec<CAESReal, ISet, false>::initializeEstimators(SolverImpl<CAESReal, ISet, false> *solver)
 {
 	solver->m_unsafe.estimatedIC = makeRawArray<CAESReal, ISet>(solver->m_TECount);
 	solver->m_unsafe.dEstimatedICdH = makeRawArray<CAESReal, ISet>(solver->m_TECount);
@@ -124,7 +124,7 @@ void SolverImplSpec<CAESReal, ISet, false>::initializeEstimators(SolverImplSpec:
 }
 
 template <typename CAESReal, InstructionSet ISet>
-void SolverImplSpec<CAESReal, ISet, true>::initializeEstimators(SolverImplSpec::SI *solver)
+void SolverImplSpec<CAESReal, ISet, true>::initializeEstimators(SolverImpl<CAESReal, ISet, true> *solver)
 {
 	solver->m_totalLigandCopyCount = 0;
 	for (const auto l : *solver->m_ctx->allLigands)
@@ -132,7 +132,7 @@ void SolverImplSpec<CAESReal, ISet, true>::initializeEstimators(SolverImplSpec::
 }
 
 template <typename CAESReal, InstructionSet ISet>
-void SolverImplSpec<CAESReal, ISet, false>::initializeUnsafe(SolverImplSpec::SI *solver, const SolverContextImpl<CAESReal> *ctx)
+void SolverImplSpec<CAESReal, ISet, false>::initializeUnsafe(SolverImpl<CAESReal, ISet, false> *solver, const SolverContextImpl<CAESReal> *ctx)
 {
 	initializeEstimators(solver);
 
@@ -142,13 +142,13 @@ void SolverImplSpec<CAESReal, ISet, false>::initializeUnsafe(SolverImplSpec::SI 
 }
 
 template <typename CAESReal, InstructionSet ISet>
-void SolverImplSpec<CAESReal, ISet, true>::initializeUnsafe(SolverImplSpec::SI *, const SolverContextImpl<CAESReal> *)
+void SolverImplSpec<CAESReal, ISet, true>::initializeUnsafe(SolverImpl<CAESReal, ISet, true> *, const SolverContextImpl<CAESReal> *)
 {
 	/* NOOP */
 }
 
 template <typename CAESReal, InstructionSet ISet>
-void SolverImplSpec<CAESReal, ISet, false>::releaseUnsafe(SolverImplSpec::SI *solver) noexcept
+void SolverImplSpec<CAESReal, ISet, false>::releaseUnsafe(SolverImpl<CAESReal, ISet, false> *solver) noexcept
 {
 	delete solver->m_unsafe.internal;
 	delete solver->m_unsafe.anCVec;
@@ -159,13 +159,13 @@ void SolverImplSpec<CAESReal, ISet, false>::releaseUnsafe(SolverImplSpec::SI *so
 }
 
 template <typename CAESReal, InstructionSet ISet>
-void SolverImplSpec<CAESReal, ISet, true>::releaseUnsafe(SolverImplSpec::SI *) noexcept
+void SolverImplSpec<CAESReal, ISet, true>::releaseUnsafe(SolverImpl<CAESReal, ISet, true> *) noexcept
 {
 	/* NOOP */
 }
 
 template <typename CAESReal, InstructionSet ISet>
-void SolverImplSpec<CAESReal, ISet, false>::setContainersForSolve(SolverImplSpec::SI *solver,
+void SolverImplSpec<CAESReal, ISet, false>::setContainersForSolve(SolverImpl<CAESReal, ISet, false> *solver,
 		SolverInternal<CAESReal, ISet> *&internal,
 							      SolverVector<CAESReal> *&anCVec,
 							      CAESReal *&estimatedConcentrations)
@@ -176,7 +176,7 @@ void SolverImplSpec<CAESReal, ISet, false>::setContainersForSolve(SolverImplSpec
 }
 
 template <typename CAESReal, InstructionSet ISet>
-void SolverImplSpec<CAESReal, ISet, true>::setContainersForSolve(SolverImplSpec::SI *solver,
+void SolverImplSpec<CAESReal, ISet, true>::setContainersForSolve(SolverImpl<CAESReal, ISet, true> *solver,
 		SolverInternal<CAESReal, ISet> *&internal,
 							     SolverVector<CAESReal> *&anCVec,
 							     CAESReal *&estimatedConcentrations)
