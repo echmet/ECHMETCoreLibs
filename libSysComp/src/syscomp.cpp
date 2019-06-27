@@ -1134,28 +1134,17 @@ private:
 		static const bool value{true};
 	};
 
-	template <typename T>
-	constexpr static bool IsPtr()
-	{
-		return std::is_pointer<T>::value;
-	}
-
-	template <typename T>
-	constexpr static bool HasSpec()
-	{
-		return HasSpecialization<T>::value;
-	}
 public:
 	template <typename T>
 	static bool call(const T &first,
-			 const typename std::enable_if<!IsPtr<T>(), T>::type &second)
+			 const typename std::enable_if<!std::is_pointer<T>::value, T>::type &second)
 	{
 		return first == second;
 	}
 
 	template <typename T>
 	static bool call(const T &first,
-			 const typename std::enable_if<IsPtr<T>() && !HasSpec<T>(), T>::type &second)
+			 const typename std::enable_if<std::is_pointer<T>::value && !HasSpecialization<T>::value, T>::type &second)
 	{
 		return *first == *second;
 	}
