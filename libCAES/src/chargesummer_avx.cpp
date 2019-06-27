@@ -30,6 +30,10 @@ double ChargeSummer<double, InstructionSet::AVX, false>::calc(const double *cons
 
 	return z;
 }
+#ifdef ECHMET_COMPILER_MSVC
+template
+double ChargeSummer<double, InstructionSet::AVX, false>::calc(const double *const ECHMET_RESTRICT_PTR icConcs) noexcept;
+#endif // ECHMET_COMPILER_MSVC
 
 template <>
 double ChargeSummer<double, InstructionSet::AVX, true>::calc(const double *const ECHMET_RESTRICT_PTR icConcs) noexcept
@@ -54,6 +58,10 @@ double ChargeSummer<double, InstructionSet::AVX, true>::calc(const double *const
 
 	return z;
 }
+#ifdef ECHMET_COMPILER_MSVC
+template
+double ChargeSummer<double, InstructionSet::AVX, true>::calc(const double *const ECHMET_RESTRICT_PTR icConcs) noexcept;
+#endif // ECHMET_COMPILER_MSVC
 
 template <>
 void ChargeSummer<double, InstructionSet::AVX, false>::calcWithdZ(const double *const ECHMET_RESTRICT_PTR icConcs,
@@ -86,6 +94,11 @@ void ChargeSummer<double, InstructionSet::AVX, false>::calcWithdZ(const double *
 		dZ += m_charges[idx] * dIcConcsdH[idx];
 	}
 }
+#ifdef ECHMET_COMPILER_MSVC
+template
+void ChargeSummer<double, InstructionSet::AVX, false>::calcWithdZ(const double *const ECHMET_RESTRICT_PTR,
+	const double *const ECHMET_RESTRICT_PTR, double &, double &) noexcept;
+#endif // ECHMET_COMPILER_MSVC
 
 template <>
 void ChargeSummer<double, InstructionSet::AVX, true>::calcWithdZ(const double *const ECHMET_RESTRICT_PTR icConcs,
@@ -118,6 +131,11 @@ void ChargeSummer<double, InstructionSet::AVX, true>::calcWithdZ(const double *c
 		dZ += m_charges[idx] * dIcConcsdH[idx];
 	}
 }
+#ifdef ECHMET_COMPILER_MSVC
+template
+void ChargeSummer<double, InstructionSet::AVX, true>::calcWithdZ(const double *const ECHMET_RESTRICT_PTR,
+	const double *const ECHMET_RESTRICT_PTR, double &, double &) noexcept;
+#endif // ECHMET_COMPILER_MSVC
 
 template <>
 double ChargeSummer<double, InstructionSet::AVX, true>::calculateIonicStrength(const double *const ECHMET_RESTRICT_PTR icConcs) noexcept
@@ -143,6 +161,10 @@ double ChargeSummer<double, InstructionSet::AVX, true>::calculateIonicStrength(c
 
 	return 0.0005 * is;
 }
+#ifdef ECHMET_COMPILER_MSVC
+template
+double ChargeSummer<double, InstructionSet::AVX, true>::calculateIonicStrength(const double *const ECHMET_RESTRICT_PTR) noexcept;
+#endif // ECHMET_COMPILER_MSVC
 
 template <>
 double ChargeSummer<double, InstructionSet::AVX, false>::calculateIonicStrength(const double *const ECHMET_RESTRICT_PTR icConcs) noexcept
@@ -168,6 +190,10 @@ double ChargeSummer<double, InstructionSet::AVX, false>::calculateIonicStrength(
 
 	return 0.0005 * is;
 }
+#ifdef ECHMET_COMPILER_MSVC
+template
+double ChargeSummer<double, InstructionSet::AVX, false>::calculateIonicStrength(const double *const ECHMET_RESTRICT_PTR) noexcept;
+#endif // ECHMET_COMPILER_MSVC
 
 } // namespace CAES
 } // namespace ECHMET
