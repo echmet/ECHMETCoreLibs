@@ -1,5 +1,5 @@
-#ifndef ECHMET_CAES_ESTIMATOR_HELPERS_HPP
-#define ECHMET_CAES_ESTIMATOR_HELPERS_HPP
+#ifndef ECHMET_CAES_ESTIMATOR_HELPERS_H
+#define ECHMET_CAES_ESTIMATOR_HELPERS_H
 
 #include "totalequilibrium.h"
 #include "vecmath/vecmath.h"
@@ -88,4 +88,4 @@ void estimateComplexesDistribution<double, double, InstructionSet::FMA3>
 } // namespace CAES
 } // namespace ECHMET
 
-#endif // ECHMET_CAES_ESTIMATOR_HELPERS_HPP
+#endif // ECHMET_CAES_ESTIMATOR_HELPERS_H
