@@ -8,6 +8,7 @@
 #else
 	#include <xmmintrin.h>
 	#include <immintrin.h>
+	#include <emmintrin.h>
 #endif // ECHMET_COMPILER_
 
 #define ECHMET_IMPORT_INTERNAL
