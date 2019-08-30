@@ -53,7 +53,11 @@ if (WIN32)
         set(ECHMET_HIPREC_LIBS
             libgmp-10
             libmpfr-6)
-	else ()
+    elseif (ECHMET_CORE_LIBS_XCOMPILE)
+        set(ECHMET_HIPREC_LIBS
+            libgmp
+            libmpfr)
+    else ()
         set(ECHMET_HIPREC_LIBS
             gmp-10
             mpfr-6)
