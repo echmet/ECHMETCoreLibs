@@ -172,13 +172,32 @@ protected:
 
 extern "C" {
 
+/*!
+ * Create instance of CAES Solver with double precision.
+ *
+ * @param[in] ctx Contexx for the solver. The context must be of the double-precision type
+ * @param[in] options Solver options
+ * @param[in] corrections Corrections for non-ideal solutions to use
+ *
+ * @return Pointer to the Solver instance or \p NULL if the Solver could not have been created
+ */
 ECHMET_API Solver * ECHMET_CC createSolver(SolverContext *ctx, const Solver::Options options, const NonidealityCorrections corrections) ECHMET_NOEXCEPT;
 
+/*!
+ * Create instance of CAES Solver with high precision.
+ *
+ * @param[in] ctx Contexx for the solver. The context must be of the high-precision type
+ * @param[in] options Solver options
+ * @param[in] corrections Corrections for non-ideal solutions to use
+ *
+ * @return Pointer to the Solver instance or \p NULL if the Solver could not have been created
+ */
 ECHMET_API Solver * ECHMET_CC createSolverHighPrecision(SolverContext *ctx, const Solver::Options options, const NonidealityCorrections corrections) ECHMET_NOEXCEPT;
 
 /*!
  * Creates a solver context for a given system and intializes
  * total and ionic concentrations vectors and their mappings.
+ * This creates context for double precision solver.
  *
  * @param[in,out] ctx Reference to SolverContext to be created by this function.
  *
@@ -193,6 +212,7 @@ ECHMET_API RetCode ECHMET_CC createSolverContext(SolverContext *&ctx, const SysC
 /*!
  * Creates a solver context for a given system and intializes
  * total and ionic concentrations vectors and their mappings.
+ * This creates context for high precision solver.
  *
  * @param[in,out] ctx Reference to SolverContext to be created by this function.
  *
