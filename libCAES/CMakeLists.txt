@@ -61,6 +61,7 @@ if (UNIX)
         set_source_files_properties(src/vecmath/vecmath_fma3.cpp COMPILE_FLAGS "-mfma")
         set_source_files_properties(src/internals/newtonraphson_avx.cpp COMPILE_FLAGS "-mavx")
         set_source_files_properties(src/internals/newtonraphson_fma3.cpp COMPILE_FLAGS "-mfma")
+        set_source_files_properties(src/caes.cpp COMPILE_FLAGS "-Wno-unused-variable")
     endif()
 elseif (WIN32)
     if (MINGW OR MSYS)
@@ -76,6 +77,7 @@ elseif (WIN32)
         set_source_files_properties(src/vecmath/vecmath_fma3.cpp COMPILE_FLAGS "-mfma")
         set_source_files_properties(src/internals/newtonraphson_avx.cpp COMPILE_FLAGS "-mavx")
         set_source_files_properties(src/internals/newtonraphson_fma3.cpp COMPILE_FLAGS "-mfma")
+        set_source_files_properties(src/caes.cpp COMPILE_FLAGS "-Wno-unused-variable")
     elseif (MSVC)
         set_source_files_properties(src/chargesummer_avx.cpp COMPILE_FLAGS "/arch:AVX")
         set_source_files_properties(src/chargesummer_fma3.cpp COMPILE_FLAGS "/arch:AVX2")
@@ -117,8 +119,8 @@ endif ()
 
 target_include_directories(CAES PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 set_target_properties(CAES
-                      PROPERTIES VERSION 0.2
-                                 SOVERSION 0.2
+                      PROPERTIES VERSION 0.3
+                                 SOVERSION 0.3
                                  LINK_FLAGS ${DEFAULT_SYMVER_LINK})
 target_link_libraries(CAES
                       PRIVATE ${CAES_LINK_LIBS})
