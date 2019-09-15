@@ -174,6 +174,8 @@ extern "C" {
 
 ECHMET_API Solver * ECHMET_CC createSolver(SolverContext *ctx, const Solver::Options options, const NonidealityCorrections corrections) ECHMET_NOEXCEPT;
 
+ECHMET_API Solver * ECHMET_CC createSolverHighPrecision(SolverContext *ctx, const Solver::Options options, const NonidealityCorrections corrections) ECHMET_NOEXCEPT;
+
 /*!
  * Creates a solver context for a given system and intializes
  * total and ionic concentrations vectors and their mappings.
@@ -187,6 +189,20 @@ ECHMET_API Solver * ECHMET_CC createSolver(SolverContext *ctx, const Solver::Opt
  * @retval RetCode::E_MISSING_PB Complexation constant was not set.
  */
 ECHMET_API RetCode ECHMET_CC createSolverContext(SolverContext *&ctx, const SysComp::ChemicalSystem &chemSystem) ECHMET_NOEXCEPT;
+
+/*!
+ * Creates a solver context for a given system and intializes
+ * total and ionic concentrations vectors and their mappings.
+ *
+ * @param[in,out] ctx Reference to SolverContext to be created by this function.
+ *
+ * @retval RetCode::OK Success
+ * @retval RetCode::E_NO_MEMORY Not enough memory to create the sovler context.
+ * @retval RetCode::E_DATA_TOO_LARGE Amount of data to be processed is too large.
+ * @retval RetCode::E_BAD_INPUT Nonsensical input data.
+ * @retval RetCode::E_MISSING_PB Complexation constant was not set.
+ */
+ECHMET_API RetCode ECHMET_CC createSolverContextHighPrecision(SolverContext *&ctx, const SysComp::ChemicalSystem &chemSystem) ECHMET_NOEXCEPT;
 
 } // extern "C"
 

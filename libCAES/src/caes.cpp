@@ -15,21 +15,23 @@ Solver * ECHMET_CC createSolver(SolverContext *ctx, const Solver::Options option
 	return createSolverInternal<ECHMETReal>(ctx, options, corrections);
 }
 
-/*!
- * Creates a solver context for a given system and intializes
- * total and ionic concentrations vectors and their mappings.
- *
- * @param[in,out] ctx Reference to SolverContext to be created by this function.
- *
- * @retval RetCode::OK Success
- * @retval RetCode::E_NO_MEMORY Not enough memory to create the sovler context.
- * @retval RetCode::E_DATA_TOO_LARGE Amount of data to be processed is too large.
- * @retval RetCode::E_BAD_INPUT Nonsensical input data.
- * @retval RetCode::E_MISSING_PB Complexation constant was not set.
- */
+Solver * ECHMET_CC createSolverHighPrecision(SolverContext *ctx, const Solver::Options options, const NonidealityCorrections corrections) noexcept
+{
+	NumericPrecisionSetter<mpfr::mpreal> nps{};
+
+	return createSolverInternal<mpfr::mpreal>(ctx, options, corrections);
+}
+
 RetCode ECHMET_CC createSolverContext(SolverContext *&ctx, const SysComp::ChemicalSystem &chemSystem) noexcept
 {
 	return createSolverContextInternal<ECHMETReal>(ctx, chemSystem);
+}
+
+RetCode ECHMET_CC createSolverContextHighPrecision(SolverContext *&ctx, const SysComp::ChemicalSystem &chemSystem) noexcept
+{
+	NumericPrecisionSetter<mpfr::mpreal> nps{};
+
+	return createSolverContextInternal<mpfr::mpreal>(ctx, chemSystem);
 }
 
 InstructionSet detectInstructionSet() noexcept

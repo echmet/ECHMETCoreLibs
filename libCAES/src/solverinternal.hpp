@@ -604,6 +604,8 @@ template <typename CAESReal, InstructionSet ISet>
 RetCode SolverInternal<CAESReal, ISet>::solve(const SolverVector<CAESReal> *analyticalConcentrations, const CAESReal *estimatedConcentrations,
 					      const bool isCorrection, const size_t iterations, const CAESReal &inIonicStrength) noexcept
 {
+	NumericPrecisionSetter<CAESReal> nps{};
+
 	const size_t maxOuterIterations = 100;
 	uint32_t totalIterationsCtr = 0;
 	uint32_t outerIterationsCtr = 0;

@@ -45,7 +45,7 @@ RetCode derivatorSkin(RealVec *derivatives, const ECHMETReal &H, Solver *solver,
 		      std::function<RetCode (RealVec *, const ECHMETReal &, SolverImpl<mpfr::mpreal, ISet, true> *, const SysComp::ChemicalSystem &, const RealVec *, const MPRealVecWrap &, EParams...)> &executor, EParams... params)
 {
 	RetCode tRet;
-	const int currentMpfrPrec = mpfr::mpreal::get_default_prec();
+	const long currentMpfrPrec = mpfr::mpreal::get_default_prec();
 
 	if (H <= ECHMETReal{0})
 		return RetCode::E_INVALID_ARGUMENT;

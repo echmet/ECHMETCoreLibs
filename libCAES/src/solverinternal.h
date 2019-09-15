@@ -9,6 +9,31 @@
 namespace ECHMET {
 namespace CAES {
 
+template <typename CAESReal>
+class NumericPrecisionSetter {};
+
+template <>
+class NumericPrecisionSetter<mpfr::mpreal> {
+public:
+	NumericPrecisionSetter()
+	{
+		m_currentPrecision = mpfr::mpreal::get_default_prec();
+
+		if (m_currentPrecision != BITS_OF_PREC)
+			mpfr::mpreal::set_default_prec(BITS_OF_PREC);
+	}
+
+	~NumericPrecisionSetter()
+	{
+		mpfr::mpreal::set_default_prec(m_currentPrecision);
+	}
+
+	static const long BITS_OF_PREC = 665; /* Corresponds to 200 digits of precision */
+
+private:
+	int m_currentPrecision;
+};
+
 template <typename CAESReal, InstructionSet ISet>
 class SolverInternal : public NewtonRaphson<CAESReal, ISet> {
 public:

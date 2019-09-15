@@ -13,8 +13,6 @@ void calculateTsAnddTsdV<double, InstructionSet::AVX>
 			 const std::vector<double> &Ls, const size_t len,
 			 const int numLow)
 {
-	assert(ts.size() == dts.size());
-
 	X = 1.0;
 	ts[0] = 1.0;
 	dX = 0.0;

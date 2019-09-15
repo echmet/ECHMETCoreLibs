@@ -58,8 +58,6 @@ void calculateTsAnddTsdV(CAESReal *const ECHMET_RESTRICT_PTR ts,
 			 const std::vector<CAESReal> &Ls, const size_t len,
 			 const int numLow)
 {
-	assert(ts.size() == dts.size());
-
 	X = 1.0;
 	ts[0] = 1.0;
 	dX = 0.0;
