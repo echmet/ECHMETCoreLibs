@@ -152,10 +152,12 @@ void SolverImplSpec<CAESReal, ISet, false>::releaseUnsafe(SolverImpl<CAESReal, I
 {
 	delete solver->m_unsafe.internal;
 	delete solver->m_unsafe.anCVec;
+	delete solver->m_unsafe.chargeSummer;
 
 	solver->m_unsafe.internal = nullptr;
 	solver->m_unsafe.anCVec = nullptr;
 	solver->m_unsafe.estimatedConcentrations = nullptr;
+	solver->m_unsafe.chargeSummer = nullptr;
 }
 
 template <typename CAESReal, InstructionSet ISet>
