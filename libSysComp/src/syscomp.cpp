@@ -1491,36 +1491,61 @@ void ECHMET_CC releaseChemicalSystem(ChemicalSystem &chemSystem) noexcept
 	if (chemSystem.ionicForms != nullptr) {
 		releaseIonicFormVec(chemSystem.ionicForms);
 		chemSystem.ionicForms->destroy();
+
+		chemSystem.ionicForms = nullptr;
 	}
 
 	if (chemSystem.constituents != nullptr) {
 		releaseConstituentVec(chemSystem.constituents);
 		chemSystem.constituents->destroy();
+
+		chemSystem.constituents = nullptr;
 	}
 
-	if (chemSystem.analyticalConcentrationsByName != nullptr)
+	if (chemSystem.analyticalConcentrationsByName != nullptr) {
 		chemSystem.analyticalConcentrationsByName->destroy();
 
-	if (chemSystem.effectiveMobilitiesByName != nullptr)
+		chemSystem.analyticalConcentrationsByName = nullptr;
+	}
+
+	if (chemSystem.effectiveMobilitiesByName != nullptr) {
 		chemSystem.effectiveMobilitiesByName->destroy();
 
-	if (chemSystem.ionicConcentrationsByName != nullptr)
+		chemSystem.effectiveMobilitiesByName = nullptr;
+	}
+
+	if (chemSystem.ionicConcentrationsByName != nullptr) {
 		chemSystem.ionicConcentrationsByName->destroy();
 
-	if (chemSystem.ionicMobilitiesByName != nullptr)
+		chemSystem.ionicConcentrationsByName = nullptr;
+	}
+
+	if (chemSystem.ionicMobilitiesByName != nullptr) {
 		chemSystem.ionicMobilitiesByName->destroy();
+
+		chemSystem.ionicMobilitiesByName = nullptr;
+	}
 }
 
 void ECHMET_CC releaseCalculatedProperties(CalculatedProperties &calcProps) noexcept
 {
-	if (calcProps.effectiveMobilities != nullptr)
+	if (calcProps.effectiveMobilities != nullptr) {
 		calcProps.effectiveMobilities->destroy();
 
-	if (calcProps.ionicMobilities != nullptr)
+		calcProps.effectiveMobilities = nullptr;
+	}
+
+	if (calcProps.ionicMobilities != nullptr) {
 		calcProps.ionicMobilities->destroy();
 
-	if (calcProps.ionicConcentrations != nullptr)
+		calcProps.ionicMobilities = nullptr;
+	}
+
+	if (calcProps.ionicConcentrations != nullptr) {
 		calcProps.ionicConcentrations->destroy();
+
+		calcProps.ionicConcentrations = nullptr;
+	}
 }
 
 void ECHMET_CC releaseInConstituent(const InConstituent &inC) noexcept
