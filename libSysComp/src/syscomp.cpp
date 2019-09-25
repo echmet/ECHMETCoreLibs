@@ -1498,17 +1498,29 @@ void ECHMET_CC releaseChemicalSystem(ChemicalSystem &chemSystem) noexcept
 		chemSystem.constituents->destroy();
 	}
 
-	chemSystem.analyticalConcentrationsByName->destroy();
-	chemSystem.effectiveMobilitiesByName->destroy();
-	chemSystem.ionicConcentrationsByName->destroy();
-	chemSystem.ionicMobilitiesByName->destroy();
+	if (chemSystem.analyticalConcentrationsByName != nullptr)
+		chemSystem.analyticalConcentrationsByName->destroy();
+
+	if (chemSystem.effectiveMobilitiesByName != nullptr)
+		chemSystem.effectiveMobilitiesByName->destroy();
+
+	if (chemSystem.ionicConcentrationsByName != nullptr)
+		chemSystem.ionicConcentrationsByName->destroy();
+
+	if (chemSystem.ionicMobilitiesByName != nullptr)
+		chemSystem.ionicMobilitiesByName->destroy();
 }
 
 void ECHMET_CC releaseCalculatedProperties(CalculatedProperties &calcProps) noexcept
 {
-	calcProps.effectiveMobilities->destroy();
-	calcProps.ionicMobilities->destroy();
-	calcProps.ionicConcentrations->destroy();
+	if (calcProps.effectiveMobilities != nullptr)
+		calcProps.effectiveMobilities->destroy();
+
+	if (calcProps.ionicMobilities != nullptr)
+		calcProps.ionicMobilities->destroy();
+
+	if (calcProps.ionicConcentrations != nullptr)
+		calcProps.ionicConcentrations->destroy();
 }
 
 void ECHMET_CC releaseInConstituent(const InConstituent &inC) noexcept
