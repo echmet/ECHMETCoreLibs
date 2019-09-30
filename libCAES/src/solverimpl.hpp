@@ -142,9 +142,9 @@ void SolverImplSpec<CAESReal, ISet, false>::initializeUnsafe(SolverImpl<CAESReal
 }
 
 template <typename CAESReal, InstructionSet ISet>
-void SolverImplSpec<CAESReal, ISet, true>::initializeUnsafe(SolverImpl<CAESReal, ISet, true> *, const SolverContextImpl<CAESReal> *)
+void SolverImplSpec<CAESReal, ISet, true>::initializeUnsafe(SolverImpl<CAESReal, ISet, true> *solver, const SolverContextImpl<CAESReal> *)
 {
-	/* NOOP */
+	initializeEstimators(solver);
 }
 
 template <typename CAESReal, InstructionSet ISet>
