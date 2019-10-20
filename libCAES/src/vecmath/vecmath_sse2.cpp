@@ -78,30 +78,8 @@ typename VecMath<InstructionSet::SSE2>::TD VecMath<InstructionSet::SSE2>::exp10m
 	px = _mm_mul_pd(px, x);
 	px = _mm_add_pd(px, M128D(HALF));
 
-	/* Floor by conversion to int32 and back with truncation */
-#if defined(ECHMET_PLATFORM_WIN32) && defined(ECHMET_COMPILER_MINGW)
-	const double tr_hi = double(int32_t(px[1]));
-	const double tr_lo = double(int32_t(px[0]));
-
-	tmp = _mm_set_pd(tr_hi, tr_lo);
-#else
-	#if defined(_M_X64) 	/* MSVC x86_64 hack */
-		__m128i emm0 = _mm_cvttpd_epi32(px);
-		tmp = _mm_cvtepi32_pd(emm0);
-	#else
-		__m64 mm0 = _mm_cvttpd_pi32(px);
-		tmp = _mm_cvtpi32_pd(mm0);
-	#endif // _M_X64
-
-#endif /* I swear I have no idea what the fuck is up with MinGW on Windows
-	  but it seems to generate assembly that breaks the calculation
-	  when the truncated ints are converted back to doubles. Hacking around it
-	  by doing the truncation without vector intrinsics seems to help.
-	  x87 <-> MMX FPU transitions perhaps?
-
-	  Anyway, should I ever get assraped by a really horny hydra, I will find
-	  the feeling vaguely familiar and think of the time I was tracking this down.
-	*/
+	__m128i emm0 = _mm_cvttpd_epi32(px);
+	tmp = _mm_cvtepi32_pd(emm0);
 
 	/* Safety net - subtract one if the result is greater than input */
 	__m128d mask = _mm_cmpgt_pd(tmp, px);
