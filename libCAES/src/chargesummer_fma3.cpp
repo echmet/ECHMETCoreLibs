@@ -12,7 +12,7 @@ double ChargeSummer<double, InstructionSet::FMA3, false>::calc(const double *con
 {
 	double z;
 	VD vz;
-	__m256d zVec = M256D(ZERO);
+	__m256d zVec = _mm256_setzero_pd();
 
 	size_t idx{0};
 	for (; idx < m_NBlock; idx += m_blockSize) {
@@ -40,7 +40,7 @@ double ChargeSummer<double, InstructionSet::FMA3, true>::calc(const double *cons
 {
 	double z;
 	VD vz;
-	__m256d zVec = M256D(ZERO);
+	__m256d zVec = _mm256_setzero_pd();
 
 	size_t idx{0};
 	for (; idx < m_NBlock; idx += m_blockSize) {
@@ -70,8 +70,8 @@ void ChargeSummer<double, InstructionSet::FMA3, false>::calcWithdZ(const double 
 {
 	VD vz;
 	VD vdZ;
-	__m256d zVec = M256D(ZERO);
-	__m256d dZVec = M256D(ZERO);
+	__m256d zVec = _mm256_setzero_pd();
+	__m256d dZVec = _mm256_setzero_pd();
 
 	size_t idx{0};
 	for (; idx < m_NBlock; idx += m_blockSize) {
@@ -108,8 +108,8 @@ void ChargeSummer<double, InstructionSet::FMA3, true>::calcWithdZ(const double *
 {
 	VD vz;
 	VD vdZ;
-	__m256d zVec = M256D(ZERO);
-	__m256d dZVec = M256D(ZERO);
+	__m256d zVec = _mm256_setzero_pd();
+	__m256d dZVec = _mm256_setzero_pd();
 
 	size_t idx{0};
 	for (; idx < m_NBlock; idx += m_blockSize) {
@@ -144,7 +144,7 @@ double ChargeSummer<double, InstructionSet::FMA3, false>::calculateIonicStrength
 {
 	double is;
 	VD vIs;
-	__m256d isVec = M256D(ZERO);
+	__m256d isVec = _mm256_setzero_pd();
 
 	size_t idx{0};
 	for (; idx < m_NBlock; idx += m_blockSize) {
@@ -173,7 +173,7 @@ double ChargeSummer<double, InstructionSet::FMA3, true>::calculateIonicStrength(
 {
 	double is;
 	VD vIs;
-	__m256d isVec = M256D(ZERO);
+	__m256d isVec = _mm256_setzero_pd();
 
 	size_t idx{0};
 	for (; idx < m_NBlock; idx += m_blockSize) {

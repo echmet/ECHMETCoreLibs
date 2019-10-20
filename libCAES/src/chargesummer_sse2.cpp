@@ -12,7 +12,7 @@ double ChargeSummer<double, InstructionSet::SSE2, false>::calc(const double *con
 {
 	double z;
 	VD vz;
-	__m128d zVec = M128D(ZERO);
+	__m128d zVec = _mm_setzero_pd();
 
 	size_t idx{0};
 	for (; idx < m_NBlock; idx += m_blockSize) {
@@ -40,7 +40,7 @@ double ChargeSummer<double, InstructionSet::SSE2, true>::calc(const double *cons
 {
 	double z;
 	VD vz;
-	__m128d zVec = M128D(ZERO);
+	__m128d zVec = _mm_setzero_pd();
 
 	size_t idx{0};
 	for (; idx < m_NBlock; idx += m_blockSize) {
@@ -70,8 +70,8 @@ void ChargeSummer<double, InstructionSet::SSE2, false>::calcWithdZ(const double 
 {
 	VD vz;
 	VD vdZ;
-	__m128d zVec = M128D(ZERO);
-	__m128d dZVec = M128D(ZERO);
+	__m128d zVec = _mm_setzero_pd();
+	__m128d dZVec = _mm_setzero_pd();
 
 	size_t idx{0};
 	for (; idx < m_NBlock; idx += m_blockSize) {
@@ -107,8 +107,8 @@ void ChargeSummer<double, InstructionSet::SSE2, true>::calcWithdZ(const double *
 {
 	VD vz;
 	VD vdZ;
-	__m128d zVec = M128D(ZERO);
-	__m128d dZVec = M128D(ZERO);
+	__m128d zVec = _mm_setzero_pd();
+	__m128d dZVec = _mm_setzero_pd();
 
 	size_t idx{0};
 	for (; idx < m_NBlock; idx += m_blockSize) {
@@ -142,7 +142,7 @@ double ChargeSummer<double, InstructionSet::SSE2, true>::calculateIonicStrength(
 {
 	double is;
 	VD vIs;
-	__m128d isVec = M128D(ZERO);
+	__m128d isVec = _mm_setzero_pd();
 
 	size_t idx{0};
 	for (; idx < m_NBlock; idx += m_blockSize) {
@@ -171,7 +171,7 @@ double ChargeSummer<double, InstructionSet::SSE2, false>::calculateIonicStrength
 {
 	double is;
 	VD vIs;
-	__m128d isVec = M128D(ZERO);
+	__m128d isVec = _mm_setzero_pd();
 
 	size_t idx{0};
 	for (; idx < m_NBlock; idx += m_blockSize) {
