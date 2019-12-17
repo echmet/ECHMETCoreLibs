@@ -14,7 +14,18 @@ set(ECHMETShared_SRCS
     internal/echmetmath.cpp
     internal/initializers.cpp
     internal/phchconsts.cpp
-    internal/cpufeatures.cpp)
+    internal/cpufeatures_common.cpp)
+
+if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86" OR
+    ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
+    set(ECHMETShared_SRCS
+        ${ECHMETShared_SRCS}
+        internal/cpufeatures_x86.cpp)
+else ()
+     set(ECHMETShared_SRCS
+        ${ECHMETShared_SRCS}
+        internal/cpufeatures_generic.cpp)
+endif ()
 	
 if (!WIN32)
     set(ECHMET_SHARED_LINK_LIBS

@@ -17,9 +17,6 @@
 
 namespace ECHMET {
 
-std::mutex CPUFeatures::s_init_lock;
-CPUFeatures * CPUFeatures::s_instance{nullptr};
-
 static const uint8_t SSE2_FEATURE_BIT_EDX{26};
 static const uint8_t SSE3_FEATURE_BIT_ECX{0};
 static const uint8_t SSSE3_FEATURE_BIT_ECX{9};
@@ -110,21 +107,6 @@ CPUFeatures::CPUFeatures()
 	m_cpu_name = "";
 #endif // ECHMET_COMPILER_
 
-}
-
-
-const std::string & CPUFeatures::name()
-{
-	initialize();
-
-	return s_instance->m_cpu_name;
-}
-
-const CPUFeatures::SupportedSIMD & CPUFeatures::SIMD()
-{
-	initialize();
-
-	return s_instance->m_supportedSIMD;
 }
 
 std::string CPUFeatures::fetch_cpu_name()
