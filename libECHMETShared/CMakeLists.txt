@@ -16,17 +16,23 @@ set(ECHMETShared_SRCS
     internal/phchconsts.cpp
     internal/cpufeatures_common.cpp)
 
-if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86" OR
-    ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
+if (DISABLE_HANDCRAFTED_SIMD)
     set(ECHMETShared_SRCS
         ${ECHMETShared_SRCS}
-        internal/cpufeatures_x86.cpp)
-else ()
-     set(ECHMETShared_SRCS
-        ${ECHMETShared_SRCS}
         internal/cpufeatures_generic.cpp)
-endif ()
-	
+else ()
+    if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86" OR
+        ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
+        set(ECHMETShared_SRCS
+            ${ECHMETShared_SRCS}
+            internal/cpufeatures_x86.cpp)
+    else ()
+         set(ECHMETShared_SRCS
+            ${ECHMETShared_SRCS}
+            internal/cpufeatures_generic.cpp)
+    endif ()
+endif()
+
 if (!WIN32)
     set(ECHMET_SHARED_LINK_LIBS
         ${ECHMET_SHARED_LINK_LIBS}

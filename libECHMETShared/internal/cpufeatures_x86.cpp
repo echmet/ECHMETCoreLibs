@@ -43,60 +43,6 @@ bool is_bit_set(const T field, const uint8_t bit) noexcept
 	return field & ((T)1 << bit);
 }
 
-CPUFeatures::SupportedSIMD::SupportedSIMD() noexcept :
-	SSE2(false),
-	SSE3(false),
-	SSSE3(false),
-	SSE41(false),
-	SSE42(false),
-	AVX(false),
-	AVX2(false),
-	AVX512(false),
-	FMA3(false)
-{}
-
-CPUFeatures::SupportedSIMD::SupportedSIMD(const bool SSE2, const bool SSE3, const bool SSSE3,
-					  const bool SSE41, const bool SSE42,
-					  const bool AVX, const bool AVX2, const bool AVX512,
-					  const bool FMA3) noexcept :
-	SSE2(SSE2),
-	SSE3(SSE3),
-	SSSE3(SSSE3),
-	SSE41(SSE41),
-	SSE42(SSE42),
-	AVX(AVX),
-	AVX2(AVX2),
-	AVX512(AVX512),
-	FMA3(FMA3)
-{}
-
-CPUFeatures::SupportedSIMD::SupportedSIMD(const SupportedSIMD &other) noexcept :
-	SSE2(other.SSE2),
-	SSE3(other.SSE3),
-	SSSE3(other.SSSE3),
-	SSE41(other.SSE41),
-	SSE42(other.SSE42),
-	AVX(other.AVX),
-	AVX2(other.AVX2),
-	AVX512(other.AVX512),
-	FMA3(other.FMA3)
-{}
-
-CPUFeatures::SupportedSIMD & CPUFeatures::SupportedSIMD::operator=(const SupportedSIMD &other) noexcept
-{
-	const_cast<bool&>(SSE2) = other.SSE2;
-	const_cast<bool&>(SSE3) = other.SSE3;
-	const_cast<bool&>(SSSE3) = other.SSSE3;
-	const_cast<bool&>(SSE41) = other.SSE41;
-	const_cast<bool&>(SSE42) = other.SSE42;
-	const_cast<bool&>(AVX) = other.AVX;
-	const_cast<bool&>(AVX2) = other.AVX2;
-	const_cast<bool&>(AVX512) = other.AVX512;
-	const_cast<bool&>(FMA3) = other.FMA3;
-
-	return *this;
-}
-
 CPUFeatures::CPUFeatures()
 {
 #if defined(ECHMET_COMPILER_GCC_LIKE) || defined(ECHMET_COMPILER_MINGW) || defined(ECHMET_COMPILER_MSYS) || defined(ECHMET_COMPILER_MSVC)
@@ -309,16 +255,6 @@ CPUFeatures::SupportedSIMD CPUFeatures::fetch_supported_SIMD()
 				     cpu_has_avx512 & os_avx512_aware,
 				     cpu_has_fma & os_avx_aware);
 	}
-}
-
-void CPUFeatures::initialize()
-{
-	s_init_lock.lock();
-
-	if (s_instance == nullptr)
-		s_instance = new CPUFeatures{};
-
-	s_init_lock.unlock();
 }
 
 } // namespace ECHMET

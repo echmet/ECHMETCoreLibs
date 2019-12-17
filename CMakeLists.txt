@@ -8,6 +8,7 @@ option(MANUAL_HIPREC_LIBS_PATH "Use manually specified paths to GMP and MPFR lib
 option(ENABLE_DIAGNOSTIC_OUTPUT "Enables diagnostic text output. This output is enabled automatically in debug builds" OFF)
 option(USE_CLANG_FPROF "Enables Clang-specific code profiling instrumentation" OFF)
 option(BUILD_STATIC_LIBS "Build static libraries" OFF)
+option(DISABLE_HANDCRAFTED_SIMD "Disable hand-crafted SIMD code" OFF)
 
 if (WIN32)
     option(ECHMET_FORCE_WINXP "Define target Windows version to Windows XP")
