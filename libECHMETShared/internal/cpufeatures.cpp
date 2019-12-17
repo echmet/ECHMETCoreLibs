@@ -20,6 +20,23 @@ namespace ECHMET {
 std::mutex CPUFeatures::s_init_lock;
 CPUFeatures * CPUFeatures::s_instance{nullptr};
 
+static const uint8_t SSE2_FEATURE_BIT_EDX{26};
+static const uint8_t SSE3_FEATURE_BIT_ECX{0};
+static const uint8_t SSSE3_FEATURE_BIT_ECX{9};
+static const uint8_t SSE41_FEATURE_BIT_ECX{19};
+static const uint8_t SSE42_FEATURE_BIT_ECX{20};
+static const uint8_t AVX_FEATURE_BIT_ECX{28};
+static const uint8_t FMA3_FEATURE_BIT_ECX{12};
+static const uint8_t XSAVE_FEATURE_BIT_ECX{27};
+static const uint8_t AVX2_FEATURE_BIT_EBX{5};
+static const uint8_t AVX512_FEATURE_BIT_EBX{16};
+
+static const uint8_t XMM_FEATURE_BIT{1};
+static const uint8_t YMM_FEATURE_BIT{2};
+static const uint8_t AVX512_OPMASK_BIT{5};
+static const uint8_t AVX512_HI256_BIT{6};
+static const uint8_t AVX512_ZMM_HI256_BIT{7};
+
 template <typename T>
 static
 bool is_bit_set(const T field, const uint8_t bit) noexcept
