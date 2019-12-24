@@ -38,11 +38,11 @@ InstructionSet detectInstructionSet() noexcept
 {
 	const CPUSIMD simd = cpuSupportedSIMD();
 
-	if (simd.FMA3 && simd.AVX2) {
+	if (simd.FMA3 && simd.AVX2 && simd.SSE42 && simd.SSE41 && simd.SSSE3) {
 		ECHMET_DEBUG_CODE(fprintf(stderr, "Using FMA3-optimized solver\n"));
 		return InstructionSet::FMA3;
 	}
-	if (simd.AVX) {
+	if (simd.AVX && simd.SSE42 && simd.SSE41 && simd.SSSE3) {
 		ECHMET_DEBUG_CODE(fprintf(stderr, "Using AVX-optimized solver\n"));
 		return InstructionSet::AVX;
 	}
