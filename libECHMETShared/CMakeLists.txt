@@ -22,7 +22,7 @@ if (DISABLE_HANDCRAFTED_SIMD)
         internal/cpufeatures_generic.cpp)
 else ()
     if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86" OR
-        ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
+        ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64" OR WIN32)
         set(ECHMETShared_SRCS
             ${ECHMETShared_SRCS}
             internal/cpufeatures_x86.cpp)
