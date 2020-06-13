@@ -150,6 +150,7 @@ void SolverImplSpec<CAESReal, ISet, true>::initializeUnsafe(SolverImpl<CAESReal,
 template <typename CAESReal, InstructionSet ISet>
 void SolverImplSpec<CAESReal, ISet, false>::releaseUnsafe(SolverImpl<CAESReal, ISet, false> *solver) noexcept
 {
+        delete solver->m_unsafe.chargeSummer;
 	delete solver->m_unsafe.internal;
 	delete solver->m_unsafe.anCVec;
 
