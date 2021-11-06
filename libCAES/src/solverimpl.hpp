@@ -500,7 +500,7 @@ std::pair<CAESReal *, CAESReal> SolverImpl<CAESReal, ISet, ThreadSafe>::estimate
 			else
 				leftWall = cH;
 
-			cH = (rightWall - leftWall) / 2.0 + leftWall;
+			cH = (rightWall - leftWall) * 0.5 + leftWall;
 		}
 
 		ionicStrength = chargeSummer.calculateIonicStrength(icConcs);
