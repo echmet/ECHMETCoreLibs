@@ -55,6 +55,11 @@ Similarly, if you do not have a system-wide installation of the GMP and MPFR lib
 
 CMake can be used to configure the project for building. [MinGW](https://sourceforge.net/projects/mingw-w64) and MSVC 2015 can be used to build the project on Windows for both x86 and x86_64 architectures. `LIBGMP_DIR` and `LIBMPFR_DIR` must be set to point to GMP and MPFR libraries installations. These libraries must be obtained separately. Once the project files are generated, ECHMETCoreLibs can be built following a standard procedure for your compiler of choice.
 
+### Remarks
+As of MPFR 4.1.0 a newly introduced `mpfr_srcptr` macro conflicts with a function of the same name used by the MPReal wrapper library. ECHMETCoreLibs ships an updated MPReal code which fixes the issue. Unfortunately, the fix causes issues with the MPReal module used by Eigen. In order to make Eigen buildable with patched MPReal, all occurrences of `mpfr_srcptr` must be replaced with `mpfr_xsrcptr` in `unsupported\Eigen\MPReal` file in Eigen codebase.
+
+See [this GitHub issue](https://github.com/advanpix/mpreal/issues/7) for more details.
+
 Examples
 ---
 
