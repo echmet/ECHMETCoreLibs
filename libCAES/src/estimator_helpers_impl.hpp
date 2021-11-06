@@ -2,6 +2,7 @@
 #define ECHMET_CAES_ESTIMATOR_HELPERS_IMPL_HPP
 
 #include "estimator_helpers.h"
+#include <xmmintrin.h>
 
 namespace ECHMET {
 namespace CAES {
@@ -9,40 +10,40 @@ namespace CAES {
 template <InstructionSet ISet, bool ThreadSafe>
 inline
 void calculateDistributionWithDerivative_dbl(const double &v,
-					     double *const ECHMET_RESTRICT_PTR distribution,
-					     double *const ECHMET_RESTRICT_PTR dDistdV,
+					     double * ECHMET_RESTRICT_PTR distribution,
+					     double * ECHMET_RESTRICT_PTR dDistdV,
 					     std::vector<TotalEquilibrium<double, ISet, ThreadSafe>> &totalEquilibria,
 					     const ECHMETReal *const ECHMET_RESTRICT_PTR acRaw,
 					     const std::vector<double> &activityCoefficients)
 {
-	size_t rowCounter = 2;
+	_mm_prefetch(distribution, _MM_HINT_T0);
+	_mm_prefetch(dDistdV, _MM_HINT_T0);
+
+	distribution += 2;
+	dDistdV += 2;
 
 	for (auto &te : totalEquilibria) {
 		double X;
 		double dX;
 		const auto pack = te.TsAnddTsdV(v, activityCoefficients, X, dX);
 
-		const std::vector<double> & Ts = std::get<0>(pack);
-		const std::vector<double> & dTsdV = std::get<1>(pack);
+		const auto & Ts = std::get<0>(pack);
+		const auto & dTsdV = std::get<1>(pack);
 
 		assert(Ts.size() == dTsdV.size());
 
 		const ECHMETReal c = acRaw[te.concentrationIndex];
 
-		const size_t len = te.len;
-		for (size_t idx = 0; idx < len; idx++) {
-			const size_t rIdx{rowCounter + idx};
+		for (size_t idx = 0; idx < te.len; idx++) {
 			const double T = Ts[idx];
 			const double dT = dTsdV[idx];
 
 			/* Distribution */
-			distribution[rIdx] = c * T / X;
+			*(distribution++) = c * T / X;
 
 			/* dDistdV */
-			dDistdV[rIdx] = c * (dT * X - T * dX) / X / X;
+			*(dDistdV++) = c * (dT * X - T * dX) / X / X;
 		}
-
-		rowCounter += len;
 	}
 }
 
