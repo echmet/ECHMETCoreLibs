@@ -90,12 +90,12 @@ void calculateDistributionWithDerivative(const CAESReal &v,
 template <typename CAESReal, InstructionSet ISet, bool ThreadSafe>
 inline
 void calculateDistribution(const CAESReal &v,
-			   CAESReal *const ECHMET_RESTRICT_PTR distribution,
+			   CAESReal * ECHMET_RESTRICT_PTR distribution,
 			   std::vector<TotalEquilibrium<CAESReal, ISet, ThreadSafe>> &totalEquilibria,
 			   const ECHMETReal *const ECHMET_RESTRICT_PTR acRaw,
 			   const std::vector<CAESReal> &activityCoefficients)
 {
-	size_t rowCounter = 2;
+	distribution += 2;
 
 	for (auto &te : totalEquilibria) {
 		CAESReal X;
@@ -103,11 +103,8 @@ void calculateDistribution(const CAESReal &v,
 
 		const ECHMETReal c = acRaw[te.concentrationIndex];
 		for (const CAESReal &T : Ts) {
-			const CAESReal fC = c * T / X;
-
-			distribution[rowCounter] = fC;
-
-			rowCounter++;
+			*distribution = c * T / X;
+			distribution++;
 		}
 	}
 }
