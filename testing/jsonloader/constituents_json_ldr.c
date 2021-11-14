@@ -1,23 +1,9 @@
 #include <errno.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <jansson.h>
+#include "json_ldr_util.h"
 #include "constituents_json_ldr.h"
-
-static void print_json_error(const json_error_t *error)
-{
-	fprintf(stderr, "Error has occured when parsing JSON structure:\n"
-			"Error: %s\n"
-			"Source: %s\n"
-			"Line: %d\n"
-			"Column: %d\n",
-			error->text,
-			error->source,
-			error->line,
-			error->column);
-}
 
 static const char * type_to_string(const enum ConstituentType t)
 {
@@ -153,7 +139,7 @@ static void init_constituent(constituent_t *ctuent,
 		ctuent->crole = INVALID_ROLE;
 }
 
-static bool is_json_number(const json_t *item)
+static int is_json_number(const json_t *item)
 {
 	return json_is_integer(item) || json_is_real(item);
 }
@@ -655,39 +641,32 @@ static size_t parse_cts_array(const json_t *array, constituent_t *allCts, size_t
 	return ctr;
 }
 
-static const constituent_array_t * parse_json(const json_t *node, enum LoaderErrorCode *err)
+static constituent_array_t parse_json(const json_t *node, enum LoaderErrorCode *err)
 {
 	json_t *jCtsArray;
 	constituent_t *allCts;
-	constituent_array_t *ctArr;
 	size_t count;
 	size_t realCount;
+	constituent_array_t ctArr = { NULL, 0 };
 
 	jCtsArray = json_object_get(node, "constituents");
 	if (jCtsArray == NULL) {
 		fprintf(stderr, "No key \"constituents\" was found in the input\n");
 		*err = JLDR_E_BAD_INPUT;
-		return NULL;
+		return ctArr;
 	}
 	if (json_is_array(jCtsArray) == 0) {
 		fprintf(stderr, "Item \"constituents\" is not an array\n");
 		*err = JLDR_E_BAD_INPUT;
-		return NULL;
+		return ctArr;
 	}
 	count = json_array_size(jCtsArray);
-
-	ctArr = malloc(sizeof(constituent_array_t));
-	if (ctArr == NULL) {
-		*err = JLDR_E_NO_MEM;
-		return NULL;
-	}
 
 	allCts = calloc(count, sizeof(constituent_t));
 	if (allCts == NULL) {
 		fprintf(stderr, "Insufficient memory to store all constituents\n");
-		free(ctArr);
 		*err = JLDR_E_NO_MEM;
-		return NULL;
+		return ctArr;
 	}
 
 	realCount = parse_cts_array(jCtsArray, allCts, count, err);
@@ -697,50 +676,36 @@ static const constituent_array_t * parse_json(const json_t *node, enum LoaderErr
 		for (idx = 0; idx < realCount; idx++)
 			ldr_destroy_constituent(&allCts[idx]);
 
-		free(ctArr);
-		return NULL;
+		return ctArr;
 	}
 
 	print_all_constituents(allCts, realCount);
 
-	ctArr->constituents = allCts;
-	ctArr->count = realCount;
+	ctArr.constituents = allCts;
+	ctArr.count = realCount;
 
 	return ctArr;
 }
 
-const constituent_array_t * ldr_loadFromFile(const char *fileName, enum LoaderErrorCode *err)
+constituent_array_t ldr_load_constituents(const char *fileName, enum LoaderErrorCode *err)
 {
 	FILE *f;
 	json_t *root;
 	json_error_t jsonError;
-	const constituent_array_t *ctArr;
+	constituent_array_t ctArr = { NULL, 0 };
 
-	f = fopen(fileName, "r");
-	if (f == NULL) {
-		fprintf(stderr, "Cannot open file \"%s\" for reading: %s\n", fileName, strerror(errno));
-		*err = JLDR_E_CANT_READ;
-		return NULL;
-	}
-
-	root = json_loadf(f, JSON_REJECT_DUPLICATES, &jsonError);
+	root = json_load_file(fileName, JSON_REJECT_DUPLICATES, &jsonError);
 	if (root == NULL) {
 		print_json_error(&jsonError);
 		json_decref(root);
 		*err = JLDR_E_MALFORMED;
-		return NULL;
+		return ctArr;
 	}
 
 	ctArr = parse_json(root, err);
 	json_decref(root);
 
 	return ctArr;
-}
-
-void ldr_destroy_array(const constituent_array_t *array)
-{
-	free(array->constituents);
-	free((void *)array);
 }
 
 void ldr_destroy_constituent(constituent_t *ctuent)
@@ -779,4 +744,14 @@ void ldr_destroy_constituent(constituent_t *ctuent)
 	free(ctuent->name);
 	free(ctuent->pKas);
 	free(ctuent->mobilities);
+}
+
+void ldr_destroy_constituent_array(const constituent_array_t *array)
+{
+	size_t idx;
+
+	for (idx = 0; idx < array->count; idx++)
+		ldr_destroy_constituent(&array->constituents[idx]);
+
+	free(array->constituents);
 }

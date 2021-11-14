@@ -24,5 +24,14 @@
 				}
 			]
 		}
-	]
+	],
+    "expected": [
+        {
+            "debyeHuckel": false,
+            "onsagerFuoss": false,
+            "viscosity": false,
+            "bufferCapacity": 0.1,
+            "ionicStrength": 0.0
+        }
+    ]
 }

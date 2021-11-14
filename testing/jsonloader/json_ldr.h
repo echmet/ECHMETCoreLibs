@@ -1,0 +1,13 @@
+#ifndef JSON_LDR_H
+#define JSON_LDR_H
+
+enum LoaderErrorCode {
+	JLDR_OK,
+	JLDR_E_BAD_INPUT,
+	JLDR_E_CANT_READ,
+	JLDR_E_MALFORMED,
+	JLDR_E_NO_MEM,
+	JLDR_E_NOT_FOUND
+};
+
+#endif // JSON_LDR_H

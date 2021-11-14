@@ -5,6 +5,7 @@
 extern "C" {
 #endif
 
+#include "json_ldr.h"
 #include <stddef.h>
 
 enum ConstituentType {
@@ -17,14 +18,6 @@ enum ConstituentRole {
 	BACKGROUND,
 	ANALYTE,
 	INVALID_ROLE
-};
-
-enum LoaderErrorCode {
-	JLDR_OK,
-	JLDR_E_BAD_INPUT,
-	JLDR_E_CANT_READ,
-	JLDR_E_MALFORMED,
-	JLDR_E_NO_MEM
 };
 
 struct ligand_form {
@@ -73,9 +66,9 @@ struct constituent_array {
 };
 typedef struct constituent_array constituent_array_t;
 
-const constituent_array_t * ldr_loadFromFile(const char *fileName, enum LoaderErrorCode *err);
-void ldr_destroy_array(const constituent_array_t *array);
 void ldr_destroy_constituent(constituent_t *ctuent);
+void ldr_destroy_constituent_array(const constituent_array_t *array);
+constituent_array_t ldr_load_constituents(const char *fileName, enum LoaderErrorCode *err);
 
 #ifdef __cplusplus
 }

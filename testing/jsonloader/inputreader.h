@@ -5,8 +5,6 @@
 #include <string>
 #include "constituents_json_ldr.h"
 
-//typedef struct constituent_array constituent_array_t;
-
 class InputReader {
 public:
 	class InputReaderException : public std::exception {
@@ -51,11 +49,11 @@ public:
 
 	InputReader();
 	~InputReader();
-	const constituent_array_t * read(const std::string &filepath);
+	constituent_array_t read(const std::string &filepath);
 	void release(const std::string &filename);
 
 private:
-	typedef std::map<std::string, const constituent_array_t *> TrackedDataMap;
+	typedef std::map<std::string, constituent_array_t> TrackedDataMap;
 
 	void freeData(const constituent_array_t *array);
 

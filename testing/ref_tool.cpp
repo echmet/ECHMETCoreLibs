@@ -2,6 +2,8 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include "echmetelems.h"
+#include "echmetionprops.h"
 #include "jsonloader/inputreader.h"
 #include "json_input_processor.h"
 #include <echmetcaes.h>
@@ -30,10 +32,13 @@ ECHMET::NonidealityCorrections makeCorrections(const bool correctForDH, const bo
 	return corrs;
 }
 
-void printEquilibrium(const ECHMET::SysComp::ChemicalSystem &chemSystem, const ECHMET::SysComp::CalculatedProperties &calcProps)
+void printEquilibrium(const ECHMET::SysComp::ChemicalSystem &chemSystem, ECHMET::SysComp::CalculatedProperties &calcProps, ECHMET::NonidealityCorrections corrs)
 {
+	const ECHMET::IonProps::ComputationContext *ctx = ECHMET::IonProps::makeComputationContext(chemSystem, ECHMET::IonProps::ComputationContext::NONE);
 	std::cout << "Ionic strength (mM): " << calcProps.ionicStrength * 1000 << "\n";
+	std::cout << "pH: " << ECHMET::IonProps::calculatepH(ctx, corrs, calcProps) << "\n";
 	std::cout << "Ionic composition:\n";
+	ctx->destroy();
 
 	for (size_t idx = 0; idx < chemSystem.ionicForms->size(); idx++) {
 		const ECHMET::SysComp::IonicForm *iF = chemSystem.ionicForms->at(idx);
@@ -85,8 +90,8 @@ int launch(int argc, char **argv)
 	try {
 		ECHMET::JsonInputProcessor inputProc;
 		InputReader reader;
-		const constituent_array_t *ctarray = reader.read(inputDataFile);
-		inputDesc = inputProc.process(ctarray);
+		const constituent_array_t ctarray = reader.read(inputDataFile);
+		inputDesc = inputProc.process(&ctarray);
 	} catch (InputReader::MalformedInputException &ex) {
 		std::cerr << ex.what();
 		return EXIT_FAILURE;
@@ -138,7 +143,7 @@ int launch(int argc, char **argv)
 		goto out_3;
 	}
 
-	printEquilibrium(chemSystem, calcProps);
+	printEquilibrium(chemSystem, calcProps, corrs);
 
 	tRet = ECHMET::CAES::calculateBufferCapacity(bufferCap, corrs, chemSystem, calcProps, acVec);
 	if (tRet != ECHMET::OK) {
