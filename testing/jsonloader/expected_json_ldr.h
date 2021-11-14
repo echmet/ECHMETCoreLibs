@@ -8,27 +8,37 @@ extern "C" {
 #include "json_ldr.h"
 #include <stddef.h>
 
-struct expectation {
+typedef struct expected_ion {
+	char *name;
+	double concentration;
+	double mobility;
+} expected_ion_t;
+
+typedef struct expected_ion_array {
+	expected_ion_t *ions;
+	size_t count;
+} expected_ion_array_t;
+
+typedef struct expectation {
 	int debyeHuckel;
 	int onsagerFuoss;
 	int viscosity;
 	double ionicStrength;
 	double bufferCapacity;
-};
-typedef struct expectation expectation_t;
+	expected_ion_array_t ions;
+} expectation_t;
 
-struct expectation_array {
+typedef struct expectation_array {
 	expectation_t *expectations;
 	size_t count;
-};
-typedef struct expectation_array expectation_array_t;
+} expectation_array_t;
+
+void ldr_destroy_expectation(expectation_t *expectation);
+void ldr_destroy_expectation_array(expectation_array_t *array);
+expectation_array_t * ldr_load_expectations(const char *fileName, enum LoaderErrorCode *err);
 
 #ifdef __cplusplus
 }
 #endif
-
-void ldr_destroy_expectation(expectation_t *expectation);
-void ldr_destroy_expectation_array(expectation_array_t *expectations);
-expectation_array_t ldr_load_expectations(const char *fileName, enum LoaderErrorCode *err);
 
 #endif // EXPECTED_LDR_H

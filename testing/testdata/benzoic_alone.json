@@ -30,8 +30,59 @@
             "debyeHuckel": false,
             "onsagerFuoss": false,
             "viscosity": false,
-            "bufferCapacity": 0.1,
-            "ionicStrength": 0.0
+            "bufferCapacity": 0.7238405012093,
+            "ionicStrength": 0.0001804347341986,
+            "ions": [
+                {
+                    "name": "H+",
+                    "concentration": 0.1804347344281,
+                    "mobility": 362.5
+                },
+                {
+                    "name": "OH-",
+                    "concentration": 5.542170154597e-08,
+                    "mobility": 205.5
+                },
+                {
+                    "name": "Benzoic acid(-1)",
+                    "concentration": 0.1804346790064,
+                    "mobility": 33.6
+                },
+                {
+                    "name": "Benzoic acid(0)",
+                    "concentration": 0.5195653212231,
+                    "mobility": 0.0
+                }
+            ]
+        },
+        {
+            "debyeHuckel": true,
+            "onsagerFuoss": true,
+            "viscosity": false,
+            "bufferCapacity": 0.7320088605187,
+            "ionicStrength": 0.0001828299752316,
+            "ions": [
+                {
+                    "name": "H+",
+                    "concentration": 0.1828299754057,
+                    "mobility": 360.9814097196
+                },
+                {
+                    "name": "OH-",
+                    "concentration": 5.641750476654e-08,
+                    "mobility": 203.8823646388
+                },
+                {
+                    "name": "Benzoic acid(-1)",
+                    "concentration": 0.1828299189882,
+                    "mobility": 33.08394459575
+                },
+                {
+                    "name": "Benzoic acid(0)",
+                    "concentration": 0.517170081186,
+                    "mobility": 0.0
+                }
+            ]
         }
     ]
 }

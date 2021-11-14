@@ -641,13 +641,14 @@ static size_t parse_cts_array(const json_t *array, constituent_t *allCts, size_t
 	return ctr;
 }
 
-static constituent_array_t parse_json(const json_t *node, enum LoaderErrorCode *err)
+static constituent_array_t * parse_json(const json_t *node, enum LoaderErrorCode *err)
 {
 	json_t *jCtsArray;
 	constituent_t *allCts;
 	size_t count;
 	size_t realCount;
-	constituent_array_t ctArr = { NULL, 0 };
+	constituent_array_t *ctArr = malloc(sizeof(constituent_array_t));
+	memset(ctArr, 0, sizeof(constituent_array_t));
 
 	jCtsArray = json_object_get(node, "constituents");
 	if (jCtsArray == NULL) {
@@ -681,18 +682,18 @@ static constituent_array_t parse_json(const json_t *node, enum LoaderErrorCode *
 
 	print_all_constituents(allCts, realCount);
 
-	ctArr.constituents = allCts;
-	ctArr.count = realCount;
+	ctArr->constituents = allCts;
+	ctArr->count = realCount;
 
 	return ctArr;
 }
 
-constituent_array_t ldr_load_constituents(const char *fileName, enum LoaderErrorCode *err)
+constituent_array_t * ldr_load_constituents(const char *fileName, enum LoaderErrorCode *err)
 {
 	FILE *f;
 	json_t *root;
 	json_error_t jsonError;
-	constituent_array_t ctArr = { NULL, 0 };
+	constituent_array_t *ctArr;
 
 	root = json_load_file(fileName, JSON_REJECT_DUPLICATES, &jsonError);
 	if (root == NULL) {
@@ -704,6 +705,11 @@ constituent_array_t ldr_load_constituents(const char *fileName, enum LoaderError
 
 	ctArr = parse_json(root, err);
 	json_decref(root);
+
+	if (*err != JLDR_OK) {
+		ldr_destroy_constituent_array(ctArr);
+		return NULL;
+	}
 
 	return ctArr;
 }

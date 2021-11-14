@@ -49,11 +49,11 @@ public:
 
 	InputReader();
 	~InputReader();
-	constituent_array_t read(const std::string &filepath);
+	const constituent_array_t *read(const std::string &filepath);
 	void release(const std::string &filename);
 
 private:
-	typedef std::map<std::string, constituent_array_t> TrackedDataMap;
+	typedef std::map<std::string, const constituent_array_t *> TrackedDataMap;
 
 	void freeData(const constituent_array_t *array);
 

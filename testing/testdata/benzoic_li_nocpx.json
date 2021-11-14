@@ -48,5 +48,73 @@
 				}
 			]
 		}
-	]
+	],
+    "expected": [
+        {
+            "debyeHuckel": false,
+            "onsagerFuoss": false,
+            "viscosity": false,
+            "bufferCapacity": 16.94989139549,
+            "ionicStrength": 0.01015334125498,
+            "concentrations": [
+                {
+                    "name": "H+",
+                    "concentration": 0.1533412560047
+                },
+                {
+                    "name": "OH-",
+                    "concentration": 6.521402172221e-08
+                },
+                {
+                    "name": "Benzoic acid(-1)",
+                    "concentration": 10.15334118833
+                },
+                {
+                    "name": "Benzoic acid(0)",
+                    "concentration": 24.84665881557
+                },
+                {
+                    "name": "Li(0)",
+                    "concentration": 1.033572590699e-09
+                },
+                {
+                    "name": "Li(1)",
+                    "concentration": 9.999999998966
+                }
+            ]
+        },
+        {
+            "debyeHuckel": true,
+            "onsagerFuoss": true,
+            "viscosity": false,
+            "bufferCapacity": 17.05853221089,
+            "ionicStrength": 0.01018659481131,
+            "concentrations": [
+                {
+                    "name": "H+",
+                    "concentration": 0.186594812272
+                },
+                {
+                    "name": "OH-",
+                    "concentration": 6.551528886693e-08
+                },
+                {
+                    "name": "Benzoic acid(-1)",
+                    "concentration": 10.18659474421
+                },
+                {
+                    "name": "Benzoic acid(0)",
+                    "concentration": 24.81340525974
+                },
+                {
+                    "name": "Li(0)",
+                    "concentration": 8.493768787184e-10
+                },
+                {
+                    "name": "Li(1)",
+                    "concentration": 9.999999999151
+                }
+            ]
+        }
+    ]
 }

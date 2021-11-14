@@ -68,7 +68,7 @@ typedef struct constituent_array constituent_array_t;
 
 void ldr_destroy_constituent(constituent_t *ctuent);
 void ldr_destroy_constituent_array(const constituent_array_t *array);
-constituent_array_t ldr_load_constituents(const char *fileName, enum LoaderErrorCode *err);
+constituent_array_t * ldr_load_constituents(const char *fileName, enum LoaderErrorCode *err);
 
 #ifdef __cplusplus
 }

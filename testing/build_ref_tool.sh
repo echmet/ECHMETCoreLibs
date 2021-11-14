@@ -20,4 +20,3 @@ clang++ -std=c++98 -Wall -Wextra -pedantic -g -O0 \
 	-L${ECL_BIN} \
 	-L../build \
 	-lECHMETShared -lSysComp -lCAES -lIonProps
-	
