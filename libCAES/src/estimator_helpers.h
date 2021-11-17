@@ -85,6 +85,22 @@ void estimateComplexesDistribution<double, double, InstructionSet::FMA3>
 				 const double *const ECHMET_RESTRICT_PTR estConcentrations, const size_t LGBlockOffset,
 				 double *estimatedConcentrations);
 
+template <typename CAESReal, typename OutputReal, InstructionSet ISet>
+inline
+void setDistributionFast(const CAESReal *const ECHMET_RESTRICT_PTR estConcentrations, const size_t count, OutputReal *estimatedConcentrations);
+
+template <>
+void setDistributionFast<double, double, InstructionSet::SSE2>
+			(const double *const ECHMET_RESTRICT_PTR estConcentrations, const size_t count, double *estimatedConcentrations);
+
+template <>
+void setDistributionFast<double, double, InstructionSet::AVX>
+			(const double *const ECHMET_RESTRICT_PTR estConcentrations, const size_t count, double *estimatedConcentrations);
+template <>
+void setDistributionFast<double, double, InstructionSet::FMA3>
+			(const double *const ECHMET_RESTRICT_PTR estConcentrations, const size_t count, double *estimatedConcentrations);
+
+
 } // namespace CAES
 } // namespace ECHMET
 

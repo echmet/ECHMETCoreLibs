@@ -345,8 +345,11 @@ RetCode SolverImpl<CAESReal, ISet, ThreadSafe>::fillResults(const std::pair<CAES
 	estimatedConcentrations[0] = CAESRealToECHMETReal<CAESReal, OutputReal>(results.first[0]);
 	estimatedConcentrations[1] = CAESRealToECHMETReal<CAESReal, OutputReal>(results.first[1]);
 
-	estimateComplexesDistribution<CAESReal, OutputReal, ISet>(m_ctx->complexNuclei, m_ctx->allLigands, m_totalLigandCopyCount,
-								  results.first, m_ctx->allForms->size() + 2, estimatedConcentrations);
+	if (m_totalLigandCopyCount == 0)
+		setDistributionFast<CAESReal, OutputReal, ISet>(results.first, m_ctx->allForms->size() + 2, estimatedConcentrations);
+	else
+		estimateComplexesDistribution<CAESReal, OutputReal, ISet>(m_ctx->complexNuclei, m_ctx->allLigands, m_totalLigandCopyCount,
+									  results.first, m_ctx->allForms->size() + 2, estimatedConcentrations);
 
 	ionicStrength = CAESRealToECHMETReal<CAESReal, OutputReal>(results.second);
 

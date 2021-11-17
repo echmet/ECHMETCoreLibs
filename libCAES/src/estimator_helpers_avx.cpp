@@ -43,5 +43,15 @@ void estimateComplexesDistribution<double, double, InstructionSet::AVX>
 					  LGBlockOffset, estimatedConcentrations);
 }
 
+template <>
+void setDistributionFast<double, double, InstructionSet::AVX>
+			(const double *const ECHMET_RESTRICT_PTR estConcentrations,
+			 const size_t count,
+			 double *estimatedConcentrations)
+{
+	setDistributionFast_dbl(estConcentrations, count, estimatedConcentrations);
+}
+
+
 } // namespace CAES
 } // namespace ECHMET

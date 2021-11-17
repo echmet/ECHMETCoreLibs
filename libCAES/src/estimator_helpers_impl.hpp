@@ -67,7 +67,10 @@ void estimateComplexesDistribution_dbl(const CNVec<double> *const ECHMET_RESTRIC
 		}
 	}
 
-	memcpy(&estimatedConcentrations[rowCounter], &estConcentrations[ecRowCounter], totalLigandCopyCount * sizeof(double));
+	if (totalLigandCopyCount == 0)
+		return;
+
+	std::memcpy(&estimatedConcentrations[rowCounter], &estConcentrations[ecRowCounter], totalLigandCopyCount * sizeof(double));
 
 	rowCounter += totalLigandCopyCount;
 	ecRowCounter += totalLigandCopyCount;
@@ -88,6 +91,12 @@ void estimateComplexesDistribution_dbl(const CNVec<double> *const ECHMET_RESTRIC
 			}
 		}
 	}
+}
+
+ECHMET_FORCE_INLINE
+void setDistributionFast_dbl(const double *const ECHMET_RESTRICT_PTR estConcentrations, const size_t count, double *estimatedConcentrations)
+{
+	std::memcpy(estimatedConcentrations, estConcentrations, sizeof(double) * count);
 }
 
 } // namespace CAES

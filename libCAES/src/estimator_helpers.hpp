@@ -168,6 +168,13 @@ void estimateComplexesDistribution(const CNVec<CAESReal> *const ECHMET_RESTRICT_
 	}
 }
 
+template <typename CAESReal, typename OutputReal, InstructionSet ISet>
+void setDistributionFast(const CAESReal *const ECHMET_RESTRICT_PTR estConcentrations, const size_t count, OutputReal *estimatedConcentrations)
+{
+	for (size_t idx = 0; idx < count; idx++)
+		estimatedConcentrations[idx] = CAESRealToECHMETReal(estConcentrations[idx]);
+}
+
 } // namespace CAES
 } // namespace ECHMET
 
