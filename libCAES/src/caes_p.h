@@ -96,10 +96,11 @@ public:
 private:
 	void defaultActivityCoefficients(std::vector<CAESReal> &activityCoefficients) const;
 
-	std::pair<CAESReal *, CAESReal> estimatepHFast(const CAESReal &cHInitial, const ECHMETReal *analyticalConcentrations,
-						       CAESReal *const ECHMET_RESTRICT_PTR icConcs, CAESReal *const ECHMET_RESTRICT_PTR dIcConcsdH,
-						       std::vector<CAESReal> &activityCoefficients,
-						       ChargeSummer<CAESReal, ISet, ThreadSafe> &chargeSummer);
+	RetCode estimatepHFast(std::pair<CAESReal *, CAESReal> &results,
+			       const CAESReal &cHInitial, const ECHMETReal *analyticalConcentrations,
+			       CAESReal *const ECHMET_RESTRICT_PTR icConcs, CAESReal *const ECHMET_RESTRICT_PTR dIcConcsdH,
+			       std::vector<CAESReal> &activityCoefficients,
+			       ChargeSummer<CAESReal, ISet, ThreadSafe> &chargeSummer);
 	std::pair<CAESReal *, CAESReal> estimatepHSafe(const ECHMETReal *analyticalConcentrations,
 						       CAESReal *const ECHMET_RESTRICT_PTR icConcs,
 						       std::vector<CAESReal> &activityCoefficients,
@@ -137,7 +138,7 @@ public:
 
 	SolverImplSpec() = delete;
 
-	static std::pair<CAESReal *, CAESReal> estimatepHFastWrapper(SI *solver, const CAESReal &cHInitial, const RealVec *analyticalConcentrations);
+	static RetCode estimatepHFastWrapper(SI *solver, std::pair<CAESReal *, CAESReal> &results, const CAESReal &cHInitial, const RealVec *analyticalConcentrations);
 	static std::pair<CAESReal *, CAESReal> estimatepHSafeWrapper(SI *solver, const RealVec *analyticalConcentrations);
 	static void initializeEstimators(SI *solver);
 	static void initializeUnsafe(SI *solver, const SolverContextImpl<CAESReal> *ctx);
@@ -159,7 +160,7 @@ public:
 
 	SolverImplSpec() = delete;
 
-	static std::pair<CAESReal *, CAESReal> estimatepHFastWrapper(SI *solver, const CAESReal &cHInitial, const RealVec *analyticalConcentrations);
+	static RetCode estimatepHFastWrapper(SI *solver, std::pair<CAESReal *, CAESReal> &results, const CAESReal &cHInitial, const RealVec *analyticalConcentrations);
 	static std::pair<CAESReal *, CAESReal> estimatepHSafeWrapper(SI *solver, const RealVec *analyticalConcentrations);
 	static void initializeEstimators(SI *solver);
 	static void initializeUnsafe(SI *solver, const SolverContextImpl<CAESReal> *ctx);

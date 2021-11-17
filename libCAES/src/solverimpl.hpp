@@ -55,31 +55,37 @@ UnsafeContext<CAESReal, ISet, false>::UnsafeContext() :
 }
 
 template <typename CAESReal, InstructionSet ISet>
-std::pair<CAESReal *, CAESReal>
-SolverImplSpec<CAESReal, ISet, false>::estimatepHFastWrapper(SolverImpl<CAESReal, ISet, false> *solver, const CAESReal &cHInitial, const RealVec *analyticalConcentrations)
+RetCode
+SolverImplSpec<CAESReal, ISet, false>::estimatepHFastWrapper(SolverImpl<CAESReal, ISet, false> *solver, std::pair<CAESReal *, CAESReal> &results, const CAESReal &cHInitial, const RealVec *analyticalConcentrations)
 {
-	return solver->estimatepHFast(cHInitial, analyticalConcentrations->cdata(),
+	return solver->estimatepHFast(results, cHInitial,
+				      analyticalConcentrations->cdata(),
 				      solver->m_unsafe.estimatedIC.get(), solver->m_unsafe.dEstimatedICdH.get(),
 				      solver->m_unsafe.activityCoefficients, *solver->m_unsafe.chargeSummer);
 }
 
 template <typename CAESReal, InstructionSet ISet>
-std::pair<CAESReal *, CAESReal>
-SolverImplSpec<CAESReal, ISet, true>::estimatepHFastWrapper(SolverImpl<CAESReal, ISet, true> *solver, const CAESReal &cHInitial, const RealVec *analyticalConcentrations)
+RetCode
+SolverImplSpec<CAESReal, ISet, true>::estimatepHFastWrapper(SolverImpl<CAESReal, ISet, true> *solver, std::pair<CAESReal *, CAESReal> &results, const CAESReal &cHInitial, const RealVec *analyticalConcentrations)
 {
-	std::vector<CAESReal> activityCoefficients;
-	auto icConcs = makeRawArray<CAESReal, ISet>(solver->m_TECount);
-	auto dIcConcsdH = makeRawArray<CAESReal, ISet>(solver->m_TECount);
-	ChargeSummer<CAESReal, ISet, true> chargeSummer{solver->m_TECount, solver->m_totalEquilibria};
+	try {
+		std::vector<CAESReal> activityCoefficients;
+		auto icConcs = makeRawArray<CAESReal, ISet>(solver->m_TECount);
+		auto dIcConcsdH = makeRawArray<CAESReal, ISet>(solver->m_TECount);
+		ChargeSummer<CAESReal, ISet, true> chargeSummer{solver->m_TECount, solver->m_totalEquilibria};
 
-	activityCoefficients.resize(solver->m_ctx->chargesSquared.size());
+		activityCoefficients.resize(solver->m_ctx->chargesSquared.size());
 
-	const auto ret = solver->estimatepHFast(cHInitial, analyticalConcentrations->cdata(),
-						icConcs.get(), dIcConcsdH.get(),
-						activityCoefficients, chargeSummer);
-	icConcs.release();
+		const auto ret = solver->estimatepHFast(results, cHInitial,
+							analyticalConcentrations->cdata(),
+							icConcs.get(), dIcConcsdH.get(),
+							activityCoefficients, chargeSummer);
+		icConcs.release();
 
-	return ret;
+		return ret;
+	} catch (const std::bad_alloc &) {
+		return RetCode::E_NO_MEMORY;
+	}
 }
 
 template <typename CAESReal, InstructionSet ISet>
@@ -271,21 +277,18 @@ void SolverImpl<CAESReal, ISet, ThreadSafe>::defaultActivityCoefficients(std::ve
 template <typename CAESReal, InstructionSet ISet, bool ThreadSafe>
 RetCode ECHMET_CC SolverImpl<CAESReal, ISet, ThreadSafe>::estimateDistributionFast(const ECHMETReal &cHInitial, const RealVec *analyticalConcentrations, SysComp::CalculatedProperties &calcProps) noexcept
 {
+	std::pair<CAESReal *, CAESReal> results{ nullptr, 0 };
+
 	if (analyticalConcentrations->size() != m_ctx->analyticalConcentrationCount)
 		return RetCode::E_INVALID_ARGUMENT;
 
 	assert(calcProps.ionicConcentrations->size() == m_ctx->concentrationCount);
 
-	try {
-		const auto results = SolverImplSpec<CAESReal, ISet, ThreadSafe>::estimatepHFastWrapper(this, cHInitial, analyticalConcentrations);
+	const auto tRet =SolverImplSpec<CAESReal, ISet, ThreadSafe>::estimatepHFastWrapper(this, results, cHInitial, analyticalConcentrations);
+	if (tRet != RetCode::OK)
+		return tRet;
 
-		fillResults<ECHMETReal>(results, calcProps.ionicConcentrations->data(), calcProps.ionicStrength);
-	} catch (const FastEstimateFailureException &) {
-		return RetCode::E_FAST_ESTIMATE_FAILURE;
-	} catch (const std::bad_alloc &) {
-		return RetCode::E_NO_MEMORY;
-	}
-
+	fillResults<ECHMETReal>(results, calcProps.ionicConcentrations->data(), calcProps.ionicStrength);
 	return RetCode::OK;
 }
 
@@ -364,10 +367,11 @@ RetCode SolverImpl<CAESReal, ISet, ThreadSafe>::fillResults(const std::pair<CAES
  * @return Vector of concentrations of all ionic forms including \p H+ and \p OH-
  */
 template <typename CAESReal, InstructionSet ISet, bool ThreadSafe>
-std::pair<CAESReal *, CAESReal> SolverImpl<CAESReal, ISet, ThreadSafe>::estimatepHFast(const CAESReal &cHInitial, const ECHMETReal *analyticalConcentrations,
-										       CAESReal *const ECHMET_RESTRICT_PTR icConcs, CAESReal *const ECHMET_RESTRICT_PTR dIcConcsdH,
-										       std::vector<CAESReal> &activityCoefficients,
-										       ChargeSummer<CAESReal, ISet, ThreadSafe> &chargeSummer)
+RetCode SolverImpl<CAESReal, ISet, ThreadSafe>::estimatepHFast(std::pair<CAESReal *, CAESReal> &results,
+							       const CAESReal &cHInitial, const ECHMETReal *analyticalConcentrations,
+							       CAESReal *const ECHMET_RESTRICT_PTR icConcs, CAESReal *const ECHMET_RESTRICT_PTR dIcConcsdH,
+							       std::vector<CAESReal> &activityCoefficients,
+							       ChargeSummer<CAESReal, ISet, ThreadSafe> &chargeSummer)
 {
 	const CAESReal KW_298 = CAESReal(PhChConsts::KW_298) * 1e6;
 	const CAESReal threshold = electroneturalityPrecision<CAESReal>();
@@ -410,7 +414,7 @@ std::pair<CAESReal *, CAESReal> SolverImpl<CAESReal, ISet, ThreadSafe>::estimate
 			//fprintf(stderr, "cH %g, z %g, dZ %g, cHNew, %g\n", CAESRealToDouble(cH), CAESRealToDouble(z), CAESRealToDouble(dZ), CAESRealToDouble(cHNew));
 
 			if (cHNew <= 0.0)
-				throw FastEstimateFailureException{};
+				return RetCode::E_FAST_ESTIMATE_FAILURE;
 
 			if (VMath::abs(cHNew - cH) < threshold)
 				break;
@@ -422,7 +426,7 @@ std::pair<CAESReal *, CAESReal> SolverImpl<CAESReal, ISet, ThreadSafe>::estimate
 			 * throw an error and let the user deal with it.
 			 */
 			if (ctr++ > 50)
-				throw FastEstimateFailureException{};
+				return RetCode::E_FAST_ESTIMATE_FAILURE;
 		}
 
 		ECHMET_DEBUG_CODE(fprintf(stderr, "cH = %g\n", CAESRealToDouble(cH)));
@@ -435,7 +439,10 @@ std::pair<CAESReal *, CAESReal> SolverImpl<CAESReal, ISet, ThreadSafe>::estimate
 			ionicStrengthUnstable = false;
 	} while (m_correctDebyeHuckel && ionicStrengthUnstable && isLoopCtr++ < 100);
 
-	return { icConcs, ionicStrength };
+	results.first = icConcs;
+	results.second = ionicStrength;
+
+	return RetCode::OK;
 }
 
 /*
