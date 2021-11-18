@@ -96,7 +96,6 @@ void calculateDistribution(const CAESReal &v,
 			   const ECHMETReal *const ECHMET_RESTRICT_PTR acRaw,
 			   const std::vector<CAESReal> &activityCoefficients)
 {
-	_mm_prefetch(distribution, _MM_HINT_T0);
 	distribution += 2;
 
 	for (auto &te : totalEquilibria) {

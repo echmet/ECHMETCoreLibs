@@ -16,9 +16,6 @@ void calculateDistributionWithDerivative_dbl(const double &v,
 					     const ECHMETReal *const ECHMET_RESTRICT_PTR acRaw,
 					     const std::vector<double> &activityCoefficients)
 {
-	_mm_prefetch(distribution, _MM_HINT_T0);
-	_mm_prefetch(dDistdV, _MM_HINT_T0);
-
 	distribution += 2;
 	dDistdV += 2;
 

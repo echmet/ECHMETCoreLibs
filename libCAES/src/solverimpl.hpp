@@ -376,6 +376,10 @@ RetCode SolverImpl<CAESReal, ISet, ThreadSafe>::estimatepHFast(std::pair<CAESRea
 							       std::vector<CAESReal> &activityCoefficients,
 							       ChargeSummer<CAESReal, ISet, ThreadSafe> &chargeSummer)
 {
+	_mm_prefetch(icConcs, _MM_HINT_T0);
+	_mm_prefetch(dIcConcsdH, _MM_HINT_T0);
+	_mm_prefetch(analyticalConcentrations, _MM_HINT_T0);
+
 	const CAESReal KW_298 = CAESReal(PhChConsts::KW_298) * 1e6;
 	const CAESReal threshold = electroneturalityPrecision<CAESReal>();
 	CAESReal cH = cHInitial;
@@ -463,6 +467,9 @@ std::pair<CAESReal *, CAESReal> SolverImpl<CAESReal, ISet, ThreadSafe>::estimate
 										       std::vector<CAESReal> &activityCoefficients,
 										       ChargeSummer<CAESReal, ISet, ThreadSafe> &chargeSummer)
 {
+	_mm_prefetch(icConcs, _MM_HINT_T0);
+	_mm_prefetch(analyticalConcentrations, _MM_HINT_T0);
+
 	const CAESReal KW_298 = CAESReal(PhChConsts::KW_298) * 1e6;
 	const CAESReal threshold = electroneturalityPrecision<CAESReal>();
 
