@@ -1,6 +1,7 @@
 #include "../containers/echmetfixedstring_p.h"
 #include "../containers/echmetvec_p.h"
 #include "cpufeatures.h"
+#include "echmetelems.h"
 
 #include <cstring>
 #include <typeinfo>
@@ -15,6 +16,11 @@ namespace ECHMET {
 RealVec * ECHMET_CC createRealVec(const size_t reserve) noexcept
 {
 	return createECHMETVec<ECHMETReal, false>(reserve);
+}
+
+RealVec * ECHMET_CC createRealVecPreallocated(const size_t size, ECHMETReal *const pool)
+{
+	return createECHMETVecPreallocated<ECHMETReal, false>(size, pool);
 }
 
 FixedString * ECHMET_CC createFixedString(const char *str) noexcept

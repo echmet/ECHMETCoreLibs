@@ -1172,6 +1172,26 @@ bool compare(const T &first, const T &second, U T::* m)
 
 /* Public interface functions */
 
+RetCode ECHMET_CC allocateCalculatedPropertiesPools(CalculatedPropertiesPools &pools, const ChemicalSystem &chemSystem, const size_t numBlocks)
+{
+	const size_t NIF = chemSystem.ionicForms->size();
+
+	if (NIF < 1 || numBlocks < 1)
+		return RetCode::E_INVALID_ARGUMENT;
+
+	// NOTE: Consider more sophisticated alignment here
+	pools.ionicConcentrations = new (std::nothrow) ECHMETReal[NIF * numBlocks];
+	pools.ionicMobilities = new (std::nothrow) ECHMETReal[NIF * numBlocks];
+
+	if (pools.ionicConcentrations == nullptr || pools.ionicMobilities == nullptr) {
+		delete [] pools.ionicConcentrations;
+		delete [] pools.ionicMobilities;
+		return RetCode::E_NO_MEMORY;
+	}
+
+	return RetCode::OK;
+}
+
 bool ECHMET_CC compareInConstituents(const InConstituent &first, const InConstituent &second, const bool compareComplexations) noexcept
 {
 	auto mismatch = [&first, &second](auto &&m) {
@@ -1268,7 +1288,7 @@ RetCode ECHMET_CC initializeCalculatedProperties(CalculatedProperties &calcProps
 	}
 
 	calcProps.effectiveMobilities = createRealVec(NCO);
-	if (calcProps.ionicMobilities == nullptr) {
+	if (calcProps.effectiveMobilities == nullptr) {
 		calcProps.ionicMobilities->destroy();
 		calcProps.ionicConcentrations->destroy();
 		return RetCode::E_NO_MEMORY;
@@ -1290,6 +1310,43 @@ RetCode ECHMET_CC initializeCalculatedProperties(CalculatedProperties &calcProps
 	} catch (std::bad_alloc &) {
 		calcProps.ionicConcentrations->destroy();
 		calcProps.ionicMobilities->destroy();
+		calcProps.effectiveMobilities->destroy();
+		return RetCode::E_NO_MEMORY;
+	}
+}
+
+RetCode ECHMET_CC initializeCalculatedPropertiesWithPools(CalculatedProperties &calcProps, const ChemicalSystem &chemSystem, CalculatedPropertiesPools &pools, const int32_t block)
+{
+	const size_t NIF = chemSystem.ionicForms->size();
+	const size_t NCO = chemSystem.constituents->size();
+
+
+	calcProps.ionicConcentrations = createRealVecPreallocated(NIF, &pools.ionicConcentrations[NIF * block]);
+	if (calcProps.ionicConcentrations == nullptr)
+		return RetCode::E_NO_MEMORY;
+
+	calcProps.ionicMobilities = createRealVecPreallocated(NIF, &pools.ionicMobilities[NIF * block]);
+	if (calcProps.ionicMobilities == nullptr) {
+		calcProps.ionicConcentrations->destroy();
+		return RetCode::E_NO_MEMORY;
+	}
+
+	calcProps.effectiveMobilities = createRealVec(NCO);
+	if (calcProps.effectiveMobilities == nullptr) {
+		calcProps.ionicConcentrations->destroy();
+		calcProps.ionicMobilities->destroy();
+		return RetCode::E_NO_MEMORY;
+	}
+
+	try {
+		for (size_t idx = 0; idx < NIF; idx++) {
+			const IonicForm *iF = chemSystem.ionicForms->at(idx);
+
+			(*calcProps.ionicMobilities)[idx] = iF->limitMobility;
+		}
+
+		return RetCode::OK;
+	} catch (std::bad_alloc &) {
 		calcProps.effectiveMobilities->destroy();
 		return RetCode::E_NO_MEMORY;
 	}
@@ -1546,6 +1603,24 @@ void ECHMET_CC releaseCalculatedProperties(CalculatedProperties &calcProps) noex
 
 		calcProps.ionicConcentrations = nullptr;
 	}
+}
+
+ECHMET_API void ECHMET_CC releaseCalculatedPropertiesPools(CalculatedPropertiesPools &pools)
+{
+	delete [] pools.ionicConcentrations;
+	delete [] pools.ionicMobilities;
+}
+
+void ECHMET_CC releaseCalculatedPropertiesWithPools(CalculatedProperties &calcProps)
+{
+	if (calcProps.effectiveMobilities != nullptr) {
+		calcProps.effectiveMobilities->destroy();
+
+		calcProps.effectiveMobilities = nullptr;
+	}
+
+	calcProps.ionicMobilities = nullptr;
+	calcProps.ionicConcentrations = nullptr;
 }
 
 void ECHMET_CC releaseInConstituent(const InConstituent &inC) noexcept

@@ -102,6 +102,16 @@ public:
 IS_POD(InConstituent)
 
 /*!
+ * Memory pools to use with \p CalculatedProperties initialized with <tt>initializeCalculatedPropertiesWithPools</tt>
+ */
+class CalculatedPropertiesPools {
+public:
+	ECHMETReal *ionicConcentrations;
+	ECHMETReal *ionicMobilities;
+};
+IS_POD(CalculatedPropertiesPools)
+
+/*!
  * Ligand ionic form contained within a specific complexation relation.
  */
 class ContainedLigandIonicForm {
@@ -215,6 +225,23 @@ IS_POD(CalculatedProperties)
 extern "C" {
 
 /*!
+ * Initialize memory pools for blocks of <tt>ionicConcentrations</tt> and <tt>ionicMobilities</tt> array.
+ *
+ * The intended use of this function is to allocate memory space for multiple <tt>ionicConcentrations</tt> and <tt>ionicMobilities</tt>
+ * vectors in a large contiguous memory space. The reason to do this is potentially better cache efficiency.
+ * Memory allocated by the pool must be released by <tt>releaseCalculatedPropertiesPools()</tt>.
+ *
+ * @param[in,out] pools The \p CalculatedPropertiesPools object to be initialized
+ * @param[in] chemSystem \p ChemicalSystem to initialize the \p CalculatedPropertiesPools for
+ * @param[in] numBlocks Number of \p CalculatedProperties objects that are expected to be used simultaneously
+ *
+ * @retval OK Success
+ * @retval E_NO_MEMORY Insufficient memory to allocate pools
+ * @retval E_INVALID_ARGUMENT Number of blocks or ionic forms in the system is less than 1
+ */
+ECHMET_API RetCode ECHMET_CC allocateCalculatedPropertiesPools(CalculatedPropertiesPools &pools, const ChemicalSystem &chemSystem, const size_t numBlocks);
+
+/*!
  * \brief Compares two \p InConstituent s
  *
  * Comparison is done on all members of the \p InConstituent class.
@@ -313,6 +340,17 @@ ECHMET_API InConstituentVec * ECHMET_CC duplicateInConstituentVec(const InConsti
 ECHMET_API RetCode ECHMET_CC initializeCalculatedProperties(CalculatedProperties &calcProps, const ChemicalSystem &chemSystem) ECHMET_NOEXCEPT;
 
 /*!
+ * Initialize \p CalculatedProperties object using \p CalculatedPropertiesPools for <tt>ionicConcentrations</tt> and <tt>ionicMobilities</tt> vectors.
+ * \p CalculatedProperties allocated by this function must be released with <tt>releaseCalculatedPropertiesWithPools</tt>.
+ *
+ * @param[in,out] calcProps \p CalculatedProperties to be initialized
+ * @param[in] chemSystem \p ChemicalSystem to initialize the \p CalculatedProperties for
+ * @param[in] pools \p CalculatedPropertiesPools to use
+ * @param[in[ block Index of the \p CalculatedProperties object. Note that multiple \p CalculatedProperties objects used simultaneously must not use the same index
+ */
+ECHMET_API RetCode ECHMET_CC initializeCalculatedPropertiesWithPools(CalculatedProperties &calcProps, const ChemicalSystem &chemSystem, CalculatedPropertiesPools &pools, const int32_t block);
+
+/*!
  * Create a vector with the correct size to hold analytical concentrations of all constituents
  * in a system
  *
@@ -353,11 +391,26 @@ ECHMET_API void ECHMET_CC releaseChemicalSystem(ChemicalSystem &chemSystem) ECHM
 
 /*!
  * Convenience function that releases all resources claimed by
- * \p CalculatedProperties
+ * \p CalculatedProperties initialized with <tt>initializeCalculatedProperties</tt> or <tt>makeComposition</tt>
  *
  * @param[in] calcProps \p CalculatedProperties to be released
  */
 ECHMET_API void ECHMET_CC releaseCalculatedProperties(CalculatedProperties &calcProps) ECHMET_NOEXCEPT;
+
+/*!
+ * Frees memory allocated by <tt>allocateCalculatedPropertiesPools</tt>
+ *
+ * @param[in,out] pools \p CalculatedPropertiesPools object to be released
+ */
+ECHMET_API void ECHMET_CC releaseCalculatedPropertiesPools(CalculatedPropertiesPools &pools);
+
+/*!
+ * Convenience function that releases all resources claimed by
+ * \p CalculatedProperties initialized with <tt>initializeCalculatedPropertiesWithPools</tt>
+ *
+ * @param[in] calcProps \p CalculatedProperties to be released
+ */
+ECHMET_API void ECHMET_CC releaseCalculatedPropertiesWithPools(CalculatedProperties &calcProps);
 
 /*!
  * Convenience function to release \p InConstituent object

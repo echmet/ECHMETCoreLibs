@@ -64,6 +64,7 @@ ECHMET_ST_ENUM(RetCode) {
 	E_NOT_IMPLEMENTED = 0x5,		/*!< Requested functionality is not implemented. */
 	E_LOGIC_ERROR = 0x6,			/*!< A logic invariant was violated during exectution. */
 	E_NOT_FOUND = 0x7,			/*!< Requested data was not found. */
+	E_UNSUPPORTED = 0x8,			/*!< Requested operation is not supported */
 	/* SysComp error codes */
 	E_INVALID_CONSTITUENT = 0x100,		/*!< Properties of a constituent are invalid or nonsensical. */
 	E_INVALID_COMPLEXATION = 0x101,		/*!< Complexation scheme is invalid or nonsensical. */
@@ -375,6 +376,7 @@ public:
 	 * @retval RetCode::OK Success.
 	 * @retval RetCode::E_NO_MEMORY Insufficient memory to append the vector.
 	 * @retval RetCode::E_INVALID_ARGUMENT Incompatible vector types.
+	 * @retval RetCode::E_UNSUPPORTED Vector does not support resize operation.
 	 */
 	virtual RetCode ECHMET_CC append_vector(const Vec<T> *vec) ECHMET_NOEXCEPT = 0;
 
@@ -419,7 +421,7 @@ public:
 	 * the duplicated vector contains shallow copies of the items
 	 * from the source vector.
 	 *
-	 * @return Pointer to the copy of the vector, NULL of the operation fails.
+	 * @return Pointer to the copy of the vector, NULL of the operation fails or is not supported.
 	 */
 	virtual Vec<T> * ECHMET_CC duplicate() const ECHMET_NOEXCEPT = 0;
 
@@ -441,6 +443,8 @@ public:
 
 	/*!
 	 * Removes the last item from the vector.
+	 *
+	 * Note that this is a no-op for vectors created in a preallocated memory pool.
 	 */
 	virtual void ECHMET_CC pop_back() ECHMET_NOEXCEPT = 0;
 
@@ -451,6 +455,7 @@ public:
 	 *
 	 * @retval RetCode::OK Success.
 	 * @retval RetCode::E_NO_MEMORY Insufficient memory to append the item.
+	 * @retval RetCode::E_UNSUPPORTED Vector does not support duplicate operation.
 	 */
 	virtual RetCode ECHMET_CC push_back(const T &item) ECHMET_NOEXCEPT = 0;
 
@@ -461,6 +466,7 @@ public:
 	 *
 	 * @retval RetCode::OK Success.
 	 * @retval RetCode::E_NO_MEMORY Insufficient memory to append the item.
+	 * @retval RetCode::E_UNSUPPORTED Vector does not support resize operation.
 	 */
 	virtual RetCode ECHMET_CC push_front(const T &item) ECHMET_NOEXCEPT = 0;
 
@@ -479,6 +485,7 @@ public:
 	 *
 	 * @retval RetCode::OK Success.
 	 * @retval RetCode::E_NO_MEMORY Insufficient memory to do the reservation.
+	 * @retval RetCode::E_UNSUPPORTED Vector does not support reserve operation.
 	 */
 	virtual RetCode ECHMET_CC reserve(const size_t size) ECHMET_NOEXCEPT = 0;
 
@@ -489,6 +496,7 @@ public:
 	 *
 	 * @retval RetCode::OK Success.
 	 * @retval RetCode::E_NO_MEMORY Insufficient memory to resize the vector.
+	 * @retval RetCode::E_UNSUPPORTED Vector does not support resize operation.
 	 */
 	virtual RetCode ECHMET_CC resize(const size_t size) ECHMET_NOEXCEPT = 0;
 
@@ -560,11 +568,24 @@ ECHMET_API FixedString * ECHMET_CC cpuIdentifier() ECHMET_NOEXCEPT;
 ECHMET_API CPUSIMD ECHMET_CC cpuSupportedSIMD() ECHMET_NOEXCEPT;
 
 /*!
- * Creates an <tt>ECHMET::Vec</tt> of doubles.
+ * Creates an <tt>ECHMET::Vec</tt> of ECHMETReals.
+ *
+ * @param[in] reserve Number of elements to reserve memory for
  *
  * @return Pointer to the \p Vec interface, \p NULL on failure.
  */
 ECHMET_API RealVec * ECHMET_CC createRealVec(const size_t reserve) ECHMET_NOEXCEPT;
+
+/*!
+ * Creates an <tt>ECHMET::Vec</tt> of ECHMETReals in a preallocated pools of memory.
+ * Note that this vector is not resizable.
+ *
+ * @param[in] size Number of elements in vector
+ * @param[in] pool Pointer to a memory pool where the first element of the vector will be stored
+ *
+ * @return Pointer to the \p Vec interface, \p NULL on failure.
+ */
+ECHMET_API RealVec * ECHMET_CC createRealVecPreallocated(const size_t size, ECHMETReal *const pool);
 
 /*!
  * Creates na <tt>ECHMET::FixedString</tt>.
