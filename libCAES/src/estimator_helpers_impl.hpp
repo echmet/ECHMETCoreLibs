@@ -23,6 +23,8 @@ void calculateDistributionWithDerivative_dbl(const double &v,
 		double X;
 		double dX;
 		const auto pack = te.TsAnddTsdV(v, activityCoefficients, X, dX);
+		double invX = 1.0 / X;
+		double invXX = invX * invX;
 
 		const auto & Ts = std::get<0>(pack);
 		const auto & dTsdV = std::get<1>(pack);
@@ -36,14 +38,15 @@ void calculateDistributionWithDerivative_dbl(const double &v,
 			const double dT = dTsdV[idx];
 
 			/* Distribution */
-			*(distribution++) = c * T / X;
+			*(distribution++) = c * T * invX;
 
 			/* dDistdV */
-			*(dDistdV++) = c * (dT * X - T * dX) / X / X;
+			*(dDistdV++) = c * (dT * X - T * dX) * invXX;
 		}
 	}
 }
 
+inline
 void estimateComplexesDistribution_dbl(const CNVec<double> *const ECHMET_RESTRICT_PTR complexNuclei,
 				       const size_t totalLigandCopyCount,
 				       const double *const ECHMET_RESTRICT_PTR estConcentrations, const size_t LGBlockOffset,
