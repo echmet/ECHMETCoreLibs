@@ -44,7 +44,6 @@ void calculateDistributionWithDerivative_dbl(const double &v,
 	}
 }
 
-ECHMET_FORCE_INLINE
 void estimateComplexesDistribution_dbl(const CNVec<double> *const ECHMET_RESTRICT_PTR complexNuclei,
 				       const size_t totalLigandCopyCount,
 				       const double *const ECHMET_RESTRICT_PTR estConcentrations, const size_t LGBlockOffset,
