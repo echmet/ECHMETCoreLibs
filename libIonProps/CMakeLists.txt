@@ -37,19 +37,12 @@ include_directories(${INCLUDE_DIRECTORIES}
                     "${CMAKE_CURRENT_SOURCE_DIR}/include"
                     "${CMAKE_CURRENT_SOURCE_DIR}/../libSysComp/include")
 
-set(IONPROPS_LINK_LIBS
-    ECHMETShared
-    SysComp)
-			
 if (!WIN32)
-    set(IONPROPS_LINK_LIBS
-        ${IONPROPS_LINK_LIBS}
-        m)
+    set(IONPROPS_LINK_MATH
+        ${IONPROPS_LINK_MATH}
+        "PRIVATE m")
 endif ()
 
-set(IONPROPS_LINK_LIBS
-    "${IONPROPS_LINK_LIBS}"
-    ${ECHMET_HIPREC_LIBS})
 
 if (BUILD_STATIC_LIBS)
     add_library(IonProps STATIC ${libIonProps_SRCS})
@@ -64,7 +57,10 @@ set_target_properties(IonProps
                                  LINK_FLAGS ${DEFAULT_SYMVER_LINK}
                       PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/include/echmetionprops.h")
 target_link_libraries(IonProps
-                      PRIVATE ${IONPROPS_LINK_LIBS})
+                      PRIVATE ECHMETShared
+                      PRIVATE SysComp
+                      PRIVATE ${ECHMET_HIPREC_LIBS}
+                      ${IONPROPS_LINK_MATH})
 
 if (WIN32)
     install(TARGETS IonProps

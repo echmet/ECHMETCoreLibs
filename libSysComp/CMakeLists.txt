@@ -13,13 +13,9 @@ set(libSysComp_SRCS
     src/syscomp.cpp
    )
 
-set(SYSCOMP_LINK_LIBS
-    ECHMETShared)
-			
 if (!WIN32)
-    set(SYSCOMP_LINK_LIBS
-        ${SYSCOMP_LINK_LIBS}
-        m)
+    set(SYSCOMP_LINK_MATH
+        "PRIVATE m")
 endif ()
 
 if (ECHMET_USE_HIGH_PRECISION)
@@ -41,7 +37,8 @@ set_target_properties(SysComp
                                  LINK_FLAGS ${DEFAULT_SYMVER_LINK}
                       PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/include/echmetsyscomp.h")
 target_link_libraries(SysComp
-                      PRIVATE ${SYSCOMP_LINK_LIBS})
+                      PRIVATE ECHMETShared
+                      ${SYSCOMP_LINK_MATH})
 
 if (WIN32)
     install(TARGETS SysComp

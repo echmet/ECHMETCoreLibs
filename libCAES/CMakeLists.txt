@@ -99,16 +99,9 @@ include_directories(${INCLUDE_DIRECTORIES}
                     "${CMAKE_CURRENT_SOURCE_DIR}/../libECHMETShared/internal"
                     "${CMAKE_CURRENT_SOURCE_DIR}/../libIonProps/include")
 
-
-set(CAES_LINK_LIBS
-    ECHMETShared
-    SysComp
-    ${ECHMET_HIPREC_LIBS})
-			
 if (!WIN32)
-    set(CAES_LINK_LIBS
-        ${CAES_LINK_LIBS}
-        m)
+    set(CAES_LINK_MATH
+        "PRIVATE m")
 endif()
 
 if (BUILD_STATIC_LIBS)
@@ -123,7 +116,10 @@ set_target_properties(CAES
                                  SOVERSION 0.3
                                  LINK_FLAGS ${DEFAULT_SYMVER_LINK})
 target_link_libraries(CAES
-                      PRIVATE ${CAES_LINK_LIBS})
+                      PRIVATE ECHMETShared
+                      PRIVATE SysComp
+                      PRIVATE ${ECHMET_HIPREC_LIBS}
+                      ${CAES_LINK_MATH})
 
 if (WIN32)
     install(TARGETS CAES
