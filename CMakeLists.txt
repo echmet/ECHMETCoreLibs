@@ -34,7 +34,30 @@ endif()
 
 add_definitions("-DECHMET_DLL_BUILD -DUSE_ECHMET_CONTAINERS")
 
-if (WIN32)
+if ((NOT EMSCRIPTEN) AND (NOT DISABLE_HANDCRAFTED_SIMD) AND (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)"))
+    set(ENABLE_X86_EXTENSIONS TRUE)
+    add_definitions("-DECHMET_USE_X86_EXTENSIONS")
+else ()
+    set(ENABLE_X86_EXTENSIONS FALSE)
+endif()
+
+if (EMSCRIPTEN)
+    set("ECHMET_PLATFORM_EMSCRIPTEN" "1")
+    set(CMAKE_CXX_FLAGS "-pipe -std=c++14 -Wall -Wextra -pedantic -Wno-unused-function -fvisibility=hidden")
+
+    add_definitions("-DECHMET_COMPILER_GCC_LIKE")
+
+    if (MANUAL_HIPREC_LIBS_PATH)
+	    link_directories(${LINK_DIRECTORIES}
+	                     "${LIBGMP_DIR}/lib/"
+                         "${LIBMPFR_DIR}/lib/")
+        set(ECHMET_HIPREC_INCLUDE_DIR
+            "${LIBGMP_DIR}/include"
+            "${LIBMPFR_DIR}/include")
+
+        include_directories(SYSTEM ${ECHMET_HIPREC_INCLUDE_DIR})
+    endif()
+elseif (WIN32)
     set("ECHMET_PLATFORM_WIN32" "1")
     if (ECHMET_FORCE_WINXP)
         add_definitions("-D_WIN32_WINNT=0x0501")
@@ -107,12 +130,12 @@ elseif (UNIX)
             CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 9.1.0)
             set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
         endif ()
-	if (USE_CLANG_FPROF)
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-instr-generate -fcoverage-mapping")
-		set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -fprofile-instr-generate")
-	endif()
+        if (USE_CLANG_FPROF)
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-instr-generate -fcoverage-mapping")
+            set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -fprofile-instr-generate")
+        endif()
 
-        add_definitions("-DECHMET_COMPILER_GCC_LIKE ")
+        add_definitions("-DECHMET_COMPILER_GCC_LIKE")
         set(DEFAULT_SYMVER_LINK "-Wl,--default-symver")
     endif ()
 

@@ -2,15 +2,13 @@
 #define ECHMET_CAES_SOLVERINTERNAL_HPP
 
 #include "funcs.h"
+#ifdef ECHMET_USE_X86_EXTENSIONS
 #include "vecmath/vecmath.h"
-#include <internal/phchconsts_calcs.hpp>
-
-#if defined(ECHMET_COMPILER_GCC_LIKE) || defined (ECHMET_COMPILER_MINGW) || defined (ECHMET_COMPILER_MSYS)
-#include <x86intrin.h>
 #else
-#include <xmmintrin.h>
-#include <immintrin.h>
-#endif // ECHMET_COMPILER_
+#include "genericmath.h"
+#endif // ECHMET_USE_X86_EXTENSIONS
+
+#include <internal/phchconsts_calcs.hpp>
 
 #include <cassert>
 
@@ -38,6 +36,7 @@ std::ostream & operator<<(std::ostream &ostr, const ECHMET::CAES::SolverMatrix<C
 /* END: For debugging purposes only */
 #endif // ECHMET_DEBUG_OUTPUT
 
+#ifdef ECHMET_USE_X86_EXTENSIONS
 template <> template <>
 void SolverInternal<double, InstructionSet::SSE2>::VectorizedDelogifier<InstructionSet::SSE2>::operator()(double *ECHMET_RESTRICT_PTR dst, const double *ECHMET_RESTRICT_PTR src);
 
@@ -55,6 +54,7 @@ void SolverInternal<double, InstructionSet::FMA3>::VectorizedDelogifier<Instruct
 
 template <> template <>
 void SolverInternal<double, InstructionSet::FMA3>::VectorizedLogifier<InstructionSet::FMA3>::operator()(double *ECHMET_RESTRICT_PTR dst, const double *ECHMET_RESTRICT_PTR src);
+#endif // ECHMET_USE_X86_EXTENSIONS
 
 template <typename CAESReal, InstructionSet ISet>
 const char * SolverInternal<CAESReal, ISet>::NumericErrorException::infError = "Result of numeric operation is infinity";

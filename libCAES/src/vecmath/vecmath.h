@@ -38,12 +38,6 @@ public:
 	static double mlog10_single(double x) noexcept;
 };
 
-template <InstructionSet ISet>
-class VDType {
-public:
-	constexpr static const size_t ALIGNMENT_BYTES = 16;
-};
-
 template <>
 class VDType<InstructionSet::SSE2> {
 public:
@@ -69,10 +63,6 @@ public:
 	typedef double ECHMET_ALIGNED_BEF_32 VD[4] ECHMET_ALIGNED_AFT_32;
 
 	constexpr static const size_t ALIGNMENT_BYTES = 32;
-};
-
-template <InstructionSet ISet>
-class VecMath {
 };
 
 template <>

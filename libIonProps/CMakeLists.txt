@@ -40,22 +40,29 @@ include_directories(${INCLUDE_DIRECTORIES}
 if (!WIN32)
     set(IONPROPS_LINK_MATH
         ${IONPROPS_LINK_MATH}
-        "PRIVATE m")
+        PRIVATE m)
 endif ()
 
 
-if (BUILD_STATIC_LIBS)
+if ((BUILD_STATIC_LIBS) OR (EMSCRIPTEN))
     add_library(IonProps STATIC ${libIonProps_SRCS})
 else ()
     add_library(IonProps SHARED ${libIonProps_SRCS})
 endif ()
 
 target_include_directories(IonProps PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
-set_target_properties(IonProps
-                      PROPERTIES VERSION 0.2
-                                 SOVERSION 0.2
-                                 LINK_FLAGS ${DEFAULT_SYMVER_LINK}
-                      PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/include/echmetionprops.h")
+if (EMSCRIPTEN)
+    set_target_properties(IonProps
+                          PROPERTIES VERSION 0.2
+                                     SOVERSION 0.2
+                          PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/include/echmetionprops.h")
+else ()
+    set_target_properties(IonProps
+                          PROPERTIES VERSION 0.2
+                                     SOVERSION 0.2
+                                     LINK_FLAGS ${DEFAULT_SYMVER_LINK}
+                          PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/include/echmetionprops.h")
+endif ()
 target_link_libraries(IonProps
                       PRIVATE ECHMETShared
                       PRIVATE SysComp
@@ -70,6 +77,7 @@ if (WIN32)
 else ()
     install(TARGETS IonProps
             LIBRARY DESTINATION lib
+            ARCHIVE DESTINATION lib
             PUBLIC_HEADER DESTINATION include/ECHMET/CoreLibs)
 endif ()
 if (WIN32)

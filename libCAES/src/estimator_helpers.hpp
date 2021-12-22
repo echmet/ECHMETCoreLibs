@@ -2,7 +2,6 @@
 #define ECHMET_CAES_ESTIMATOR_HELPERS_HPP
 
 #include "estimator_helpers.h"
-#include <xmmintrin.h>
 
 namespace ECHMET {
 namespace CAES {

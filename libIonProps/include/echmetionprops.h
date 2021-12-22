@@ -19,7 +19,7 @@ namespace IonProps {
 
 
 
-class ComputationContext {
+class ECHMET_API ComputationContext {
 public:
 	ECHMET_WK_ENUM(Options) {
 		NONE = 0,

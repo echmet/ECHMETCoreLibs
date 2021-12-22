@@ -2,7 +2,12 @@
 #define ECHMET_CAES_ESTIMATOR_HELPERS_H
 
 #include "totalequilibrium.h"
+#ifdef ECHMET_USE_X86_EXTENSIONS
 #include "vecmath/vecmath.h"
+#else
+#include "genericmath.h"
+#endif // ECHMET_USE_X86_EXTENSIONS
+
 #include <vector>
 
 namespace ECHMET {
@@ -17,6 +22,7 @@ void calculateDistributionWithDerivative(const CAESReal &v,
 					 const ECHMETReal *const ECHMET_RESTRICT_PTR acRaw,
 					 const std::vector<CAESReal> &activityCoefficients);
 
+#ifdef ECHMET_USE_X86_EXTENSIONS
 template <>
 void calculateDistributionWithDerivative<double, InstructionSet::AVX, false>
 					(const double &v,
@@ -52,6 +58,7 @@ void calculateDistributionWithDerivative<double, InstructionSet::FMA3, true>
 					 std::vector<TotalEquilibrium<double, InstructionSet::FMA3, true>> &totalEquilibria,
 					 const ECHMETReal *const ECHMET_RESTRICT_PTR acRaw,
 					 const std::vector<double> &activityCoefficients);
+#endif // ECHMET_USE_X86_EXTENSIONS
 
 template <typename CAESReal, typename OutputReal, InstructionSet ISet>
 inline
@@ -61,6 +68,7 @@ void estimateComplexesDistribution(const CNVec<CAESReal> *const ECHMET_RESTRICT_
 				   const CAESReal *const ECHMET_RESTRICT_PTR estConcentrations, const size_t LGBlockOffset,
 				   OutputReal *estimatedConcentrations);
 
+#ifdef ECHMET_USE_X86_EXTENSIONS
 template <>
 void estimateComplexesDistribution<double, double, InstructionSet::SSE2>
 				(const CNVec<double> *const ECHMET_RESTRICT_PTR complexNuclei,
@@ -84,11 +92,13 @@ void estimateComplexesDistribution<double, double, InstructionSet::FMA3>
 				 const size_t totalLigandCopySize,
 				 const double *const ECHMET_RESTRICT_PTR estConcentrations, const size_t LGBlockOffset,
 				 double *estimatedConcentrations);
+#endif // ECHMET_USE_X86_EXTENSIONS
 
 template <typename CAESReal, typename OutputReal, InstructionSet ISet>
 inline
 void setDistributionFast(const CAESReal *const ECHMET_RESTRICT_PTR estConcentrations, const size_t count, OutputReal *estimatedConcentrations);
 
+#ifdef ECHMET_USE_X86_EXTENSIONS
 template <>
 void setDistributionFast<double, double, InstructionSet::SSE2>
 			(const double *const ECHMET_RESTRICT_PTR estConcentrations, const size_t count, double *estimatedConcentrations);
@@ -99,6 +109,7 @@ void setDistributionFast<double, double, InstructionSet::AVX>
 template <>
 void setDistributionFast<double, double, InstructionSet::FMA3>
 			(const double *const ECHMET_RESTRICT_PTR estConcentrations, const size_t count, double *estimatedConcentrations);
+#endif // ECHMET_USE_X86_EXTENSIONS
 
 
 } // namespace CAES

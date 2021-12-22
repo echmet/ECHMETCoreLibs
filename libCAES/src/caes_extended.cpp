@@ -1,5 +1,6 @@
 #include "caes_extended_p.h"
 #define ECHMET_IMPORT_INTERNAL
+#include "echmetionprops.h"
 #include <echmetionprops_extended.h>
 #undef ECHMET_IMPORT_INTERNAL
 
@@ -542,7 +543,5 @@ RetCode ECHMET_CC prepareDerivatorContext(RealVec *&derivatives, Solver *&solver
 DDSContext::~DDSContext() noexcept {}
 
 } // namespace CAES
-
-IonProps::ComputationContext::~ComputationContext() noexcept {}
 
 } // namespace ECHMET

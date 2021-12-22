@@ -3,6 +3,7 @@
 
 #cmakedefine ECHMET_PLATFORM_WIN32
 #cmakedefine ECHMET_PLATFORM_UNIX
+#cmakedefine ECHMET_PLATFORM_EMSCRIPTEN
 
 #cmakedefine ECHMET_USE_HIGH_PRECISION
 

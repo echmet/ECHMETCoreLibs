@@ -3,7 +3,11 @@
 
 #include "solvercontextimpl.h"
 #include "internals/newtonraphson.h"
+#ifdef ECHMET_USE_X86_EXTENSIONS
 #include "vecmath/vecmath.h"
+#else
+#include "genericmath.h"
+#endif // ECHMET_USE_X86_EXTENSIONS
 #include <echmetcaes.h>
 
 namespace ECHMET {

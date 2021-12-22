@@ -16,21 +16,14 @@ set(ECHMETShared_SRCS
     internal/phchconsts.cpp
     internal/cpufeatures_common.cpp)
 
-if (DISABLE_HANDCRAFTED_SIMD)
+if (NOT X86_EXTENSIONS)
     set(ECHMETShared_SRCS
         ${ECHMETShared_SRCS}
         internal/cpufeatures_generic.cpp)
 else ()
-    if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86" OR
-        ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64" OR WIN32)
-        set(ECHMETShared_SRCS
-            ${ECHMETShared_SRCS}
-            internal/cpufeatures_x86.cpp)
-    else ()
-         set(ECHMETShared_SRCS
-            ${ECHMETShared_SRCS}
-            internal/cpufeatures_generic.cpp)
-    endif ()
+    set(ECHMETShared_SRCS
+        ${ECHMETShared_SRCS}
+        internal/cpufeatures_x86.cpp)
 endif()
 
 if (!WIN32)
@@ -45,17 +38,22 @@ if (ECHMET_USE_HIGH_PRECISION)
         ${ECHMET_HIPREC_LIBS})
 endif ()
 
-if (BUILD_STATIC_LIBS)
+if ((BUILD_STATIC_LIBS) OR (EMSCRIPTEN))
     add_library(ECHMETShared STATIC ${ECHMETShared_SRCS})
 else ()
     add_library(ECHMETShared SHARED ${ECHMETShared_SRCS})
 endif ()
 
 target_include_directories(ECHMETShared PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-set_target_properties(ECHMETShared
-                      PROPERTIES VERSION 0.1
-                                 SOVERSION 0.1
-                                 LINK_FLAGS ${DEFAULT_SYMVER_LINK})
+if (EMSCRIPTEN)
+    set_target_properties(ECHMETShared
+                          PROPERTIES VERSION 0.1)
+else ()
+    set_target_properties(ECHMETShared
+                          PROPERTIES VERSION 0.1
+                                     SOVERSION 0.1
+                                     LINK_FLAGS ${DEFAULT_SYMVER_LINK})
+endif ()
 target_link_libraries(ECHMETShared
                       PRIVATE ${ECHMET_SHARED_LINK_LIBS}
                       PRIVATE ${ECHMET_HIPREC_LIBS})
@@ -68,6 +66,7 @@ if (WIN32)
 else ()
     install(TARGETS ECHMETShared
             LIBRARY DESTINATION lib
+            ARCHIVE DESTINATION lib
             PUBLIC_HEADER DESTINATION include/ECHMET/CoreLibs)
 endif ()
 install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/echmetelems.h"

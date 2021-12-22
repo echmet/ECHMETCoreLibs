@@ -27,71 +27,85 @@ endif()
 set(libCAES_SRCS
     src/caes.cpp
     src/caes_extended.cpp
-    src/solvercontextimpl.cpp
-    src/solverinternal_sse2.cpp
-    src/solverinternal_avx.cpp
-    src/solverinternal_fma3.cpp
-    src/chargesummer_sse2.cpp
-    src/chargesummer_avx.cpp
-    src/chargesummer_fma3.cpp
-    src/estimator_helpers_sse2.cpp
-    src/estimator_helpers_avx.cpp
-    src/estimator_helpers_fma3.cpp
-    src/totalequilibrium_avx.cpp
-    src/totalequilibrium_fma3.cpp
-    src/internals/newtonraphson_avx.cpp
-    src/internals/newtonraphson_fma3.cpp
-    src/vecmath/vecmath.cpp
-    src/vecmath/vecmath_avx.cpp
-    src/vecmath/vecmath_sse2.cpp
-    src/vecmath/vecmath_fma3.cpp)
+    src/solvercontextimpl.cpp)
 
 if (UNIX)
     if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" OR
         ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
-        set_source_files_properties(src/chargesummer_avx.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx")
-        set_source_files_properties(src/chargesummer_fma3.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx -mavx2 -mfma")
-        set_source_files_properties(src/solverinternal_avx.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx")
-        set_source_files_properties(src/solverinternal_fma3.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx -mavx2 -mfma")
-        set_source_files_properties(src/estimator_helpers_avx.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx")
-        set_source_files_properties(src/estimator_helpers_fma3.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx -mavx2 -mfma")
-        set_source_files_properties(src/totalequilibrium_avx.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx")
-        set_source_files_properties(src/totalequilibrium_fma3.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx -mavx2 -mfma")
-        set_source_files_properties(src/vecmath/vecmath_avx.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx")
-        set_source_files_properties(src/vecmath/vecmath_fma3.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx -mavx2 -mfma")
-        set_source_files_properties(src/internals/newtonraphson_avx.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx")
-        set_source_files_properties(src/internals/newtonraphson_fma3.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx -mavx2 -mfma")
-        set_source_files_properties(src/caes.cpp COMPILE_FLAGS "-Wno-unused-variable")
-    endif()
+            set_source_files_properties(src/caes.cpp COMPILE_FLAGS "-Wno-unused-variable")
+    endif ()
 elseif (WIN32)
     if (MINGW OR MSYS)
-        set_source_files_properties(src/chargesummer_avx.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx")
-        set_source_files_properties(src/chargesummer_fma3.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx -mavx2 -mfma")
-        set_source_files_properties(src/solverinternal_avx.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx")
-        set_source_files_properties(src/solverinternal_fma3.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx -mavx2 -mfma")
-        set_source_files_properties(src/estimator_helpers_avx.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx")
-        set_source_files_properties(src/estimator_helpers_fma3.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx -mavx2 -mfma")
-        set_source_files_properties(src/totalequilibrium_avx.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx")
-        set_source_files_properties(src/totalequilibrium_fma3.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx -mavx2 -mfma")
-        set_source_files_properties(src/vecmath/vecmath_avx.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx")
-        set_source_files_properties(src/vecmath/vecmath_fma3.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx -mavx2 -mfma")
-        set_source_files_properties(src/internals/newtonraphson_avx.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx")
-        set_source_files_properties(src/internals/newtonraphson_fma3.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx -mavx2 -mfma")
         set_source_files_properties(src/caes.cpp COMPILE_FLAGS "-Wno-unused-variable")
-    elseif (MSVC)
-        set_source_files_properties(src/chargesummer_avx.cpp COMPILE_FLAGS "/arch:AVX")
-        set_source_files_properties(src/chargesummer_fma3.cpp COMPILE_FLAGS "/arch:AVX2")
-        set_source_files_properties(src/solverinternal_avx.cpp COMPILE_FLAGS "/arch:AVX")
-        set_source_files_properties(src/solverinternal_fma3.cpp COMPILE_FLAGS "/arch:AVX2")
-        set_source_files_properties(src/estimator_helpers_avx.cpp COMPILE_FLAGS "/arch:AVX")
-        set_source_files_properties(src/estimator_helpers_fma3.cpp COMPILE_FLAGS "/arch:AVX2")
-        set_source_files_properties(src/totalequilibrium_avx.cpp COMPILE_FLAGS "/arch:AVX")
-        set_source_files_properties(src/totalequilibrium_fma3.cpp COMPILE_FLAGS "/arch:AVX2")
-        set_source_files_properties(src/vecmath/vecmath_avx.cpp COMPILE_FLAGS "/arch:AVX")
-        set_source_files_properties(src/vecmath/vecmath_fma3.cpp COMPILE_FLAGS "/arch:AVX2")
-        set_source_files_properties(src/internals/newtonraphson_avx.cpp COMPILE_FLAGS "/arch:AVX")
-        set_source_files_properties(src/internals/newtonraphson_fma3.cpp COMPILE_FLAGS "/arch:AVX2")
-	endif ()
+    endif ()
+endif ()
+
+if (ENABLE_X86_EXTENSIONS)
+    set(libCAES_SRCS
+        ${libCAES_SRCS}
+        src/solverinternal_sse2.cpp
+        src/solverinternal_avx.cpp
+        src/solverinternal_fma3.cpp
+        src/chargesummer_sse2.cpp
+        src/chargesummer_avx.cpp
+        src/chargesummer_fma3.cpp
+        src/estimator_helpers_sse2.cpp
+        src/estimator_helpers_avx.cpp
+        src/estimator_helpers_fma3.cpp
+        src/totalequilibrium_avx.cpp
+        src/totalequilibrium_fma3.cpp
+        src/internals/newtonraphson_avx.cpp
+        src/internals/newtonraphson_fma3.cpp
+        src/vecmath/vecmath.cpp
+        src/vecmath/vecmath_avx.cpp
+        src/vecmath/vecmath_sse2.cpp
+        src/vecmath/vecmath_fma3.cpp)
+
+    if (UNIX)
+        if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" OR
+            ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
+            set_source_files_properties(src/chargesummer_avx.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx")
+            set_source_files_properties(src/chargesummer_fma3.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx -mavx2 -mfma")
+            set_source_files_properties(src/solverinternal_avx.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx")
+            set_source_files_properties(src/solverinternal_fma3.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx -mavx2 -mfma")
+            set_source_files_properties(src/estimator_helpers_avx.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx")
+            set_source_files_properties(src/estimator_helpers_fma3.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx -mavx2 -mfma")
+            set_source_files_properties(src/totalequilibrium_avx.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx")
+            set_source_files_properties(src/totalequilibrium_fma3.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx -mavx2 -mfma")
+            set_source_files_properties(src/vecmath/vecmath_avx.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx")
+            set_source_files_properties(src/vecmath/vecmath_fma3.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx -mavx2 -mfma")
+            set_source_files_properties(src/internals/newtonraphson_avx.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx")
+            set_source_files_properties(src/internals/newtonraphson_fma3.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx -mavx2 -mfma")
+        endif()
+    elseif (WIN32)
+        if (MINGW OR MSYS)
+            set_source_files_properties(src/chargesummer_avx.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx")
+            set_source_files_properties(src/chargesummer_fma3.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx -mavx2 -mfma")
+            set_source_files_properties(src/solverinternal_avx.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx")
+            set_source_files_properties(src/solverinternal_fma3.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx -mavx2 -mfma")
+            set_source_files_properties(src/estimator_helpers_avx.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx")
+            set_source_files_properties(src/estimator_helpers_fma3.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx -mavx2 -mfma")
+            set_source_files_properties(src/totalequilibrium_avx.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx")
+            set_source_files_properties(src/totalequilibrium_fma3.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx -mavx2 -mfma")
+            set_source_files_properties(src/vecmath/vecmath_avx.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx")
+            set_source_files_properties(src/vecmath/vecmath_fma3.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx -mavx2 -mfma")
+            set_source_files_properties(src/internals/newtonraphson_avx.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx")
+            set_source_files_properties(src/internals/newtonraphson_fma3.cpp COMPILE_FLAGS "-msse3 -mssse3 -msse4 -mavx -mavx2 -mfma")
+        elseif (MSVC)
+            set_source_files_properties(src/chargesummer_avx.cpp COMPILE_FLAGS "/arch:AVX")
+            set_source_files_properties(src/chargesummer_fma3.cpp COMPILE_FLAGS "/arch:AVX2")
+            set_source_files_properties(src/solverinternal_avx.cpp COMPILE_FLAGS "/arch:AVX")
+            set_source_files_properties(src/solverinternal_fma3.cpp COMPILE_FLAGS "/arch:AVX2")
+            set_source_files_properties(src/estimator_helpers_avx.cpp COMPILE_FLAGS "/arch:AVX")
+            set_source_files_properties(src/estimator_helpers_fma3.cpp COMPILE_FLAGS "/arch:AVX2")
+            set_source_files_properties(src/totalequilibrium_avx.cpp COMPILE_FLAGS "/arch:AVX")
+            set_source_files_properties(src/totalequilibrium_fma3.cpp COMPILE_FLAGS "/arch:AVX2")
+            set_source_files_properties(src/vecmath/vecmath_avx.cpp COMPILE_FLAGS "/arch:AVX")
+            set_source_files_properties(src/vecmath/vecmath_fma3.cpp COMPILE_FLAGS "/arch:AVX2")
+            set_source_files_properties(src/internals/newtonraphson_avx.cpp COMPILE_FLAGS "/arch:AVX")
+            set_source_files_properties(src/internals/newtonraphson_fma3.cpp COMPILE_FLAGS "/arch:AVX2")
+        endif ()
+    endif ()
 endif()
 
 include_directories(${INCLUDE_DIRECTORIES}
@@ -101,23 +115,30 @@ include_directories(${INCLUDE_DIRECTORIES}
 
 if (!WIN32)
     set(CAES_LINK_MATH
-        "PRIVATE m")
+        PRIVATE m)
 endif()
 
-if (BUILD_STATIC_LIBS)
+if ((BUILD_STATIC_LIBS) OR (EMSCRIPTEN))
     add_library(CAES STATIC ${libCAES_SRCS})
 else ()
     add_library(CAES SHARED ${libCAES_SRCS})
 endif ()
 
 target_include_directories(CAES PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
-set_target_properties(CAES
-                      PROPERTIES VERSION 0.3
-                                 SOVERSION 0.3
-                                 LINK_FLAGS ${DEFAULT_SYMVER_LINK})
+
+if (EMSCRIPTEN)
+    set_target_properties(ECHMETShared
+                          PROPERTIES VERSION 0.1)
+else ()
+    set_target_properties(CAES
+                          PROPERTIES VERSION 0.3
+                                     SOVERSION 0.3
+                                     LINK_FLAGS ${DEFAULT_SYMVER_LINK})
+endif ()
 target_link_libraries(CAES
                       PRIVATE ECHMETShared
                       PRIVATE SysComp
+                      PRIVATE IonProps
                       PRIVATE ${ECHMET_HIPREC_LIBS}
                       ${CAES_LINK_MATH})
 
@@ -129,6 +150,7 @@ if (WIN32)
 else ()
     install(TARGETS CAES
             LIBRARY DESTINATION lib
+            ARCHIVE DESTINATION lib
             PUBLIC_HEADER DESTINATION include/ECHMET/CoreLibs)
 endif ()
 install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/include/echmetcaes.h"

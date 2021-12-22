@@ -4,11 +4,13 @@
 namespace ECHMET {
 namespace CAES {
 
+#ifdef ECHMET_USE_X86_EXTENSIONS
 template <>
 void NewtonRaphson<double, InstructionSet::AVX>::initializeLu(const int elements);
 
 template <>
 void NewtonRaphson<double, InstructionSet::FMA3>::initializeLu(const int elements);
+#endif // ECHMET_USE_X86_EXTENSIONS
 
 template <typename NRReal, InstructionSet ISet>
 void NewtonRaphson<NRReal, ISet>::initializeLu(const int elements)
@@ -65,11 +67,13 @@ template <typename NRReal, InstructionSet ISet>
 void NewtonRaphson<NRReal, ISet>::AInit()
 {}
 
+#ifdef ECHMET_USE_X86_EXTENSIONS
 template <>
 typename NewtonRaphson<double, InstructionSet::AVX>::TX const & NewtonRaphson<double, InstructionSet::AVX>::ASolve();
 
 template <>
 typename NewtonRaphson<double, InstructionSet::FMA3>::TX const & NewtonRaphson<double, InstructionSet::FMA3>::ASolve();
+#endif // ECHMET_USE_X86_EXTENSIONS
 
 template <typename NRReal, InstructionSet ISet>
 typename NewtonRaphson<NRReal, ISet>::TX const & NewtonRaphson<NRReal, ISet>::ASolve()

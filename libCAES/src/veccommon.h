@@ -1,6 +1,8 @@
 #ifndef ECHMET_CAES_VECCOMMON_H
 #define ECHMET_CAES_VECCOMMON_H
 
+#include "genericmath.h"
+
 #include <new>
 
 #if defined(ECHMET_COMPILER_GCC_LIKE) || defined(ECHMET_COMPILER_MINGW) || defined(ECHMET_COMPILER_MSYS)
@@ -22,13 +24,6 @@
 
 namespace ECHMET {
 namespace CAES {
-
-enum InstructionSet {
-	GENERIC,
-	SSE2,
-	AVX,
-	FMA3
-};
 
 template <typename T, size_t Alignment, bool RawAllocation>
 class AlignedAllocatorWorker;

@@ -3,7 +3,11 @@
 
 #include "solvercontextimpl.h"
 #include "totalequilibrium.h"
+#ifdef ECHMET_USE_X86_EXTENSIONS
 #include "vecmath/vecmath.h"
+#else
+#include "genericmath.h"
+#endif // ECHMET_USE_X86_EXTENSIONS
 
 #include <cassert>
 
@@ -121,6 +125,7 @@ private:
 	CAESReal *ECHMET_RESTRICT_PTR m_chargesSquared;
 };
 
+#ifdef ECHMET_USE_X86_EXTENSIONS
 template <>
 double ChargeSummer<double, InstructionSet::SSE2, false>::calc(const double *const ECHMET_RESTRICT_PTR icConcs) noexcept;
 template <>
@@ -171,6 +176,7 @@ template <>
 double ChargeSummer<double, InstructionSet::FMA3, false>::calculateIonicStrength(const double *const ECHMET_RESTRICT_PTR icConcs) noexcept;
 template <>
 double ChargeSummer<double, InstructionSet::FMA3, true>::calculateIonicStrength(const double *const ECHMET_RESTRICT_PTR icConcs) noexcept;
+#endif // ECHMET_USE_X86_EXTENSIONS
 
 } // namespace CAES
 } // namespace ECHMET

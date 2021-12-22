@@ -5,7 +5,11 @@
 #include <internal/echmetmath_internal.h>
 
 #include "../mappedmatrix.h"
+#ifdef ECHMET_USE_X86_EXTENSIONS
 #include "../vecmath/vecmath.h"
+#else
+#include "../genericmath.h"
+#endif // ECHMET_USE_X86_EXTENSIONS
 
 namespace ECHMET {
 namespace CAES {

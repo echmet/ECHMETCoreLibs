@@ -15,27 +15,33 @@ set(libSysComp_SRCS
 
 if (!WIN32)
     set(SYSCOMP_LINK_MATH
-        "PRIVATE m")
+        PRIVATE m)
 endif ()
 
 if (ECHMET_USE_HIGH_PRECISION)
     set(SYSCOMP_LINK_LIBS
         ${SYSCOMP_LINK_LIBS}
-	${ECHMET_HIPREC_LIBS})
+        ${ECHMET_HIPREC_LIBS})
 endif ()
 
-if (BUILD_STATIC_LIBS)
+if ((BUILD_STATIC_LIBS) OR (EMSCRIPTEN))
     add_library(SysComp STATIC ${libSysComp_SRCS})
 else ()
     add_library(SysComp SHARED ${libSysComp_SRCS})
 endif ()
 
 target_include_directories(SysComp PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
-set_target_properties(SysComp
-                      PROPERTIES VERSION 0.1
-                                 SOVERSION 0.1
-                                 LINK_FLAGS ${DEFAULT_SYMVER_LINK}
-                      PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/include/echmetsyscomp.h")
+if (EMSCRIPTEN)
+    set_target_properties(SysComp
+                          PROPERTIES VERSION 0.1
+                          PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/include/echmetsyscomp.h")
+else ()
+    set_target_properties(SysComp
+                          PROPERTIES VERSION 0.1
+                                     SOVERSION 0.1
+                                     LINK_FLAGS ${DEFAULT_SYMVER_LINK}
+                          PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/include/echmetsyscomp.h")
+endif ()
 target_link_libraries(SysComp
                       PRIVATE ECHMETShared
                       ${SYSCOMP_LINK_MATH})
@@ -48,6 +54,7 @@ if (WIN32)
 else ()
     install(TARGETS SysComp
             LIBRARY DESTINATION lib
+            ARCHIVE DESTINATION lib
             PUBLIC_HEADER DESTINATION include/ECHMET/CoreLibs)
 endif ()
 if (WIN32)

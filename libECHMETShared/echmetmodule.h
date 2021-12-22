@@ -14,6 +14,8 @@
 		#else
 			#error "Unsupported or misdetected compiler"
 		#endif // ECHMET_COMPILER_*
+	#elif defined ECHMET_PLATFORM_EMSCRIPTEN
+		#define ECHMET_CC
 	#else
 		#error "Unsupported or misdetected target platform"
 	#endif // ECHMET_PLATFORM_*
@@ -29,7 +31,7 @@
 		#else
 			#error "Unsupported or misdetected compiler"
 		#endif // ECHMET_COMPILER_*
-	#elif defined ECHMET_PLATFORM_UNIX
+	#elif defined(ECHMET_PLATFORM_UNIX) || defined(ECHMET_PLATFORM_EMSCRIPTEN)
 		#ifdef ECHMET_COMPILER_GCC_LIKE
 			#define ECHMET_FORCE_INLINE inline __attribute__((always_inline))
 		#else
@@ -72,7 +74,7 @@
 		#else
 			#error "Unsupported or misdetected compiler"
 		#endif // ECHMET_COMPILER_*
-	#elif defined ECHMET_PLATFORM_UNIX
+	#elif defined(ECHMET_PLATFORM_UNIX) || defined(ECHMET_PLATFORM_EMSCRIPTEN)
 		#ifdef ECHMET_COMPILER_GCC_LIKE
 			#define ECHMET_ALIGNED_BEF_16
 			#define ECHMET_ALIGNED_BEF_32
@@ -112,7 +114,7 @@
 			#error "Unsupported or misdetected compiler"
 		#endif // ECHMET_COMPILER_*
 	#endif // ECHMET_DLL_BUILD
-#elif defined ECHMET_PLATFORM_UNIX
+#elif defined(ECHMET_PLATFORM_UNIX) || defined(ECHMET_PLATFORM_EMSCRIPTEN)
 	#ifdef ECHMET_COMPILER_GCC_LIKE
 		#if defined ECHMET_DLL_BUILD && !defined(ECHMET_IMPORT_INTERNAL)
 			#define ECHMET_API __attribute__ ((visibility ("default")))

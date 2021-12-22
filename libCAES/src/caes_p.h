@@ -4,7 +4,6 @@
 #include <echmetcaes.h>
 #include "totalequilibrium.h"
 #include "chargesummer.h"
-#include "vecmath/vecmath.h"
 
 #define ECHMET_IMPORT_INTERNAL
 #include <mpreal.h>
