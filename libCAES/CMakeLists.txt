@@ -8,21 +8,8 @@ endif ()
 
 add_definitions("-D_USE_MATH_DEFINES -DEIGEN_MAX_ALIGN_BYTES=32")
 
-if (WIN32)
-    if (MINGW)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem ${EIGEN_INCLUDE_DIR} -Wno-unused-function")
-    elseif (MSYS)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem ${EIGEN_INCLUDE_DIR} -Wno-unused-function")
-    else ()
-        include_directories(${INCLUDE_DIRECTORIES}
-                            "${EIGEN_INCLUDE_DIR}")
-    endif ()
-elseif (UNIX)
-    if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" OR
-        ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem ${EIGEN_INCLUDE_DIR} -Wno-unused-function")
-    endif()
-endif()
+include_directories(${INCLUDE_DIRECTORIES}
+                    SYSTEM "${EIGEN_INCLUDE_DIR}")
 
 set(libCAES_SRCS
     src/caes.cpp
@@ -142,28 +129,22 @@ target_link_libraries(CAES
                       PRIVATE ${ECHMET_HIPREC_LIBS}
                       ${CAES_LINK_MATH})
 
-if (WIN32)
-    install(TARGETS CAES
-            RUNTIME DESTINATION lib
-            ARCHIVE DESTINATION lib
-            PUBLIC_HEADER DESTINATION include/ECHMET/CoreLibs)
-else ()
-    install(TARGETS CAES
-            LIBRARY DESTINATION lib
-            ARCHIVE DESTINATION lib
-            PUBLIC_HEADER DESTINATION include/ECHMET/CoreLibs)
-endif ()
+install(TARGETS CAES
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ECHMET/CoreLibs)
 install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/include/echmetcaes.h"
               "${CMAKE_CURRENT_SOURCE_DIR}/include/echmetcaes_extended.h"
         DESTINATION include/ECHMET/CoreLibs)
 if (WIN32)
     if (MINGW OR MSYS)
         if (ECHMET_CORE_LIBS_XCOMPILE)
-            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libCAES.dll.a" DESTINATION lib)
-            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libCAES.dll" DESTINATION lib)
+            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libCAES.dll.a" DESTINATION ${CMAKE_INSTALL_LIBDIR})
+            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libCAES.dll" DESTINATION ${CMAKE_INSTALL_BINDIR})
         else ()
-            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libCAES.lib" DESTINATION lib RENAME CAES.lib)
-            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libCAES.dll" DESTINATION lib RENAME CAES.dll)
+            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libCAES.lib" DESTINATION ${CMAKE_INSTALL_LIBDIR} RENAME CAES.lib)
+            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libCAES.dll" DESTINATION ${CMAKE_INSTALL_BINDIR} RENAME CAES.dll)
         endif ()
     endif ()
 endif ()

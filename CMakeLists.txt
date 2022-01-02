@@ -10,6 +10,10 @@ option(USE_CLANG_FPROF "Enables Clang-specific code profiling instrumentation" O
 option(BUILD_STATIC_LIBS "Build static libraries" OFF)
 option(DISABLE_HANDCRAFTED_SIMD "Disable hand-crafted SIMD code" OFF)
 
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 if (WIN32)
     option(ECHMET_FORCE_WINXP "Define target Windows version to Windows XP")
 endif ()
@@ -32,6 +36,14 @@ if (ENABLE_DIAGNOSTIC_OUTPUT)
     add_definitions("-DECHMET_DEBUG_OUTPUT")
 endif()
 
+if (UNIX)
+    include(GNUInstallDirs)
+elseif (WIN32)
+    set(${CMAKE_INSTALL_LIBDIR} "lib")
+    set(${CMAKE_INSTALL_INCLUDEDIR} "include")
+    set(${CMAKE_INSTALL_BINDIR} "bin")
+endif ()
+
 add_definitions("-DECHMET_DLL_BUILD -DUSE_ECHMET_CONTAINERS")
 
 if ((NOT EMSCRIPTEN) AND (NOT DISABLE_HANDCRAFTED_SIMD) AND (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)"))
@@ -43,17 +55,17 @@ endif()
 
 if (EMSCRIPTEN)
     set("ECHMET_PLATFORM_EMSCRIPTEN" "1")
-    set(CMAKE_CXX_FLAGS "-pipe -std=c++14 -Wall -Wextra -pedantic -Wno-unused-function -fvisibility=hidden")
+    set(CMAKE_CXX_FLAGS "-Wall -Wextra -pedantic -Wno-unused-function -fvisibility=hidden")
 
     add_definitions("-DECHMET_COMPILER_GCC_LIKE")
 
     if (MANUAL_HIPREC_LIBS_PATH)
 	    link_directories(${LINK_DIRECTORIES}
-	                     "${LIBGMP_DIR}/lib/"
-                         "${LIBMPFR_DIR}/lib/")
+            "${LIBGMP_DIR}/lib"
+            "${LIBMPFR_DIR}/lib")
         set(ECHMET_HIPREC_INCLUDE_DIR
-            "${LIBGMP_DIR}/include"
-            "${LIBMPFR_DIR}/include")
+            "${LIBGMP_DIR}/${CMAKE_INSTALL_INCLUDEDIR}"
+            "${LIBMPFR_DIR}/${CMAKE_INSTALL_INCLUDEDIR}")
 
         include_directories(SYSTEM ${ECHMET_HIPREC_INCLUDE_DIR})
     endif()
@@ -64,12 +76,12 @@ elseif (WIN32)
     endif ()
 
     link_directories(${LINK_DIRECTORIES}
-                     "${LIBGMP_DIR}/bin/"
-                     "${LIBMPFR_DIR}/bin/")
+                     "${LIBGMP_DIR}/lib"
+                     "${LIBMPFR_DIR}/lib")
 
     set(ECHMET_HIPREC_INCLUDE_DIR
-        "${LIBGMP_DIR}/include"
-        "${LIBMPFR_DIR}/include")
+        "${LIBGMP_DIR}/${CMAKE_INSTALL_INCLUDEDIR}"
+        "${LIBMPFR_DIR}/${CMAKE_INSTALL_INCLUDEDIR}")
 
     include_directories(SYSTEM ${ECHMET_HIPREC_INCLUDE_DIR})
 
@@ -91,12 +103,12 @@ elseif (WIN32)
         if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9.2)
             message(FATAL_ERROR "MinGW 4.9.2 or newer is required to build ECHMETCoreLibs")
         endif ()
-        set(CMAKE_CXX_FLAGS "-std=c++14 -Wall -Wextra -pedantic -Wno-unused-function -fvisibility=hidden -ftree-vectorize -g -msse2")
+        set(CMAKE_CXX_FLAGS "-Wall -Wextra -pedantic -Wno-unused-function -fvisibility=hidden -ftree-vectorize -g -msse2")
         set(CMAKE_CXX_FLAGS_RELEASE "-O3")
         add_definitions("-DECHMET_COMPILER_MINGW")
         set(DEFAULT_SYMVER_LINK "-Wl,--default-symver")
     elseif (MSYS)
-        set(CMAKE_CXX_FLAGS "-std=c++14 -Wall -Wextra -pedantic -Wno-unused-function -fvisibility=hidden -ftree-vectorize -g -msse2")
+        set(CMAKE_CXX_FLAGS "-Wall -Wextra -pedantic -Wno-unused-function -fvisibility=hidden -ftree-vectorize -g -msse2")
         set(CMAKE_CXX_FLAGS_RELEASE "-O3")
         add_definitions("-DECHMET_COMPILER_MSYS")
         set(DEFAULT_SYMVER_LINK "-Wl,--default-symver")
@@ -122,7 +134,7 @@ elseif (UNIX)
             message(FATAL_ERROR "Clang 3.4 or newer is required to build ECHMETCoreLibs")
         endif ()
 
-        set(CMAKE_CXX_FLAGS "-pipe -std=c++14 -Wall -Wextra -pedantic -Wno-unused-function -fvisibility=hidden -ftree-vectorize -g -msse2")
+        set(CMAKE_CXX_FLAGS "-Wall -Wextra -pedantic -Wno-unused-function -fvisibility=hidden -ftree-vectorize -g -msse2")
         set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
         if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" AND
@@ -141,11 +153,11 @@ elseif (UNIX)
 
     if (MANUAL_HIPREC_LIBS_PATH)
 	    link_directories(${LINK_DIRECTORIES}
-	                     "${LIBGMP_DIR}/lib/"
-                         "${LIBMPFR_DIR}/lib/")
+                         "${LIBGMP_DIR}/${CMAKE_INSTALL_LIBDIR}"
+                         "${LIBMPFR_DIR}/${CMAKE_INSTALL_LIBDIR}")
         set(ECHMET_HIPREC_INCLUDE_DIR
-            "${LIBGMP_DIR}/include"
-            "${LIBMPFR_DIR}/include")
+            "${LIBGMP_DIR}/${CMAKE_INSTALL_INCLUDEDIR}"
+            "${LIBMPFR_DIR}/${CMAKE_INSTALL_INCLUDEDIR}")
 
         include_directories(SYSTEM ${ECHMET_HIPREC_INCLUDE_DIR})
     endif ()
@@ -157,7 +169,7 @@ else()
     message(FATAL_ERROR "Platform not recognized or not supported")
 endif()
 
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 CONFIGURE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/libECHMETShared/echmetcorelibs_config.h.in" "${CMAKE_CURRENT_BINARY_DIR}/echmetcorelibs_config.h")
 
 include_directories(${INCLUDE_DIRECTORIES}

@@ -14,21 +14,8 @@ if (IONPROPS_DISABLE_COMPLEX_ONSFUO)
     add_definitions("-DIONPROPS_DISABLE_COMPLEX_ONSFUO")
 endif ()
 
-if (WIN32)
-    if (MINGW)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem ${EIGEN_INCLUDE_DIR} -Wno-unused-function")
-    elseif (MSYS)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem ${EIGEN_INCLUDE_DIR} -Wno-unused-function")
-    else ()
-        include_directories(${INCLUDE_DIRECTORIES}
-                            "${EIGEN_INCLUDE_DIR}")
-    endif ()
-elseif (UNIX)
-    if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" OR
-        ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem ${EIGEN_INCLUDE_DIR} -Wno-unused-function")
-    endif ()
-endif ()
+include_directories(${INCLUDE_DIRECTORIES}
+                    SYSTEM "${EIGEN_INCLUDE_DIR}")
 
 set(libIonProps_SRCS
     src/ionprops.cpp)
@@ -69,25 +56,20 @@ target_link_libraries(IonProps
                       PRIVATE ${ECHMET_HIPREC_LIBS}
                       ${IONPROPS_LINK_MATH})
 
-if (WIN32)
-    install(TARGETS IonProps
-            RUNTIME DESTINATION lib
-            ARCHIVE DESTINATION lib
-            PUBLIC_HEADER DESTINATION include/ECHMET/CoreLibs)
-else ()
-    install(TARGETS IonProps
-            LIBRARY DESTINATION lib
-            ARCHIVE DESTINATION lib
-            PUBLIC_HEADER DESTINATION include/ECHMET/CoreLibs)
-endif ()
+install(TARGETS IonProps
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ECHMET/CoreLibs)
+
 if (WIN32)
     if (MINGW OR MSYS)
         if (ECHMET_CORE_LIBS_XCOMPILE)
-            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libIonProps.dll.a" DESTINATION lib)
-            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libIonProps.dll" DESTINATION lib)
+            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libIonProps.dll.a" DESTINATION ${CMAKE_INSTALL_LIBDIR})
+            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libIonProps.dll" DESTINATION ${CMAKE_INSTALL_BINDIR})
         else ()
-            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libIonProps.lib" DESTINATION lib RENAME IonProps.lib)
-            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libIonProps.dll" DESTINATION lib RENAME IonProps.dll)
+            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libIonProps.lib" DESTINATION ${CMAKE_INSTALL_LIBDIR} RENAME IonProps.lib)
+            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libIonProps.dll" DESTINATION ${CMAKE_INSTALL_BINDIR} RENAME IonProps.dll)
         endif ()
     endif ()
 endif ()

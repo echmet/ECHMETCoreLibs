@@ -58,32 +58,26 @@ target_link_libraries(ECHMETShared
                       PRIVATE ${ECHMET_SHARED_LINK_LIBS}
                       PRIVATE ${ECHMET_HIPREC_LIBS})
 
-if (WIN32)
-    install(TARGETS ECHMETShared
-            RUNTIME DESTINATION lib
-            ARCHIVE DESTINATION lib
-            PUBLIC_HEADER DESTINATION include/ECHMET/CoreLibs)
-else ()
-    install(TARGETS ECHMETShared
-            LIBRARY DESTINATION lib
-            ARCHIVE DESTINATION lib
-            PUBLIC_HEADER DESTINATION include/ECHMET/CoreLibs)
-endif ()
-install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/echmetelems.h"
-              "${CMAKE_CURRENT_SOURCE_DIR}/echmetmath.h"
-              "${CMAKE_CURRENT_SOURCE_DIR}/echmetmodule.h"
-              "${CMAKE_CURRENT_SOURCE_DIR}/echmetphchconsts.h"
-        DESTINATION include/ECHMET/CoreLibs)
-install(DIRECTORY containers/ DESTINATION include/ECHMET/CoreLibs/containers FILES_MATCHING PATTERN "*.h")
+install(TARGETS ECHMETShared
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ECHMET/CoreLibs)
+install(FILES
+            "${CMAKE_CURRENT_SOURCE_DIR}/echmetelems.h"
+            "${CMAKE_CURRENT_SOURCE_DIR}/echmetmath.h"
+            "${CMAKE_CURRENT_SOURCE_DIR}/echmetmodule.h"
+            "${CMAKE_CURRENT_SOURCE_DIR}/echmetphchconsts.h"
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ECHMET/CoreLibs)
+install(DIRECTORY containers/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ECHMET/CoreLibs/containers FILES_MATCHING PATTERN "*.h")
 if (WIN32)
     if (MINGW OR MSYS)
         if (ECHMET_CORE_LIBS_XCOMPILE)
-            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libECHMETShared.dll.a" DESTINATION lib)
-            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libECHMETShared.dll" DESTINATION lib)
+            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libECHMETShared.dll.a" DESTINATION ${CMAKE_INSTALL_LIBDIR})
+            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libECHMETShared.dll" DESTINATION ${CMAKE_INSTALL_BINDIR})
         else ()
-            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libECHMETShared.lib" DESTINATION lib RENAME ECHMETShared.lib)
-            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libECHMETShared.dll" DESTINATION lib RENAME ECHMETShared.dll)
+            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libECHMETShared.lib" DESTINATION ${CMAKE_INSTALL_LIBDIR} RENAME ECHMETShared.lib)
+            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libECHMETShared.dll" DESTINATION ${CMAKE_INSTALL_BINDIR} RENAME ECHMETShared.dll)
         endif ()
     endif ()
 endif ()
-

@@ -46,25 +46,20 @@ target_link_libraries(SysComp
                       PRIVATE ECHMETShared
                       ${SYSCOMP_LINK_MATH})
 
-if (WIN32)
-    install(TARGETS SysComp
-            RUNTIME DESTINATION lib
-            ARCHIVE DESTINATION lib
-            PUBLIC_HEADER DESTINATION include/ECHMET/CoreLibs)
-else ()
-    install(TARGETS SysComp
-            LIBRARY DESTINATION lib
-            ARCHIVE DESTINATION lib
-            PUBLIC_HEADER DESTINATION include/ECHMET/CoreLibs)
-endif ()
+install(TARGETS SysComp
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ECHMET/CoreLibs)
+
 if (WIN32)
     if (MINGW OR MSYS)
         if (ECHMET_CORE_LIBS_XCOMPILE)
-            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libSysComp.dll.a" DESTINATION lib)
-            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libSysComp.dll" DESTINATION lib)
+            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libSysComp.dll.a" DESTINATION ${CMAKE_INSTALL_LIBDIR})
+            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libSysComp.dll" DESTINATION ${CMAKE_INSTALL_BINDIR})
         else ()
-            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libSysComp.lib" DESTINATION lib RENAME SysComp.lib)
-            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libSysComp.dll" DESTINATION lib RENAME SysComp.dll)
+            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libSysComp.lib" DESTINATION ${CMAKE_INSTALL_LIBDIR} RENAME SysComp.lib)
+            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libSysComp.dll" DESTINATION ${CMAKE_INSTALL_BINDIR} RENAME SysComp.dll)
         endif ()
     endif ()
 endif ()
