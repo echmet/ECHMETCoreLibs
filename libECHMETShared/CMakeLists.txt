@@ -16,7 +16,8 @@ set(ECHMETShared_SRCS
     internal/phchconsts.cpp
     internal/cpufeatures_common.cpp)
 
-if (NOT X86_EXTENSIONS)
+if (NOT ENABLE_X86_EXTENSIONS)
+    message(STATUS "x86 extensions disabled")
     set(ECHMETShared_SRCS
         ${ECHMETShared_SRCS}
         internal/cpufeatures_generic.cpp)
