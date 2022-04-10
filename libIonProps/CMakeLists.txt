@@ -61,15 +61,3 @@ install(TARGETS IonProps
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ECHMET/CoreLibs)
-
-if (WIN32)
-    if (MINGW OR MSYS)
-        if (ECHMET_CORE_LIBS_XCOMPILE)
-            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libIonProps.dll.a" DESTINATION ${CMAKE_INSTALL_LIBDIR})
-            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libIonProps.dll" DESTINATION ${CMAKE_INSTALL_BINDIR})
-        else ()
-            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libIonProps.lib" DESTINATION ${CMAKE_INSTALL_LIBDIR} RENAME IonProps.lib)
-            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libIonProps.dll" DESTINATION ${CMAKE_INSTALL_BINDIR} RENAME IonProps.dll)
-        endif ()
-    endif ()
-endif ()

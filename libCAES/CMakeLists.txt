@@ -137,14 +137,3 @@ install(TARGETS CAES
 install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/include/echmetcaes.h"
               "${CMAKE_CURRENT_SOURCE_DIR}/include/echmetcaes_extended.h"
         DESTINATION include/ECHMET/CoreLibs)
-if (WIN32)
-    if (MINGW OR MSYS)
-        if (ECHMET_CORE_LIBS_XCOMPILE)
-            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libCAES.dll.a" DESTINATION ${CMAKE_INSTALL_LIBDIR})
-            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libCAES.dll" DESTINATION ${CMAKE_INSTALL_BINDIR})
-        else ()
-            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libCAES.lib" DESTINATION ${CMAKE_INSTALL_LIBDIR} RENAME CAES.lib)
-            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/libCAES.dll" DESTINATION ${CMAKE_INSTALL_BINDIR} RENAME CAES.dll)
-        endif ()
-    endif ()
-endif ()

@@ -39,9 +39,9 @@ endif()
 if (UNIX)
     include(GNUInstallDirs)
 elseif (WIN32)
-    set(${CMAKE_INSTALL_LIBDIR} "lib")
-    set(${CMAKE_INSTALL_INCLUDEDIR} "include")
-    set(${CMAKE_INSTALL_BINDIR} "bin")
+    set(CMAKE_INSTALL_LIBDIR "lib")
+    set(CMAKE_INSTALL_INCLUDEDIR "include")
+    set(CMAKE_INSTALL_BINDIR "bin")
 endif ()
 
 add_definitions("-DECHMET_DLL_BUILD -DUSE_ECHMET_CONTAINERS")
@@ -76,8 +76,8 @@ elseif (WIN32)
     endif ()
 
     link_directories(${LINK_DIRECTORIES}
-                     "${LIBGMP_DIR}/lib"
-                     "${LIBMPFR_DIR}/lib")
+                     "${LIBGMP_DIR}/bin"
+                     "${LIBMPFR_DIR}/bin")
 
     set(ECHMET_HIPREC_INCLUDE_DIR
         "${LIBGMP_DIR}/${CMAKE_INSTALL_INCLUDEDIR}"
