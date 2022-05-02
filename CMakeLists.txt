@@ -182,4 +182,4 @@ add_subdirectory(libIonProps)
 add_subdirectory(libCAES)
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/echmetcorelibs_config.h"
-        DESTINATION include/ECHMET/CoreLibs)
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/ECHMET/CoreLibs")
