@@ -121,6 +121,10 @@ elseif (WIN32)
     else()
         message(FATAL_ERROR "Compiler not recognized or not supported")
     endif()
+
+    if ((MINGW OR MSYS) AND (CMAKE_SIZEOF_VOID_P EQUAL 4))
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mincoming-stack-boundary=2")
+    endif ()
 elseif (UNIX)
     set("ECHMET_PLATFORM_UNIX" "1")
 
