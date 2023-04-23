@@ -32,7 +32,11 @@ public:
 		mpfr::mpreal::set_default_prec(m_currentPrecision);
 	}
 
+#ifdef ECHMET_USE_REDUCED_HIGH_PRECISION
+	static const long BITS_OF_PREC = 200; /* Corresponds to 60 digits of precision */
+#else
 	static const long BITS_OF_PREC = 665; /* Corresponds to 200 digits of precision */
+#endif // ECHMET_USE_REDUCED_HIGH_PRECISION
 
 private:
 	int m_currentPrecision;

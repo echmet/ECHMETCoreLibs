@@ -56,8 +56,12 @@ endif()
 if (EMSCRIPTEN)
     set("ECHMET_PLATFORM_EMSCRIPTEN" "1")
     set(CMAKE_CXX_FLAGS "-Wall -Wextra -pedantic -Wno-unused-function -fvisibility=hidden")
+    if (NOT CMAKE_BUILD_TYPE MATCHES Debug)
+        message("ems release")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -flto")
+    endif ()
 
-    add_definitions("-DECHMET_COMPILER_GCC_LIKE")
+    add_definitions(-DECHMET_USE_REDUCED_HIGH_PRECISION -DECHMET_COMPILER_GCC_LIKE)
 
     if (MANUAL_HIPREC_LIBS_PATH)
 	    link_directories(${LINK_DIRECTORIES}
