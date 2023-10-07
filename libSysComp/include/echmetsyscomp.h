@@ -136,7 +136,11 @@ ECHMET_ST_ENUM(IonicFormType) {
  */
 class IonicForm {
 public:
-	const Constituent *nucleus;				/*!< Complex nucleus the ionic form is base upon. */
+	/* Common */
+	const Constituent *nucleus;				/*!< Complex nucleus the ionic form is based upon.
+								     Note that the name here is misleading. If there is a constituent in the role of a Ligand,
+								     this \p nucleus field will point to that constituent. This field denotes a "pivotal" constituent
+								     upon which the ionic form is based upon rather than an actual nucleus in the complexation sense. */
 	const FixedString *name;				/*!< Unique name of the ionic form.
 								     This may be \p NULL if the ionic form corresponds to <tt>H+</tt> or <tt>OH-</tt>.
 								     Such information can be retrieved from \p IonicConcentration \p ifType field. */
@@ -157,6 +161,7 @@ public:
 								     Set to NaN if the ionic form is not a complex */
 	ContainedLigandIonicFormVec *containedLigandIFs;	/*!< Vector of all ionic forms contained in the ionic form */
 
+	/* Common */
 	size_t ionicConcentrationIndex;				/*!< Index in the respective array with the ionic concentration of the ionic form */
 	size_t ionicMobilityIndex;				/*!< Index in the respective array with the ionic mobility of the ionic form */
 
