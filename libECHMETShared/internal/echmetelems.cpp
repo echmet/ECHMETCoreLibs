@@ -137,8 +137,26 @@ CPUSIMD ECHMET_CC cpuSupportedSIMD() ECHMET_NOEXCEPT
 	SET_SIMD_FLAG(simd, simdInternal, SSE42);
 	SET_SIMD_FLAG(simd, simdInternal, AVX);
 	SET_SIMD_FLAG(simd, simdInternal, AVX2);
-	SET_SIMD_FLAG(simd, simdInternal, AVX512);
 	SET_SIMD_FLAG(simd, simdInternal, FMA3);
+
+	simd.AVX512.F = simdInternal.AVX512.F;
+	simd.AVX512.CD = simdInternal.AVX512.CD;
+	simd.AVX512.PF = simdInternal.AVX512.PF;
+	simd.AVX512.ER = simdInternal.AVX512.ER;
+	simd.AVX512.VL = simdInternal.AVX512.VL;
+	simd.AVX512.BW = simdInternal.AVX512.BW;
+	simd.AVX512.DQ = simdInternal.AVX512.DQ;
+	simd.AVX512.IFMA = simdInternal.AVX512.IFMA;
+	simd.AVX512.VBM = simdInternal.AVX512.VBM;
+	simd.AVX512.VBM2 = simdInternal.AVX512.VBM2;
+	simd.AVX512.VNNI = simdInternal.AVX512.VNNI;
+	simd.AVX512.BITALG = simdInternal.AVX512.BITALG;
+	simd.AVX512.VPOPCNTDQ = simdInternal.AVX512.VPOPCNTDQ;
+	simd.AVX512._4VNNIW = simdInternal.AVX512._4VNNIW;
+	simd.AVX512._4FMAPS = simdInternal.AVX512._4FMAPS;
+	simd.AVX512.VP2INTERSECT = simdInternal.AVX512.VP2INTERSECT;
+	simd.AVX512.FP16 = simdInternal.AVX512.FP16;
+	simd.AVX512.BF16 = simdInternal.AVX512.BF16;
 
 	return simd;
 }

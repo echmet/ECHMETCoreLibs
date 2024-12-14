@@ -26,7 +26,27 @@ static const uint8_t AVX_FEATURE_BIT_ECX{28};
 static const uint8_t FMA3_FEATURE_BIT_ECX{12};
 static const uint8_t XSAVE_FEATURE_BIT_ECX{27};
 static const uint8_t AVX2_FEATURE_BIT_EBX{5};
-static const uint8_t AVX512_FEATURE_BIT_EBX{16};
+
+// Queried by cpuid EAX=07h, ECX=0
+static const uint8_t AVX512F_FEATURE_BIT_EBX{16};
+static const uint8_t AVX512CD_FEATURE_BIT_EBX{28};
+static const uint8_t AVX512PF_FEATURE_BIT_EBX{26};
+static const uint8_t AVX512ER_FEATURE_BIT_EBX{27};
+static const uint8_t AVX512VL_FEATURE_BIT_EBX{31};
+static const uint8_t AVX512BW_FEATURE_BIT_EBX{30};
+static const uint8_t AVX512DQ_FEATURE_BIT_EBX{17};
+static const uint8_t AVX512IFMA_FEATURE_BIT_EBX{21};
+static const uint8_t AVX512VBM_FEATURE_BIT_ECX{1};
+static const uint8_t AVX512VBM2_FEATURE_BIT_ECX{6};
+static const uint8_t AVX512VNNI_FEATURE_BIT_ECX{11};
+static const uint8_t AVX512BITALG_FEATURE_BIT_ECX{12};
+static const uint8_t AVX512VPOPCNTDQ_FEATURE_BIT_ECX{14};
+static const uint8_t AVX5124VNNIW_FEATURE_BIT_EDX{2};
+static const uint8_t AVX5124FMAPS_FEATURE_BIT_EDX{3};
+static const uint8_t AVX512VP2INTERSECT_FEATURE_BIT_EDX{8};
+static const uint8_t AVX512FP16_FEATURE_BIT_EDX{23};
+// Queried by cpuid EAX=07h, ECX=1
+static const uint8_t AVX512BF16_FEATURE_BIT_EAX{05};
 
 static const uint8_t XMM_FEATURE_BIT{1};
 static const uint8_t YMM_FEATURE_BIT{2};
@@ -188,7 +208,7 @@ CPUFeatures::SupportedSIMD CPUFeatures::fetch_supported_SIMD()
 	);
 
 	cpuid_mode = 0x7; /* Check support of AVX2 and AVX512 */
-	const uint32_t cpuid_mode_ecx = 0x0;
+	uint32_t cpuid_mode_ecx = 0x0;
 #if defined(ECHMET_COMPILER_GCC_LIKE) || defined(ECHMET_COMPILER_MINGW) || defined(ECHMET_COMPILER_MSYS)
 	asm("cpuid;"
 	    : "=a"(regs.r.feature_flags_eax), "=b"(regs.r.feature_flags_ebx), "=c"(regs.r.feature_flags_ecx), "=d"(regs.r.feature_flags_edx)
@@ -200,14 +220,43 @@ CPUFeatures::SupportedSIMD CPUFeatures::fetch_supported_SIMD()
 
 
 	const bool cpu_has_avx2 = is_bit_set(regs.r.feature_flags_ebx, AVX2_FEATURE_BIT_EBX);
-	const bool cpu_has_avx512 = is_bit_set(regs.r.feature_flags_ebx, AVX512_FEATURE_BIT_EBX);
+
+	const bool cpu_has_avx512f       = is_bit_set(regs.r.feature_flags_ebx, AVX512F_FEATURE_BIT_EBX);
+	const bool cpu_has_avx512cd      = is_bit_set(regs.r.feature_flags_ebx, AVX512CD_FEATURE_BIT_EBX);
+	const bool cpu_has_avx512pf      = is_bit_set(regs.r.feature_flags_ebx, AVX512PF_FEATURE_BIT_EBX);
+	const bool cpu_has_avx512er      = is_bit_set(regs.r.feature_flags_ebx, AVX512ER_FEATURE_BIT_EBX);
+	const bool cpu_has_avx512vl      = is_bit_set(regs.r.feature_flags_ebx, AVX512VL_FEATURE_BIT_EBX);
+	const bool cpu_has_avx512bw      = is_bit_set(regs.r.feature_flags_ebx, AVX512BW_FEATURE_BIT_EBX);
+	const bool cpu_has_avx512dq      = is_bit_set(regs.r.feature_flags_ebx, AVX512DQ_FEATURE_BIT_EBX);
+	const bool cpu_has_avx512ifma    = is_bit_set(regs.r.feature_flags_ebx, AVX512IFMA_FEATURE_BIT_EBX);
+	const bool cpu_has_avx512vbm     = is_bit_set(regs.r.feature_flags_ecx, AVX512VBM_FEATURE_BIT_ECX);
+	const bool cpu_has_avx512vbm2    = is_bit_set(regs.r.feature_flags_ecx, AVX512VBM2_FEATURE_BIT_ECX);
+	const bool cpu_has_avx512vnni    = is_bit_set(regs.r.feature_flags_ecx, AVX512VNNI_FEATURE_BIT_ECX);
+	const bool cpu_has_avx512bitalg  = is_bit_set(regs.r.feature_flags_ecx, AVX512BITALG_FEATURE_BIT_ECX);
+	const bool cpu_has_avx512vpopcntdq = is_bit_set(regs.r.feature_flags_ecx, AVX512VPOPCNTDQ_FEATURE_BIT_ECX);
+	const bool cpu_has_avx5124vnniw = is_bit_set(regs.r.feature_flags_edx, AVX5124VNNIW_FEATURE_BIT_EDX);
+	const bool cpu_has_avx5124fmaps = is_bit_set(regs.r.feature_flags_edx, AVX5124FMAPS_FEATURE_BIT_EDX);
+	const bool cpu_has_avx512vp2intersect = is_bit_set(regs.r.feature_flags_edx, AVX512VP2INTERSECT_FEATURE_BIT_EDX);
+	const bool cpu_has_avx512fp16 = is_bit_set(regs.r.feature_flags_edx, AVX512FP16_FEATURE_BIT_EDX);
 
 	ECHMET_DEBUG_CODE(
 		fprintf(stderr, "CPUID advanced SIMD flags:\n"
-				"AVX2: %d\n"
-				"AVX512: %d\n",
-				cpu_has_avx2, cpu_has_avx512)
+				"AVX2: %d\n",
+				cpu_has_avx2)
 	);
+
+	cpuid_mode = 0x7; /* Check support for more AVX512 instructions */
+	cpuid_mode_ecx = 0x1;
+#if defined(ECHMET_COMPILER_GCC_LIKE) || defined(ECHMET_COMPILER_MINGW) || defined(ECHMET_COMPILER_MSYS)
+	asm("cpuid;"
+	    : "=a"(regs.r.feature_flags_eax), "=b"(regs.r.feature_flags_ebx), "=c"(regs.r.feature_flags_ecx), "=d"(regs.r.feature_flags_edx)
+	    : "a"(cpuid_mode), "c"(cpuid_mode_ecx)
+	    : );
+#elif defined(ECHMET_COMPILER_MSVC)
+	__cpuidex(regs.block, cpuid_mode, cpuid_mode_ecx);
+#endif // ECHMET_COMPILER_
+
+	const bool cpu_has_avx512bf16 = is_bit_set(regs.r.feature_flags_eax, AVX512BF16_FEATURE_BIT_EAX);
 
 	/* xgetbv instruction is not available so OS level support cannot be checked.
 	 * Fall back to safe defaults */
@@ -223,15 +272,15 @@ CPUFeatures::SupportedSIMD CPUFeatures::fetch_supported_SIMD()
 		    : );
 		const bool os_xmm_aware = is_bit_set(regs.r.feature_flags_eax, XMM_FEATURE_BIT); /* 128-bit long FPU registers available */
 		const bool os_avx_aware = is_bit_set(regs.r.feature_flags_eax, YMM_FEATURE_BIT) & os_xmm_aware; /* 256-bit and 128-bit long FPU registers available */
-		const bool os_avx512_aware = is_bit_set(regs.r.feature_flags_eax, AVX512_OPMASK_BIT) &
-					     is_bit_set(regs.r.feature_flags_eax, AVX512_HI256_BIT) &
+		const bool os_avx512_aware = is_bit_set(regs.r.feature_flags_eax, AVX512_OPMASK_BIT) &&
+					     is_bit_set(regs.r.feature_flags_eax, AVX512_HI256_BIT) &&
 					     is_bit_set(regs.r.feature_flags_eax, AVX512_ZMM_HI256_BIT);
 	#elif defined(ECHMET_COMPILER_MSVC)
 		const uint64_t xcr0 = _xgetbv(0);
 		const bool os_xmm_aware = is_bit_set(xcr0, XMM_FEATURE_BIT);
 		const bool os_avx_aware = is_bit_set(xcr0, YMM_FEATURE_BIT) & os_xmm_aware;
-		const bool os_avx512_aware = is_bit_set(xcr0, AVX512_OPMASK_BIT) &
-					     is_bit_set(xcr0, AVX512_HI256_BIT) &
+		const bool os_avx512_aware = is_bit_set(xcr0, AVX512_OPMASK_BIT) &&
+					     is_bit_set(xcr0, AVX512_HI256_BIT) &&
 					     is_bit_set(xcr0, AVX512_ZMM_HI256_BIT);
 	#endif // ECHMET_COMPILER_
 
@@ -245,6 +294,45 @@ CPUFeatures::SupportedSIMD CPUFeatures::fetch_supported_SIMD()
 					os_avx512_aware)
 		);
 
+		AVX512Sets avx512 = !os_avx512_aware
+			? AVX512Sets{}
+			: AVX512Sets{
+				cpu_has_avx512f,
+				cpu_has_avx512cd,
+				cpu_has_avx512pf,
+				cpu_has_avx512er,
+				cpu_has_avx512vl,
+				cpu_has_avx512bw,
+				cpu_has_avx512dq,
+				cpu_has_avx512ifma,
+				cpu_has_avx512vbm,
+				cpu_has_avx512vbm2,
+				cpu_has_avx512vnni,
+				cpu_has_avx512bitalg,
+				cpu_has_avx512vpopcntdq,
+				cpu_has_avx5124vnniw,
+				cpu_has_avx5124fmaps,
+				cpu_has_avx512vp2intersect,
+				cpu_has_avx512fp16,
+				cpu_has_avx512bf16
+			};
+
+		ECHMET_DEBUG_CODE(
+			fprintf(stderr, "AVX512 availability:\n"
+					"F   : %d\n"
+					"CD  : %d\n"
+					"PF  : %d\n"
+					"ER  : %d\n"
+					"VL  : %d\n"
+					"BW  : %d\n"
+					"DQ  : %d\n"
+					"IFMA: %d\n"
+					"VBM : %d\n",
+					avx512.F, avx512.CD, avx512.PF,
+					avx512.ER, avx512.VL, avx512.BW,
+					avx512.DQ, avx512.IFMA, avx512.VBM);
+		);
+
 		return SupportedSIMD(cpu_has_sse2 & os_xmm_aware,
 				     cpu_has_sse3 & os_xmm_aware,
 				     cpu_has_ssse3 & os_xmm_aware,
@@ -252,8 +340,8 @@ CPUFeatures::SupportedSIMD CPUFeatures::fetch_supported_SIMD()
 				     cpu_has_sse42 & os_xmm_aware,
 				     cpu_has_avx & os_avx_aware,
 				     cpu_has_avx2 & os_avx_aware,
-				     cpu_has_avx512 & os_avx512_aware,
-				     cpu_has_fma & os_avx_aware);
+				     cpu_has_fma & os_avx_aware,
+				     avx512);
 	}
 }
 

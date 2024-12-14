@@ -82,6 +82,33 @@ ECHMET_ST_ENUM(RetCode) {
 	ENUM_FORCE_INT32_SIZE(ECHMETRetCode)
 };
 
+
+/*!
+ * Supported sets of AVX512 instruction set extensions
+ */
+class AVX512Sets {
+public:
+	bool F;
+	bool CD;
+	bool PF;
+	bool ER;
+	bool VL;
+	bool BW;
+	bool DQ;
+	bool IFMA;
+	bool VBM;
+	bool VBM2;
+	bool VNNI;
+	bool BITALG;
+	bool VPOPCNTDQ;
+	bool _4VNNIW;
+	bool _4FMAPS;
+	bool VP2INTERSECT;
+	bool FP16;
+	bool BF16;
+};
+IS_POD(AVX512Sets)
+
 /*!
  * Supported SIMD instruction set extenstions
  */
@@ -94,8 +121,8 @@ public:
 	bool SSE42;	/*!< x86 SSE42 */
 	bool AVX;	/*!< x86 AVX */
 	bool AVX2;	/*!< x86 AVX2 */
-	bool AVX512;	/*!< x86 AVX512 */
 	bool FMA3;	/*!< x86 FMA3 */
+	AVX512Sets AVX512; /*!< x86 AVX512Sets */
 
 };
 IS_POD(CPUSIMD)

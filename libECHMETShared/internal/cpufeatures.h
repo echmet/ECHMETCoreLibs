@@ -9,13 +9,45 @@ namespace ECHMET {
 
 class CPUFeatures {
 public:
+	class AVX512Sets {
+	public:
+		AVX512Sets() noexcept;
+		AVX512Sets(const bool F, const bool CD, const bool PF,
+			   const bool ER, const bool VL, const bool BW,
+			   const bool DQ, const bool IFMA, const bool VBM,
+			   const bool VBM2, const bool VNNI, const bool BITALG,
+			   const bool VPOPCNTDQ, const bool _4VNNIW, const bool _4FMAPS,
+			   const bool VP2INTERSECT, const bool FP16, const bool BF16) noexcept;
+		AVX512Sets(const AVX512Sets &other) noexcept;
+		AVX512Sets & operator=(const AVX512Sets &other) noexcept;
+
+		const bool F;
+		const bool CD;
+		const bool PF;
+		const bool ER;
+		const bool VL;
+		const bool BW;
+		const bool DQ;
+		const bool IFMA;
+		const bool VBM;
+		const bool VBM2;
+		const bool VNNI;
+		const bool BITALG;
+		const bool VPOPCNTDQ;
+		const bool _4VNNIW;
+		const bool _4FMAPS;
+		const bool VP2INTERSECT;
+		const bool FP16;
+		const bool BF16;
+	};
+
 	class SupportedSIMD {
 	public:
 		SupportedSIMD() noexcept;
 		SupportedSIMD(const bool SSE2, const bool SSE3, const bool SSSE3,
 			      const bool SSE41, const bool SSE42,
-			      const bool AVX, const bool AVX2, const bool AVX512,
-			      const bool FMA3) noexcept;
+			      const bool AVX, const bool AVX2, const bool FMA3,
+			      const AVX512Sets AVX512) noexcept;
 		SupportedSIMD(const SupportedSIMD &other) noexcept;
 		SupportedSIMD & operator=(const SupportedSIMD &other) noexcept;
 
@@ -26,8 +58,8 @@ public:
 		const bool SSE42;
 		const bool AVX;
 		const bool AVX2;
-		const bool AVX512;
 		const bool FMA3;
+		const AVX512Sets AVX512;
 	};
 
 	static const std::string & name();
