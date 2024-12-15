@@ -163,6 +163,12 @@ elseif (UNIX)
 
         add_definitions("-DECHMET_COMPILER_GCC_LIKE")
         set(DEFAULT_SYMVER_LINK "-Wl,--default-symver")
+
+        if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
+            add_compile_options(-fdiagnostics-color=always)
+        elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
+            add_compile_options(-fcolor-diagnostics)
+        endif ()
     endif ()
 
     if (MANUAL_HIPREC_LIBS_PATH)
