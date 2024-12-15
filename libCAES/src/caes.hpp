@@ -136,8 +136,6 @@ RetCode globalDataToInternal(LigandVec<CAESReal> *allLigands, LigandIonicFormVec
 
 	/* Process complex nuclei */
 	{
-		size_t cnCounter = 0;
-
 		try {
 			cnVec->reserve(gcVec->size());
 		} catch (std::bad_alloc &) {
@@ -193,7 +191,6 @@ RetCode globalDataToInternal(LigandVec<CAESReal> *allLigands, LigandIonicFormVec
 					return tRet;
 				}
 				cnVec->emplace_back(cn);
-				cnCounter++;
 			}
 		}
 		cnVec->shrink_to_fit();
