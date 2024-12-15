@@ -115,6 +115,7 @@ class ContainedLigandIonicForm {
 public:
 	explicit ContainedLigandIonicForm();
 	explicit ContainedLigandIonicForm(const uint32_t count, const LigandIonicForm<CAESReal> *lIF);
+	ContainedLigandIonicForm(const ContainedLigandIonicForm &other) noexcept;
 
 	ContainedLigandIonicForm &operator=(const ContainedLigandIonicForm &other);
 

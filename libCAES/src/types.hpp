@@ -134,6 +134,16 @@ ContainedLigandIonicForm<CAESReal>::ContainedLigandIonicForm(const uint32_t coun
 }
 
 /*!
+ * ContainedLigandIonicForm copy c-tor
+ */
+template <typename CAESReal>
+ContainedLigandIonicForm<CAESReal>::ContainedLigandIonicForm(const ContainedLigandIonicForm &other) noexcept :
+	count{other.count},
+	lIF{other.lIF}
+{
+}
+
+/*!
  * ContainedLigandIonicForm assignment operator.
  */
 template <typename CAESReal>
