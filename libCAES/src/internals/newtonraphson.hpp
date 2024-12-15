@@ -10,6 +10,9 @@ void NewtonRaphson<double, InstructionSet::AVX>::initializeLu(const int elements
 
 template <>
 void NewtonRaphson<double, InstructionSet::FMA3>::initializeLu(const int elements);
+
+template <>
+void NewtonRaphson<double, InstructionSet::AVX512>::initializeLu(const int elements);
 #endif // ECHMET_USE_X86_EXTENSIONS
 
 template <typename NRReal, InstructionSet ISet>
@@ -73,6 +76,9 @@ typename NewtonRaphson<double, InstructionSet::AVX>::TX const & NewtonRaphson<do
 
 template <>
 typename NewtonRaphson<double, InstructionSet::FMA3>::TX const & NewtonRaphson<double, InstructionSet::FMA3>::ASolve();
+
+template <>
+typename NewtonRaphson<double, InstructionSet::AVX512>::TX const & NewtonRaphson<double, InstructionSet::AVX512>::ASolve();
 #endif // ECHMET_USE_X86_EXTENSIONS
 
 template <typename NRReal, InstructionSet ISet>

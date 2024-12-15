@@ -10,7 +10,8 @@ enum InstructionSet {
 	GENERIC,
 	SSE2,
 	AVX,
-	FMA3
+	FMA3,
+	AVX512
 };
 
 template <InstructionSet ISet>

@@ -21,6 +21,8 @@
 #define M128D(v) *(__m128d *)(v)
 #define M128I(v) *(__m128i *)(v)
 #define M256D(v) *(__m256d *)(v)
+#define M256I(v) *(__m256i *)(v)
+#define M512D(v) *(__m512d *)(v)
 
 namespace ECHMET {
 namespace CAES {

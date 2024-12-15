@@ -11,6 +11,8 @@
 
 #include <cassert>
 
+#include <iostream>
+
 namespace ECHMET {
 namespace CAES {
 
@@ -176,6 +178,26 @@ template <>
 double ChargeSummer<double, InstructionSet::FMA3, false>::calculateIonicStrength(const double *const ECHMET_RESTRICT_PTR icConcs) noexcept;
 template <>
 double ChargeSummer<double, InstructionSet::FMA3, true>::calculateIonicStrength(const double *const ECHMET_RESTRICT_PTR icConcs) noexcept;
+
+
+template <>
+double ChargeSummer<double, InstructionSet::AVX512, false>::calc(const double *const ECHMET_RESTRICT_PTR icConcs) noexcept;
+template <>
+double ChargeSummer<double, InstructionSet::AVX512, true>::calc(const double *const ECHMET_RESTRICT_PTR icConcs) noexcept;
+template <>
+void ChargeSummer<double, InstructionSet::AVX512, false>::calcWithdZ(const double *const ECHMET_RESTRICT_PTR icConcs,
+								   const double *const ECHMET_RESTRICT_PTR dIcConcsdH,
+								   double &z, double &dZ) noexcept;
+template <>
+void ChargeSummer<double, InstructionSet::AVX512, true>::calcWithdZ(const double *const ECHMET_RESTRICT_PTR icConcs,
+								  const double *const ECHMET_RESTRICT_PTR dIcConcsdH,
+								  double &z, double &dZ) noexcept;
+template <>
+double ChargeSummer<double, InstructionSet::AVX512, false>::calculateIonicStrength(const double *const ECHMET_RESTRICT_PTR icConcs) noexcept;
+template <>
+double ChargeSummer<double, InstructionSet::AVX512, true>::calculateIonicStrength(const double *const ECHMET_RESTRICT_PTR icConcs) noexcept;
+
+
 #endif // ECHMET_USE_X86_EXTENSIONS
 
 } // namespace CAES

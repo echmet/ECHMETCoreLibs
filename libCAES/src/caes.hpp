@@ -469,6 +469,12 @@ Solver * createSolverInternal(SolverContext *ctx, const Solver::Options options,
 		return makeSolverImpl<CAESReal, InstructionSet::AVX>(threadUnsafe, ctxImpl, options, corrections);
 	case InstructionSet::FMA3:
 		return makeSolverImpl<CAESReal, InstructionSet::FMA3>(threadUnsafe, ctxImpl, options, corrections);
+	case InstructionSet::AVX512:
+#ifdef ECHMET_DISABLE_AVX512
+		return makeSolverImpl<CAESReal, InstructionSet::FMA3>(threadUnsafe, ctxImpl, options, corrections);
+#else
+		return makeSolverImpl<CAESReal, InstructionSet::AVX512>(threadUnsafe, ctxImpl, options, corrections);
+#endif // ECHMET_DISABLE_AVX512
 	}
 
 	return nullptr;

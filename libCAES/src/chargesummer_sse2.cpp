@@ -5,8 +5,6 @@ namespace CAES {
 
 using VD = typename VecMath<InstructionSet::SSE2>::VD;
 
-static const VD ZERO = {0, 0};
-
 template <>
 double ChargeSummer<double, InstructionSet::SSE2, false>::calc(const double *const ECHMET_RESTRICT_PTR icConcs) noexcept
 {

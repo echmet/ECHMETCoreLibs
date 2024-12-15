@@ -66,191 +66,78 @@ public:
 };
 
 template <>
-class VecMath<InstructionSet::SSE2> {
+class VDType<InstructionSet::AVX512> {
 public:
-	typedef typename VDType<InstructionSet::SSE2>::TD TD;
-	typedef typename VDType<InstructionSet::SSE2>::VD VD;
+	typedef __m512d TD;
+	typedef double ECHMET_ALIGNED_BEF_64 VD[8] ECHMET_ALIGNED_AFT_64;
 
-	VecMath();
-	TD exp10m(TD x) const;
-	static double exp10m_single(double x) noexcept;
-	TD mlog10(const double *ECHMET_RESTRICT_PTR inx) const;
-	static double mlog10_single(double x) noexcept;
-
-	void operator delete(void *ptr);
-	void * operator new(const size_t sz);
-
-	static const uint64_t ZERO_BLOCK[];
-	static const VD INFS;
-	static const VD MINUS_INFS;
-	static const VD MINUS_ONE;
-	static const VD HALF;
-	static const VD ONE;
-	static const VD TWO;
-	static const VD MAXL10;
-	static const VD MINUS_MAXL10;
-
-	static const VD LG102A;
-	static const VD LG102B;
-	static const VD LOG210;
-
-	static const VD L102A_LOG10;
-	static const VD L102B_LOG10;
-	static const VD L10EA_LOG10;
-	static const VD L10EB_LOG10;
-	static const VD SQRTH_LOG10;
-
-	VD POne;
-	VD PTwo;
-	VD PThree;
-	VD PFour;
-	VD QOne;
-	VD QTwo;
-	VD QThree;
-
-	VD POneLog10;
-	VD PTwoLog10;
-	VD PThreeLog10;
-	VD PFourLog10;
-	VD PFiveLog10;
-	VD PSixLog10;
-	VD PSevenLog10;
-
-	VD QOneLog10;
-	VD QTwoLog10;
-	VD QThreeLog10;
-	VD QFourLog10;
-	VD QFiveLog10;
-	VD QSixLog10;
+	constexpr static const size_t ALIGNMENT_BYTES = 64;
 };
 
-template <>
-class VecMath<InstructionSet::AVX> {
-public:
-	typedef typename VDType<InstructionSet::AVX>::TD TD;
-	typedef typename VDType<InstructionSet::AVX>::VD VD;
+#define MAKE_VECMATH(iset) \
+	template <> \
+	class VecMath<InstructionSet::iset> { \
+	public: \
+		typedef typename VDType<InstructionSet::iset>::TD TD; \
+		typedef typename VDType<InstructionSet::iset>::VD VD; \
+ \
+		VecMath(); \
+		TD exp10m(TD x) const; \
+		static double exp10m_single(double x) noexcept; \
+		TD mlog10(const double *ECHMET_RESTRICT_PTR inx) const; \
+		static double mlog10_single(double x) noexcept; \
+ \
+		void operator delete(void *ptr); \
+		void * operator new(const size_t sz); \
+ \
+		static const uint64_t ZERO_BLOCK[]; \
+		static const VD INFS; \
+		static const VD MINUS_INFS; \
+		static const VD MINUS_ONE; \
+		static const VD HALF; \
+		static const VD ONE; \
+		static const VD TWO; \
+		static const VD MAXL10; \
+		static const VD MINUS_MAXL10; \
+ \
+		static const VD LG102A; \
+		static const VD LG102B; \
+		static const VD LOG210; \
+ \
+		static const VD L102A_LOG10; \
+		static const VD L102B_LOG10; \
+		static const VD L10EA_LOG10; \
+		static const VD L10EB_LOG10; \
+		static const VD SQRTH_LOG10; \
+ \
+		VD POne; \
+		VD PTwo; \
+		VD PThree; \
+		VD PFour; \
+		VD QOne; \
+		VD QTwo; \
+		VD QThree; \
+ \
+		VD POneLog10; \
+		VD PTwoLog10; \
+		VD PThreeLog10; \
+		VD PFourLog10; \
+		VD PFiveLog10; \
+		VD PSixLog10; \
+		VD PSevenLog10; \
+ \
+		VD QOneLog10; \
+		VD QTwoLog10; \
+		VD QThreeLog10; \
+		VD QFourLog10; \
+		VD QFiveLog10; \
+		VD QSixLog10; \
+	}
 
-	VecMath();
-#if defined(ECHMET_PLATFORM_WIN32) && defined(__x86_64__)
-	void exp10m(const double *ECHMET_RESTRICT_PTR inx, double *ECHMET_RESTRICT_PTR outx) const;
-#else
-	TD exp10m(TD x) const;
-#endif
-	static double exp10m_single(double x) noexcept;
-	TD mlog10(const double *ECHMET_RESTRICT_PTR inx) const;
-	static double mlog10_single(double x) noexcept;
-
-	void operator delete(void *ptr);
-	void * operator new(const size_t sz);
-
-private:
-	static const uint64_t ZERO_BLOCK[];
-	static const VD INFS;
-	static const VD MINUS_INFS;
-	static const VD MINUS_ONE;
-	static const VD HALF;
-	static const VD ONE;
-	static const VD TWO;
-	static const VD MAXL10;
-	static const VD MINUS_MAXL10;
-
-	static const VD LG102A;
-	static const VD LG102B;
-	static const VD LOG210;
-
-	static const VD L102A_LOG10;
-	static const VD L102B_LOG10;
-	static const VD L10EA_LOG10;
-	static const VD L10EB_LOG10;
-	static const VD SQRTH_LOG10;
-
-	VD POne;
-	VD PTwo;
-	VD PThree;
-	VD PFour;
-	VD QOne;
-	VD QTwo;
-	VD QThree;
-
-	VD POneLog10;
-	VD PTwoLog10;
-	VD PThreeLog10;
-	VD PFourLog10;
-	VD PFiveLog10;
-	VD PSixLog10;
-	VD PSevenLog10;
-
-	VD QOneLog10;
-	VD QTwoLog10;
-	VD QThreeLog10;
-	VD QFourLog10;
-	VD QFiveLog10;
-	VD QSixLog10;
-};
-
-template <>
-class VecMath<InstructionSet::FMA3> {
-public:
-	typedef typename VDType<InstructionSet::FMA3>::TD TD;
-	typedef typename VDType<InstructionSet::FMA3>::VD VD;
-
-	VecMath();
-#if defined(ECHMET_PLATFORM_WIN32) && defined(__x86_64__)
-	void exp10m(const double *ECHMET_RESTRICT_PTR inx, double *ECHMET_RESTRICT_PTR outx) const;
-#else
-	TD exp10m(TD x) const;
-#endif
-	static double exp10m_single(double x) noexcept;
-	TD mlog10(const double *ECHMET_RESTRICT_PTR inx) const;
-	static double mlog10_single(double x) noexcept;
-
-	void operator delete(void *ptr);
-	void * operator new(const size_t sz);
-
-private:
-	static const uint64_t ZERO_BLOCK[];
-	static const VD INFS;
-	static const VD MINUS_INFS;
-	static const VD MINUS_ONE;
-	static const VD HALF;
-	static const VD ONE;
-	static const VD TWO;
-	static const VD MAXL10;
-	static const VD MINUS_MAXL10;
-
-	static const VD LG102A;
-	static const VD LG102B;
-	static const VD LOG210;
-
-	static const VD L102A_LOG10;
-	static const VD L102B_LOG10;
-	static const VD L10EA_LOG10;
-	static const VD L10EB_LOG10;
-	static const VD SQRTH_LOG10;
-
-	VD POne;
-	VD PTwo;
-	VD PThree;
-	VD PFour;
-	VD QOne;
-	VD QTwo;
-	VD QThree;
-
-	VD POneLog10;
-	VD PTwoLog10;
-	VD PThreeLog10;
-	VD PFourLog10;
-	VD PFiveLog10;
-	VD PSixLog10;
-	VD PSevenLog10;
-
-	VD QOneLog10;
-	VD QTwoLog10;
-	VD QThreeLog10;
-	VD QFourLog10;
-	VD QFiveLog10;
-	VD QSixLog10;
-};
+MAKE_VECMATH(SSE2);
+MAKE_VECMATH(AVX);
+MAKE_VECMATH(FMA3);
+MAKE_VECMATH(AVX512);
 
 } // namespace CAES
 } // namespace ECHMET
