@@ -38,7 +38,7 @@ InstructionSet detectInstructionSet() noexcept
 {
 	const CPUSIMD simd = cpuSupportedSIMD();
 
-	if (simd.AVX512.F && simd.FMA3 && simd.AVX2 && simd.AVX && simd.SSE42 && simd.SSE41 && simd.SSSE3) {
+	if (simd.AVX512.F && simd.AVX512.DQ && simd.FMA3 && simd.AVX2 && simd.AVX && simd.SSE42 && simd.SSE41 && simd.SSSE3) {
 		ECHMET_DEBUG_CODE(fprintf(stderr, "Using AVX512-optimized solver\n"));
 		return InstructionSet::AVX512;
 	}

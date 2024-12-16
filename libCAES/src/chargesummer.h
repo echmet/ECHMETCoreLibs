@@ -179,7 +179,6 @@ double ChargeSummer<double, InstructionSet::FMA3, false>::calculateIonicStrength
 template <>
 double ChargeSummer<double, InstructionSet::FMA3, true>::calculateIonicStrength(const double *const ECHMET_RESTRICT_PTR icConcs) noexcept;
 
-
 template <>
 double ChargeSummer<double, InstructionSet::AVX512, false>::calc(const double *const ECHMET_RESTRICT_PTR icConcs) noexcept;
 template <>
@@ -196,7 +195,6 @@ template <>
 double ChargeSummer<double, InstructionSet::AVX512, false>::calculateIonicStrength(const double *const ECHMET_RESTRICT_PTR icConcs) noexcept;
 template <>
 double ChargeSummer<double, InstructionSet::AVX512, true>::calculateIonicStrength(const double *const ECHMET_RESTRICT_PTR icConcs) noexcept;
-
 
 #endif // ECHMET_USE_X86_EXTENSIONS
 
