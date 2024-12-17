@@ -65,6 +65,8 @@ public:
 	constexpr static const size_t ALIGNMENT_BYTES = 32;
 };
 
+#ifndef ECHMET_DISABLE_AVX512
+
 template <>
 class VDType<InstructionSet::AVX512> {
 public:
@@ -73,6 +75,8 @@ public:
 
 	constexpr static const size_t ALIGNMENT_BYTES = 64;
 };
+
+#endif // ECHMET_DISABLE_AVX512
 
 #define MAKE_VECMATH(iset) \
 	template <> \
@@ -137,7 +141,9 @@ public:
 MAKE_VECMATH(SSE2);
 MAKE_VECMATH(AVX);
 MAKE_VECMATH(FMA3);
+#ifndef ECHMET_DISABLE_AVX512
 MAKE_VECMATH(AVX512);
+#endif // ECHMET_DISABLE_AVX512
 
 } // namespace CAES
 } // namespace ECHMET

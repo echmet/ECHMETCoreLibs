@@ -55,11 +55,16 @@ void SolverInternal<double, InstructionSet::FMA3>::VectorizedDelogifier<Instruct
 template <> template <>
 void SolverInternal<double, InstructionSet::FMA3>::VectorizedLogifier<InstructionSet::FMA3>::operator()(double *ECHMET_RESTRICT_PTR dst, const double *ECHMET_RESTRICT_PTR src);
 
+#ifndef ECHMET_DISABLE_AVX512
+
 template <> template <>
 void SolverInternal<double, InstructionSet::AVX512>::VectorizedDelogifier<InstructionSet::AVX512>::operator()(double *ECHMET_RESTRICT_PTR dst, const double *ECHMET_RESTRICT_PTR src);
 
 template <> template <>
 void SolverInternal<double, InstructionSet::AVX512>::VectorizedLogifier<InstructionSet::AVX512>::operator()(double *ECHMET_RESTRICT_PTR dst, const double *ECHMET_RESTRICT_PTR src);
+
+#endif // ECHMET_DISABLE_AVX512
+
 #endif // ECHMET_USE_X86_EXTENSIONS
 
 template <typename CAESReal, InstructionSet ISet>

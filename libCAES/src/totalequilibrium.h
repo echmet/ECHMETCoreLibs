@@ -43,6 +43,8 @@ void calculateTsAnddTsdV<double, InstructionSet::FMA3>
 			 const std::vector<double> &Ls, const size_t len,
 			 const int numLow);
 
+#ifndef ECHMET_DISABLE_AVX512
+
 template <>
 void calculateTsAnddTsdV<double, InstructionSet::AVX512>
 			(double *const ECHMET_RESTRICT_PTR ts,
@@ -52,6 +54,8 @@ void calculateTsAnddTsdV<double, InstructionSet::AVX512>
 			 double &X, double &dX,
 			 const std::vector<double> &Ls, const size_t len,
 			 const int numLow);
+
+#endif // ECHMET_DISABLE_AVX512
 
 /*!
  * Calculates total equilibrium constants from constecutive constants

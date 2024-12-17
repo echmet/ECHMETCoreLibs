@@ -11,8 +11,13 @@ void NewtonRaphson<double, InstructionSet::AVX>::initializeLu(const int elements
 template <>
 void NewtonRaphson<double, InstructionSet::FMA3>::initializeLu(const int elements);
 
+#ifndef ECHMET_DISABLE_AVX512
+
 template <>
 void NewtonRaphson<double, InstructionSet::AVX512>::initializeLu(const int elements);
+
+#endif // ECHMET_DISABLE_AVX512
+
 #endif // ECHMET_USE_X86_EXTENSIONS
 
 template <typename NRReal, InstructionSet ISet>

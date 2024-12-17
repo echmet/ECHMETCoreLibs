@@ -39,12 +39,16 @@ public:
 	typedef Eigen::Map<SolverVector<double>, Eigen::AlignmentType::Aligned32> Vector;
 };
 
+#ifndef ECHMET_DISABLE_AVX512
+
 template <>
 class MMTypes<double, InstructionSet::AVX512> {
 public:
 	typedef Eigen::Map<SolverMatrix<double>, Eigen::AlignmentType::Aligned64> Matrix;
 	typedef Eigen::Map<SolverVector<double>, Eigen::AlignmentType::Aligned64> Vector;
 };
+
+#endif // ECHMET_DISABLE_AVX512
 
 } // namespace CAES
 } // namespace ECHMET
