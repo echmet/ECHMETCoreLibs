@@ -46,6 +46,44 @@ void calculateDistributionWithDerivative_dbl(const double &v,
 	}
 }
 
+template <InstructionSet ISet, bool ThreadSafe>
+inline
+void calculateDistributionWithDerivative_dbl(const double &v,
+					     double * ECHMET_RESTRICT_PTR distribution,
+					     double * ECHMET_RESTRICT_PTR dDistdV,
+					     std::vector<TotalEquilibrium<double, ISet, ThreadSafe>> &totalEquilibria,
+					     const ECHMETReal *const ECHMET_RESTRICT_PTR acRaw)
+{
+	distribution += 2;
+	dDistdV += 2;
+
+	for (auto &te : totalEquilibria) {
+		double X;
+		double dX;
+		const auto pack = te.TsAnddTsdV(v, X, dX);
+		double invX = 1.0 / X;
+		double invXX = invX * invX;
+
+		const auto & Ts = std::get<0>(pack);
+		const auto & dTsdV = std::get<1>(pack);
+
+		assert(Ts.size() == dTsdV.size());
+
+		const ECHMETReal c = acRaw[te.concentrationIndex];
+
+		for (size_t idx = 0; idx < te.len; idx++) {
+			const double T = Ts[idx];
+			const double dT = dTsdV[idx];
+
+			/* Distribution */
+			*(distribution++) = c * T * invX;
+
+			/* dDistdV */
+			*(dDistdV++) = c * (dT * X - T * dX) * invXX;
+		}
+	}
+}
+
 inline
 void estimateComplexesDistribution_dbl(const CNVec<double> *const ECHMET_RESTRICT_PTR complexNuclei,
 				       const size_t totalLigandCopyCount,

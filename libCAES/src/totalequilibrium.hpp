@@ -1,8 +1,6 @@
 #ifndef ECHMET_CAES_TOTALEQUILIBRIUM_HPP
 #define ECHMET_CAES_TOTALEQUILIBRIUM_HPP
 
-#include "totalequilibrium.h"
-
 namespace ECHMET {
 namespace CAES {
 
@@ -18,6 +16,24 @@ void calculateTs(std::vector<CAESReal> &ts, const CAESReal &v, const std::vector
 	CAESReal vPow = vMul;
 	for (size_t idx = 1; idx < len; idx++) {
 		const CAESReal T = Ls[idx] * vPow * (activityLow / activityCoefficients[std::abs(num++)]);
+
+		vPow *= vMul;
+
+		ts[idx] = T;
+		X += T;
+	}
+}
+
+template <typename CAESReal>
+void calculateTs(std::vector<CAESReal> &ts, const CAESReal &v, CAESReal &X, const std::vector<CAESReal> &Ls, const size_t len)
+{
+	X = 1.0;
+	ts[0] = 1.0;
+
+	const CAESReal vMul = v;
+	CAESReal vPow = vMul;
+	for (size_t idx = 1; idx < len; idx++) {
+		const CAESReal T = Ls[idx] * vPow;
 
 		vPow *= vMul;
 
@@ -46,7 +62,7 @@ void calculatedTsdV(std::vector<CAESReal> &dts, const CAESReal &v, const std::ve
 	}
 }
 
-template <typename CAESReal>
+template <typename CAESReal, InstructionSet ISet>
 void calculateTsAnddTsdV(CAESReal *const ECHMET_RESTRICT_PTR ts,
 			 CAESReal *const ECHMET_RESTRICT_PTR dts,
 			 const CAESReal &v,
@@ -68,6 +84,38 @@ void calculateTsAnddTsdV(CAESReal *const ECHMET_RESTRICT_PTR ts,
 	for (size_t idx = 1; idx < len; idx++) {
 		const CAESReal actTerm = activityLow / activityCoefficients[std::abs(num++)];
 		const CAESReal LA = Ls[idx] * actTerm;
+
+		const CAESReal T = LA * vPow;
+		const CAESReal dT = idx * LA * dvPow;
+
+		dvPow = vPow;
+		vPow *= vMul;
+
+		ts[idx] = T;
+		X += T;
+
+		dts[idx] = dT;
+		dX += dT;
+	}
+}
+
+template <typename CAESReal, InstructionSet ISet>
+void calculateTsAnddTsdV(CAESReal *const ECHMET_RESTRICT_PTR ts,
+			 CAESReal *const ECHMET_RESTRICT_PTR dts,
+			 const CAESReal &v,
+			 CAESReal &X, CAESReal &dX,
+			 const std::vector<CAESReal> &Ls, const size_t len)
+{
+	X = 1.0;
+	ts[0] = 1.0;
+	dX = 0.0;
+	dts[0] = 0.0;
+
+	const CAESReal vMul = v;
+	CAESReal dvPow = 1.0;
+	CAESReal vPow = vMul;
+	for (size_t idx = 1; idx < len; idx++) {
+		const CAESReal LA = Ls[idx];
 
 		const CAESReal T = LA * vPow;
 		const CAESReal dT = idx * LA * dvPow;
@@ -365,6 +413,21 @@ std::vector<CAESReal> TotalEquilibrium<CAESReal, ISet, true>::Ts(const CAESReal 
 }
 
 template <typename CAESReal, InstructionSet ISet>
+std::vector<CAESReal> TotalEquilibrium<CAESReal, ISet, true>::Ts(const CAESReal &v, CAESReal &X) const
+{
+	std::vector<CAESReal> ts{};
+
+	const size_t len = Ls.size();
+
+	assert(len == static_cast<size_t>(numHigh - numLow + 1));
+
+	ts.resize(len);
+	calculateTs(ts, v, X, Ls, len);
+
+	return ts;
+}
+
+template <typename CAESReal, InstructionSet ISet>
 const std::vector<CAESReal> & TotalEquilibrium<CAESReal, ISet, false>::Ts(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, CAESReal &X)
 {
 	assert(m_Ts.size() == static_cast<size_t>(numHigh - numLow + 1));
@@ -374,6 +437,19 @@ const std::vector<CAESReal> & TotalEquilibrium<CAESReal, ISet, false>::Ts(const 
 	return m_Ts;
 }
 
+template <typename CAESReal, InstructionSet ISet>
+const std::vector<CAESReal> & TotalEquilibrium<CAESReal, ISet, false>::Ts(const CAESReal &v, CAESReal &X)
+{
+	assert(m_Ts.size() == static_cast<size_t>(numHigh - numLow + 1));
+
+	calculateTs(m_Ts, v, X, Ls, len);
+
+	return m_Ts;
+}
+
+/*
+ * Variant that accounts for Debye-Hückel effect
+ */
 template <typename CAESReal, InstructionSet ISet>
 typename TotalEquilibrium<CAESReal, ISet, true>::DDPack
 TotalEquilibrium<CAESReal, ISet, true>::TsAnddTsdV(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients,
@@ -389,11 +465,36 @@ TotalEquilibrium<CAESReal, ISet, true>::TsAnddTsdV(const CAESReal &v, const std:
 	ts.resize(len);
 	dts.resize(len);
 
-	calculateTsAnddTsdV(ts.data(), dts.data(), v, activityCoefficients, X, dX, Ls, len, numLow);
+	calculateTsAnddTsdV<CAESReal, ISet>(ts.data(), dts.data(), v, activityCoefficients, X, dX, Ls, len, numLow);
 
 	return { std::move(ts), std::move(dts) };
 }
 
+/*
+ * Variant that does NOT account for Debye-Hückel effect
+ */
+template <typename CAESReal, InstructionSet ISet>
+typename TotalEquilibrium<CAESReal, ISet, true>::DDPack
+TotalEquilibrium<CAESReal, ISet, true>::TsAnddTsdV(const CAESReal &v, CAESReal &X, CAESReal &dX)
+{
+	std::vector<CAESReal> ts{};
+	std::vector<CAESReal> dts{};
+
+	const size_t len = Ls.size();
+
+	assert(len == static_cast<size_t>(numHigh - numLow + 1));
+
+	ts.resize(len);
+	dts.resize(len);
+
+	calculateTsAnddTsdV<CAESReal, ISet>(ts.data(), dts.data(), v, X, dX, Ls, len);
+
+	return { std::move(ts), std::move(dts) };
+}
+
+/*
+ * Variant that accounts for Debye-Hückel effect
+ */
 template <typename CAESReal, InstructionSet ISet>
 typename TotalEquilibrium<CAESReal, ISet, false>::DDPack
 TotalEquilibrium<CAESReal, ISet, false>::TsAnddTsdV(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients,
@@ -401,7 +502,21 @@ TotalEquilibrium<CAESReal, ISet, false>::TsAnddTsdV(const CAESReal &v, const std
 {
 	assert(m_Ts.size() == static_cast<size_t>(numHigh - numLow + 1));
 
-	calculateTsAnddTsdV(m_Ts.data(), m_dTsdV.data(), v, activityCoefficients, X, dX, Ls, len, numLow);
+	calculateTsAnddTsdV<CAESReal, ISet>(m_Ts.data(), m_dTsdV.data(), v, activityCoefficients, X, dX, Ls, len, numLow);
+
+	return { m_Ts, m_dTsdV };
+}
+
+/*
+ * Variant that does NOT account for Debye-Hückel effect
+ */
+template <typename CAESReal, InstructionSet ISet>
+typename TotalEquilibrium<CAESReal, ISet, false>::DDPack
+TotalEquilibrium<CAESReal, ISet, false>::TsAnddTsdV(const CAESReal &v, CAESReal &X, CAESReal &dX)
+{
+	assert(m_Ts.size() == static_cast<size_t>(numHigh - numLow + 1));
+
+	calculateTsAnddTsdV<CAESReal, ISet>(m_Ts.data(), m_dTsdV.data(), v, X, dX, Ls, len);
 
 	return { m_Ts, m_dTsdV };
 }

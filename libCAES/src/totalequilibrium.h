@@ -23,6 +23,14 @@ void calculateTsAnddTsdV(CAESReal *const ECHMET_RESTRICT_PTR ts,
 			 const std::vector<CAESReal> &Ls, const size_t len,
 			 const int numLow);
 
+template <typename CAESReal, InstructionSet ISet>
+inline
+void calculateTsAnddTsdV(CAESReal *const ECHMET_RESTRICT_PTR ts,
+			 CAESReal *const ECHMET_RESTRICT_PTR dts,
+			 const CAESReal &v,
+			 CAESReal &X, CAESReal &dX,
+			 const std::vector<CAESReal> &Ls, const size_t len);
+
 template <>
 void calculateTsAnddTsdV<double, InstructionSet::AVX>
 			(double *const ECHMET_RESTRICT_PTR ts,
@@ -32,6 +40,13 @@ void calculateTsAnddTsdV<double, InstructionSet::AVX>
 			 double &X, double &dX,
 			 const std::vector<double> &Ls, const size_t len,
 			 const int numLow);
+template <>
+void calculateTsAnddTsdV<double, InstructionSet::AVX>
+			(double *const ECHMET_RESTRICT_PTR ts,
+			 double *const ECHMET_RESTRICT_PTR dts,
+			 const double &v,
+			 double &X, double &dX,
+			 const std::vector<double> &Ls, const size_t len);
 
 template <>
 void calculateTsAnddTsdV<double, InstructionSet::FMA3>
@@ -42,6 +57,13 @@ void calculateTsAnddTsdV<double, InstructionSet::FMA3>
 			 double &X, double &dX,
 			 const std::vector<double> &Ls, const size_t len,
 			 const int numLow);
+template <>
+void calculateTsAnddTsdV<double, InstructionSet::FMA3>
+			(double *const ECHMET_RESTRICT_PTR ts,
+			 double *const ECHMET_RESTRICT_PTR dts,
+			 const double &v,
+			 double &X, double &dX,
+			 const std::vector<double> &Ls, const size_t len);
 
 #ifndef ECHMET_DISABLE_AVX512
 
@@ -54,6 +76,14 @@ void calculateTsAnddTsdV<double, InstructionSet::AVX512>
 			 double &X, double &dX,
 			 const std::vector<double> &Ls, const size_t len,
 			 const int numLow);
+
+template <>
+void calculateTsAnddTsdV<double, InstructionSet::AVX512>
+			(double *const ECHMET_RESTRICT_PTR ts,
+			 double *const ECHMET_RESTRICT_PTR dts,
+			 const double &v,
+			 double &X, double &dX,
+			 const std::vector<double> &Ls, const size_t len);
 
 #endif // ECHMET_DISABLE_AVX512
 
@@ -114,7 +144,9 @@ public:
 	std::vector<CAESReal> distribution(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients) const;
 	std::vector<CAESReal> dTsdV(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, CAESReal &X) const;
 	std::vector<CAESReal> Ts(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, CAESReal &X) const;
+	std::vector<CAESReal> Ts(const CAESReal &v, CAESReal &X) const;
 	DDPack TsAnddTsdV(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, CAESReal &X, CAESReal &dX);
+	DDPack TsAnddTsdV(const CAESReal &v, CAESReal &X, CAESReal &dX);
 
 	const size_t concentrationIndex;	/*!< Analytical concentration index of the constituent */
 	const std::vector<CAESReal> Ls;		/*!< Vector of total equilibirum constants */
@@ -185,7 +217,9 @@ public:
 	const std::vector<CAESReal> & distribution(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients);
 	std::vector<CAESReal> & dTsdV(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, CAESReal &X);
 	const std::vector<CAESReal> & Ts(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, CAESReal &X);
+	const std::vector<CAESReal> & Ts(const CAESReal &v, CAESReal &X);
 	DDPack TsAnddTsdV(const CAESReal &v, const std::vector<CAESReal> &activityCoefficients, CAESReal &X, CAESReal &dX);
+	DDPack TsAnddTsdV(const CAESReal &v, CAESReal &X, CAESReal &dX);
 
 	const size_t concentrationIndex;	/*!< Analytical concentration index of the constituent */
 	const std::vector<CAESReal> Ls;		/*!< Vector of total equilibirum constants */

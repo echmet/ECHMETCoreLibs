@@ -391,10 +391,16 @@ RetCode SolverImpl<CAESReal, ISet, ThreadSafe>::estimatepHFast(std::pair<CAESRea
 		CAESReal dZ;
 
 		while (true) {
-			calculateDistributionWithDerivative<CAESReal, ISet, ThreadSafe>(cH, icConcs, dIcConcsdH,
-											m_totalEquilibria,
-											analyticalConcentrations,
-											activityCoefficients);
+			if (m_correctDebyeHuckel) {
+				calculateDistributionWithDerivative<CAESReal, ISet, ThreadSafe>(cH, icConcs, dIcConcsdH,
+												m_totalEquilibria,
+												analyticalConcentrations,
+												activityCoefficients);
+			} else {
+				calculateDistributionWithDerivative<CAESReal, ISet, ThreadSafe>(cH, icConcs, dIcConcsdH,
+												m_totalEquilibria,
+												analyticalConcentrations);
+			}
 
 			cOH = KW_298 / (cH * activityOneSquared);
 
@@ -478,8 +484,12 @@ std::pair<CAESReal *, CAESReal> SolverImpl<CAESReal, ISet, ThreadSafe>::estimate
 		CAESReal cOH;
 
 		while (true) {
-			calculateDistribution<CAESReal, ISet, ThreadSafe>(cH, icConcs, m_totalEquilibria, analyticalConcentrations,
-									  activityCoefficients);
+			if (m_correctDebyeHuckel) {
+				calculateDistribution<CAESReal, ISet, ThreadSafe>(cH, icConcs, m_totalEquilibria, analyticalConcentrations,
+										activityCoefficients);
+			} else {
+				calculateDistribution<CAESReal, ISet, ThreadSafe>(cH, icConcs, m_totalEquilibria, analyticalConcentrations);
+			}
 
 			cOH = KW_298 / (cH * activityOneSquared);
 

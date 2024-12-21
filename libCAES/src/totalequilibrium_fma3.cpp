@@ -41,5 +41,38 @@ void calculateTsAnddTsdV<double, InstructionSet::FMA3>
 	}
 }
 
+template <>
+void calculateTsAnddTsdV<double, InstructionSet::FMA3>
+			(double *const ECHMET_RESTRICT_PTR ts,
+			 double *const ECHMET_RESTRICT_PTR dts,
+			 const double &v,
+			 double &X, double &dX,
+			 const std::vector<double> &Ls, const size_t len)
+{
+	X = 1.0;
+	ts[0] = 1.0;
+	dX = 0.0;
+	dts[0] = 0.0;
+
+	const double vMul = v;
+	double dvPow = 1.0;
+	double vPow = vMul;
+	for (size_t idx = 1; idx < len; idx++) {
+		const double LA = Ls[idx];
+
+		const double T = LA * vPow;
+		const double dT = idx * LA * dvPow;
+
+		dvPow = vPow;
+		vPow *= vMul;
+
+		ts[idx] = T;
+		X += T;
+
+		dts[idx] = dT;
+		dX += dT;
+	}
+}
+
 } // namespace CAES
 } // namespace ECHMET

@@ -17,6 +17,18 @@ void calculateDistributionWithDerivative<double, InstructionSet::AVX512, false>
 }
 
 template <>
+void calculateDistributionWithDerivative<double, InstructionSet::AVX512, false>
+					(const double &v,
+					 double *const ECHMET_RESTRICT_PTR distribution,
+					 double *const ECHMET_RESTRICT_PTR dDistdV,
+					 std::vector<TotalEquilibrium<double, InstructionSet::AVX512, false>> &totalEquilibria,
+					 const ECHMETReal *const ECHMET_RESTRICT_PTR acRaw)
+{
+	calculateDistributionWithDerivative_dbl<InstructionSet::AVX512, false>
+		(v, distribution, dDistdV, totalEquilibria, acRaw);
+}
+
+template <>
 void calculateDistributionWithDerivative<double, InstructionSet::AVX512, true>
 					(const double &v,
 					 double *const ECHMET_RESTRICT_PTR distribution,
@@ -27,6 +39,18 @@ void calculateDistributionWithDerivative<double, InstructionSet::AVX512, true>
 {
 	calculateDistributionWithDerivative_dbl<InstructionSet::AVX512, true>
 		(v, distribution, dDistdV, totalEquilibria, acRaw, activityCoefficients);
+}
+
+template <>
+void calculateDistributionWithDerivative<double, InstructionSet::AVX512, true>
+					(const double &v,
+					 double *const ECHMET_RESTRICT_PTR distribution,
+					 double *const ECHMET_RESTRICT_PTR dDistdV,
+					 std::vector<TotalEquilibrium<double, InstructionSet::AVX512, true>> &totalEquilibria,
+					 const ECHMETReal *const ECHMET_RESTRICT_PTR acRaw)
+{
+	calculateDistributionWithDerivative_dbl<InstructionSet::AVX512, true>
+		(v, distribution, dDistdV, totalEquilibria, acRaw);
 }
 
 template <>

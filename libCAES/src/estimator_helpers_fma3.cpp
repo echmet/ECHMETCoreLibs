@@ -17,6 +17,18 @@ void calculateDistributionWithDerivative<double, InstructionSet::FMA3, false>
 }
 
 template <>
+void calculateDistributionWithDerivative<double, InstructionSet::FMA3, false>
+					(const double &v,
+					 double *const ECHMET_RESTRICT_PTR distribution,
+					 double *const ECHMET_RESTRICT_PTR dDistdV,
+					 std::vector<TotalEquilibrium<double, InstructionSet::FMA3, false>> &totalEquilibria,
+					 const ECHMETReal *const ECHMET_RESTRICT_PTR acRaw)
+{
+	calculateDistributionWithDerivative_dbl<InstructionSet::FMA3, false>
+		(v, distribution, dDistdV, totalEquilibria, acRaw);
+}
+
+template <>
 void calculateDistributionWithDerivative<double, InstructionSet::FMA3, true>
 					(const double &v,
 					 double *const ECHMET_RESTRICT_PTR distribution,
@@ -27,6 +39,18 @@ void calculateDistributionWithDerivative<double, InstructionSet::FMA3, true>
 {
 	calculateDistributionWithDerivative_dbl<InstructionSet::FMA3, true>
 		(v, distribution, dDistdV, totalEquilibria, acRaw, activityCoefficients);
+}
+
+template <>
+void calculateDistributionWithDerivative<double, InstructionSet::FMA3, true>
+					(const double &v,
+					 double *const ECHMET_RESTRICT_PTR distribution,
+					 double *const ECHMET_RESTRICT_PTR dDistdV,
+					 std::vector<TotalEquilibrium<double, InstructionSet::FMA3, true>> &totalEquilibria,
+					 const ECHMETReal *const ECHMET_RESTRICT_PTR acRaw)
+{
+	calculateDistributionWithDerivative_dbl<InstructionSet::FMA3, true>
+		(v, distribution, dDistdV, totalEquilibria, acRaw);
 }
 
 template <>

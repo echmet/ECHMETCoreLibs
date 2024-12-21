@@ -81,6 +81,54 @@ void calculateDistributionWithDerivative(const CAESReal &v,
 }
 
 /*!
+ * Calculates distribution of concentrations and its derivative of the entire system.
+ * This variant of the function is incapable of accounting for Debye-Hückel effect.
+ *
+ * @param[in] v Variable in the equilibrium equations.
+ * @param[in,out] distribution Resulting array of concentrations. The vector has to be resized by the caller to accomodate all individual concentrations.
+ * @param[in,out] dDistdV Resulting array of concentration derivatives. The vector has to be resized by the caller to accomodate all individual concentrations.
+ * @param[in] totalEquilibria Vector of objects that descibe the given equilibrium.
+ * @param[in] acRaw Array of analytical concentrations.
+ */
+template <typename CAESReal, InstructionSet ISet, bool ThreadSafe>
+void calculateDistributionWithDerivative(const CAESReal &v,
+					 CAESReal *const ECHMET_RESTRICT_PTR distribution,
+					 CAESReal *const ECHMET_RESTRICT_PTR dDistdV,
+					 std::vector<TotalEquilibrium<CAESReal, ISet, ThreadSafe>> &totalEquilibria,
+					 const ECHMETReal *const ECHMET_RESTRICT_PTR acRaw)
+{
+	size_t rowCounter = 2;
+
+	for (auto &te : totalEquilibria) {
+		CAESReal X;
+		CAESReal dX;
+		const auto pack = te.TsAnddTsdV(v, X, dX);
+
+		const std::vector<CAESReal> & Ts = std::get<0>(pack);
+		const std::vector<CAESReal> & dTsdV = std::get<1>(pack);
+
+		assert(Ts.size() == dTsdV.size());
+
+		const ECHMETReal c = acRaw[te.concentrationIndex];
+
+		const size_t len = te.len;
+		for (size_t idx = 0; idx < len; idx++) {
+			const size_t rIdx{rowCounter + idx};
+			typename FetchType<CAESReal>::CType T = Ts[idx];
+			typename FetchType<CAESReal>::CType dT = dTsdV[idx];
+
+			/* Distribution */
+			distribution[rIdx] = c * T / X;
+
+			/* dDistdV */
+			dDistdV[rIdx] = c * (dT * X - T * dX) / X / X;
+		}
+
+		rowCounter += len;
+	}
+}
+
+/*!
  * Calculates distribution of concentrations of the entire system
  *
  * @param[in] v Variable in the equilibrium equations.
@@ -100,6 +148,35 @@ void calculateDistribution(const CAESReal &v,
 	for (auto &te : totalEquilibria) {
 		CAESReal X;
 		const std::vector<CAESReal> & Ts = te.Ts(v, activityCoefficients, X);
+
+		const ECHMETReal c = acRaw[te.concentrationIndex];
+		for (const CAESReal &T : Ts) {
+			*distribution = c * T / X;
+			distribution++;
+		}
+	}
+}
+
+/*!
+ * Calculates distribution of concentrations of the entire system.
+ * This variant is incapable of accounting for Debye-Hückel effect.
+ *
+ * @param[in] v Variable in the equilibrium equations.
+ * @param[in,out] distribution Resulting vector of concentrations. The vector has to be resized by the caller to accomodate all individual concentrations.
+ * @param[in] totalEquilibria Vector of objects that descibe the given equilibria.
+ */
+template <typename CAESReal, InstructionSet ISet, bool ThreadSafe>
+inline
+void calculateDistribution(const CAESReal &v,
+			   CAESReal * ECHMET_RESTRICT_PTR distribution,
+			   std::vector<TotalEquilibrium<CAESReal, ISet, ThreadSafe>> &totalEquilibria,
+			   const ECHMETReal *const ECHMET_RESTRICT_PTR acRaw)
+{
+	distribution += 2;
+
+	for (auto &te : totalEquilibria) {
+		CAESReal X;
+		const std::vector<CAESReal> & Ts = te.Ts(v, X);
 
 		const ECHMETReal c = acRaw[te.concentrationIndex];
 		for (const CAESReal &T : Ts) {
