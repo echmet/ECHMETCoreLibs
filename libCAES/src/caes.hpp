@@ -457,6 +457,7 @@ Solver * createSolverInternal(SolverContext *ctx, const Solver::Options options,
 
 	const bool threadUnsafe = options & Solver::Options::DISABLE_THREAD_SAFETY;
 
+#ifdef ECHMET_ENABLE_X86_EXTENSIONS
 	switch (detectInstructionSet()) {
 	case InstructionSet::GENERIC:
 		return makeSolverImpl<CAESReal, InstructionSet::GENERIC>(threadUnsafe, ctxImpl, options, corrections);
@@ -473,6 +474,9 @@ Solver * createSolverInternal(SolverContext *ctx, const Solver::Options options,
 		return makeSolverImpl<CAESReal, InstructionSet::AVX512>(threadUnsafe, ctxImpl, options, corrections);
 #endif // ECHMET_DISABLE_AVX512
 	}
+#else
+	return makeSolverImpl<CAESReal, InstructionSet::GENERIC>(threadUnsafe, ctxImpl, options, corrections);
+#endif // ECHMET_ENABLE_X86_EXTENSIONS
 
 	return nullptr;
 }

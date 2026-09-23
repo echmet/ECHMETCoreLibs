@@ -36,6 +36,7 @@ RetCode ECHMET_CC createSolverContextHighPrecision(SolverContext *&ctx, const Sy
 
 InstructionSet detectInstructionSet() noexcept
 {
+#ifdef ECHMET_ENABLE_X86_EXTENSIONS
 	const CPUSIMD simd = cpuSupportedSIMD();
 
 	if (simd.AVX512.F && simd.AVX512.DQ && simd.FMA3 && simd.AVX2 && simd.AVX && simd.SSE42 && simd.SSE41 && simd.SSSE3) {
@@ -54,6 +55,7 @@ InstructionSet detectInstructionSet() noexcept
 		ECHMET_DEBUG_CODE(fprintf(stderr, "Using SSE2-optimized solver\n"));
 		return InstructionSet::SSE2;
 	}
+#endif // ECHMET_ENABLE_X86_EXTENSIONS
 
 	ECHMET_DEBUG_CODE(fprintf(stderr, "Using generic solver\n"));
 
