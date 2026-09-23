@@ -1,6 +1,8 @@
 #ifndef ECHMET_CAES_TOTALEQUILIBRIUM_HPP
 #define ECHMET_CAES_TOTALEQUILIBRIUM_HPP
 
+#include <cassert>
+
 namespace ECHMET {
 namespace CAES {
 
