@@ -540,8 +540,6 @@ RetCode ECHMET_CC prepareDerivatorContext(RealVec *&derivatives, Solver *&solver
 	return prepareDerivatorContextInternal(derivatives, solver, chemSystem, corrections, true);
 }
 
-DDSContext::~DDSContext() noexcept {}
-
 } // namespace CAES
 
 } // namespace ECHMET

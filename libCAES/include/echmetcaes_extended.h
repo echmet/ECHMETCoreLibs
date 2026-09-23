@@ -11,27 +11,6 @@
 namespace ECHMET {
 namespace CAES {
 
-/*!
- * Public context for dissociation degrees derivatives calculations
- */
-class DDSContext {
-public:
-	virtual void ECHMET_CC destroy() const ECHMET_NOEXCEPT = 0;
-	/*!
-	 * Returns a dissociation degree derivative for a given ionic form.
-	 *
-	 * @param[out] value Reference to variable that will contain the result.
-	 * @param[in] name Name of the ionic form whose dissociation degree derivative is requested.
-	 *
-	 * @retval RetCode::OK Success.
-	 * @retval RetCode::E_NOT_FOUND The given ionic form is not present in the system.
-	 */
-	virtual RetCode ECHMET_CC findDissocDegreeDerivative(ECHMETReal &value, const FixedString *name) const ECHMET_NOEXCEPT = 0;
-
-protected:
-	virtual ~DDSContext() ECHMET_NOEXCEPT = 0;
-};
-
 extern "C" {
 
 /*!
